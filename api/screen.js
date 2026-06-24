@@ -15,7 +15,7 @@ import pdf from 'pdf-parse';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-async function askClaude(systemPrompt, userPrompt, maxTokens = 2048) {
+async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -28,18 +28,90 @@ async function askClaude(systemPrompt, userPrompt, maxTokens = 2048) {
       max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
+      tools: [tool],
+      tool_choice: { type: 'tool', name: tool.name },
     }),
   });
   if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
   const json = await res.json();
-  return json.content.map((b) => (b.type === 'text' ? b.text : '')).join('\n').trim();
+  const toolUse = json.content.find((b) => b.type === 'tool_use');
+  if (!toolUse) throw new Error('Claude gaf geen tool-aanroep terug — onverwacht antwoordformaat.');
+  return toolUse.input; // al een geparsed object, geen JSON.parse nodig
 }
 
-function parseJsonLoosely(text) {
-  // Claude antwoordt soms met ```json ... ``` erom heen, ondanks instructie.
-  const schoon = text.replace(/^```json\s*|```$/g, '').trim();
-  return JSON.parse(schoon);
-}
+const classificatieTool = {
+  name: 'classificeer_document',
+  description: 'Registreert de classificatie van een echtscheidingsdocument.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      doc_type: { type: 'string', enum: ['convenant', 'ouderschapsplan', 'onbekend'] },
+      situatie_kenmerken: { type: 'array', items: { type: 'string' } },
+      samenvatting: { type: 'string' },
+    },
+    required: ['doc_type', 'situatie_kenmerken', 'samenvatting'],
+  },
+};
+
+const rapportTool = {
+  name: 'registreer_rapport',
+  description: 'Registreert het screeningsrapport van een echtscheidingsdocument.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      grammatica: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            locatie: { type: 'string' },
+            probleem: { type: 'string' },
+            suggestie: { type: 'string' },
+          },
+          required: ['locatie', 'probleem', 'suggestie'],
+        },
+      },
+      juridisch: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            onderwerp: { type: 'string' },
+            bevinding: { type: 'string' },
+            citaat: { type: 'string' },
+            ernst: { type: 'string', enum: ['laag', 'midden', 'hoog'] },
+          },
+          required: ['onderwerp', 'bevinding', 'ernst'],
+        },
+      },
+      volledigheid: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            sectie: { type: 'string' },
+            status: { type: 'string', enum: ['aanwezig', 'onvolledig', 'ontbreekt'] },
+            toelichting: { type: 'string' },
+          },
+          required: ['sectie', 'status', 'toelichting'],
+        },
+      },
+      balans: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            signalering: { type: 'string' },
+            ernst: { type: 'string', enum: ['laag', 'midden', 'hoog'] },
+          },
+          required: ['signalering', 'ernst'],
+        },
+      },
+      samenvatting: { type: 'string' },
+    },
+    required: ['grammatica', 'juridisch', 'volledigheid', 'balans', 'samenvatting'],
+  },
+};
 
 async function extractText(filename, buffer) {
   if (filename.toLowerCase().endsWith('.docx')) {
@@ -73,14 +145,13 @@ export default async function handler(req, res) {
     const { data: kenmerken } = await supabase.from('situatie_kenmerken').select('key, label, categorie');
     const kenmerkenLijst = kenmerken.map((k) => `${k.key} (${k.label})`).join(', ');
 
-    const classificatieRuw = await askClaude(
-      `Je classificeert een Nederlands echtscheidingsdocument. Antwoord UITSLUITEND met JSON, geen omloop-tekst, in dit formaat:
-{"doc_type": "convenant" | "ouderschapsplan" | "onbekend", "situatie_kenmerken": ["key1","key2"], "samenvatting": "1-2 zinnen"}
+    const classificatie = await askClaudeForJson(
+      `Je classificeert een Nederlands echtscheidingsdocument.
 Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijst}`,
       documentTekst.slice(0, 6000),
-      512
+      classificatieTool,
+      1024
     );
-    const classificatie = parseJsonLoosely(classificatieRuw);
 
     // 2. Checklist ophalen: welke secties horen er volgens het sjabloon te zijn?
     const { data: templates } = await supabase
@@ -104,22 +175,14 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
     const checklistTekst = checklist.map((c) => `- ${c.section_name}: ${c.instructions ?? '(vaste tekst, geen specifieke inhoud)'}`).join('\n');
     const wetTekst = (wetteksten ?? []).map((w) => `[${w.citation}] ${w.content}`).join('\n\n');
 
-    const rapportRuw = await askClaude(
+    const rapport = await askClaudeForJson(
       `Je bent een ervaren familiemediator die een al opgesteld echtscheidingsdocument controleert.
-Antwoord UITSLUITEND met JSON in dit formaat, geen omloop-tekst:
-{
-  "grammatica": [{"locatie": "korte aanduiding", "probleem": "...", "suggestie": "..."}],
-  "juridisch": [{"onderwerp": "...", "bevinding": "...", "citaat": "art. X BW of leeg", "ernst": "laag|midden|hoog"}],
-  "volledigheid": [{"sectie": "...", "status": "aanwezig|onvolledig|ontbreekt", "toelichting": "..."}],
-  "balans": [{"signalering": "...", "ernst": "laag|midden|hoog"}],
-  "samenvatting": "2-3 zinnen totaalindruk"
-}
 Wees specifiek en beknopt. Bij "volledigheid" doorloop je de volledige checklist, ook de punten die in orde zijn (status "aanwezig").
-Verzin geen wetsartikelen die niet in de gegeven context staan.`,
+Verzin geen wetsartikelen die niet in de gegeven context staan; laat "citaat" dan leeg.`,
       `DOCUMENTTEKST:\n${documentTekst}\n\nVERWACHTE SECTIES (checklist op basis van de situatie):\n${checklistTekst}\n\nRELEVANTE WETSARTIKELEN:\n${wetTekst || '(geen specifiek relevante artikelen gevonden)'}`,
-      4096
+      rapportTool,
+      8192
     );
-    const rapport = parseJsonLoosely(rapportRuw);
 
     return res.status(200).json({
       classificatie,
