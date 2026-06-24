@@ -255,6 +255,9 @@
 </div>
 
 <script src="config.js"></script>
+<!-- config.local.js bestaat alleen lokaal (staat in .gitignore) en bevat ANTHROPIC_API_KEY.
+     Op Vercel geeft dit een 404 — dat is prima, dan gebruikt askClaudeForJson de /api/claude proxy. -->
+<script src="config.local.js" onerror="void 0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -385,24 +388,40 @@ async function extractText(file) {
 }
 
 // ── Claude API ────────────────────────────────────────
+// Lokaal: ANTHROPIC_API_KEY is geladen via config.local.js → directe browseraanroep.
+// Op Vercel: config.local.js bestaat niet → proxy via /api/claude (key blijft server-side).
 async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-      tools: [tool],
-      tool_choice: { type: 'tool', name: tool.name },
-    }),
-  });
+  const body = {
+    model: 'claude-sonnet-4-6',
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }],
+    tools: [tool],
+    tool_choice: { type: 'tool', name: tool.name },
+  };
+
+  let res;
+  if (typeof ANTHROPIC_API_KEY !== 'undefined') {
+    // Lokale ontwikkeling: direct naar Anthropic
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify(body),
+    });
+  } else {
+    // Productie (Vercel): via server-side proxy
+    res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
   if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
   const json    = await res.json();
   const toolUse = json.content.find(b => b.type === 'tool_use');
