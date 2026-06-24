@@ -134,9 +134,21 @@
 
   /* ── Analyse-panel ──────────────────────────────────── */
   .panel-analyse{overflow-y:auto;padding:28px 32px;background:var(--bg);}
-  .a-sectie{margin-bottom:36px;}
-  .a-sectie h2{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.2rem;
-    margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  .a-sectie{margin-bottom:28px;}
+  .a-sectie h2{
+    font-family:'Source Serif 4',serif;font-weight:600;font-size:1.2rem;
+    margin:0;padding:10px 0 10px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;user-select:none;
+  }
+  .a-sectie h2:hover{color:var(--coral-dark);}
+  .a-chevron{
+    font-style:normal;font-size:.85rem;color:var(--ink-soft);
+    transition:transform .2s;display:inline-block;margin-left:8px;flex-shrink:0;
+  }
+  .a-sectie.dicht .a-chevron{transform:rotate(-90deg);}
+  .a-inhoud{padding-top:14px;}
+  .a-sectie.dicht .a-inhoud{display:none;}
   .samenvatting{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;
     padding:16px 18px;font-size:.97rem;}
 
@@ -755,27 +767,28 @@ async function toonRapport(cls, rp) {
   document.getElementById('splitTitel').textContent   = huidigeBestandsnaam;
 
   // Analyse-panel opbouwen
-  document.getElementById('analysePanel').innerHTML = `
+  // Helper: bouw één uitklapbare sectie
+  const sectie = (titel, inhoud) => `
     <div class="a-sectie">
-      <h2>Samenvatting</h2>
-      <div class="samenvatting">${escH(rp.samenvatting)}</div>
-    </div>
-    <div class="a-sectie">
-      <h2>Volledigheid</h2>
-      ${lijstKaarten('volledigheid',rp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.')}
-    </div>
-    <div class="a-sectie">
-      <h2>Juridische juistheid</h2>
-      ${lijstKaarten('juridisch',rp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,escH(j.onderwerp),escH(j.bevinding),j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')}
-    </div>
-    <div class="a-sectie">
-      <h2>Balans tussen partijen</h2>
-      ${lijstKaarten('balans',rp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.')}
-    </div>
-    <div class="a-sectie">
-      <h2>Grammatica &amp; taal</h2>
-      ${lijstKaarten('grammatica',rp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.')}
+      <h2>${titel}<span class="a-chevron">▾</span></h2>
+      <div class="a-inhoud">${inhoud}</div>
     </div>`;
+
+  document.getElementById('analysePanel').innerHTML =
+    sectie('Samenvatting', `<div class="samenvatting">${escH(rp.samenvatting)}</div>`) +
+    sectie('Volledigheid',
+      lijstKaarten('volledigheid',rp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.')) +
+    sectie('Juridische juistheid',
+      lijstKaarten('juridisch',rp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,escH(j.onderwerp),escH(j.bevinding),j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')) +
+    sectie('Balans tussen partijen',
+      lijstKaarten('balans',rp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.')) +
+    sectie('Grammatica &amp; taal',
+      lijstKaarten('grammatica',rp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'));
+
+  // Klik op h2 → sectie in/uitklappen
+  document.querySelectorAll('#analysePanel .a-sectie h2').forEach(h2 => {
+    h2.addEventListener('click', () => h2.closest('.a-sectie').classList.toggle('dicht'));
+  });
 
   openSplitView();
   await renderDocPanel(''); // document tonen (geen highlight)
