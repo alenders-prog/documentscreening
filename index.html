@@ -184,9 +184,15 @@
     padding:16px 18px;cursor:pointer;transition:border-color .15s;
   }
   .history-item:hover{border-color:var(--coral);}
+  .history-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
   .history-item .naam{font-weight:600;}
   .history-item .meta{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
   .history-item .samen{color:var(--ink-soft);font-size:.9rem;margin-top:6px;}
+  .verwijderBtn{
+    flex:none;background:none;border:none;color:var(--ink-soft);font-size:1rem;
+    cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;
+  }
+  .verwijderBtn:hover{color:var(--terra);background:#FCEFEC;}
 </style>
 </head>
 <body>
@@ -465,15 +471,40 @@ async function laadHistory() {
     }
     lijstEl.innerHTML = json.screeningen.map(s => `
       <div class="history-item" data-id="${s.id}">
-        <div class="naam">${s.bestandsnaam}</div>
+        <div class="history-item-top">
+          <div class="naam">${s.bestandsnaam}</div>
+          <button class="verwijderBtn" data-id="${s.id}" title="Verwijderen">✕</button>
+        </div>
         <div class="meta">${s.classificatie?.doc_type ?? ''} — ${new Date(s.updated_at).toLocaleString('nl-NL')}</div>
         <div class="samen">${s.classificatie?.samenvatting ?? ''}</div>
       </div>`).join('');
     lijstEl.querySelectorAll('.history-item').forEach(el => {
       el.addEventListener('click', () => laadScreening(el.dataset.id));
     });
+    lijstEl.querySelectorAll('.verwijderBtn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        verwijderScreening(btn.dataset.id);
+      });
+    });
   } catch (err) {
     lijstEl.innerHTML = `<p class="empty">Kon de lijst niet laden: ${err.message}</p>`;
+  }
+}
+
+async function verwijderScreening(id) {
+  if (!confirm('Deze analyse definitief verwijderen?')) return;
+  try {
+    const res = await fetch('/api/screening?id=' + id, { method: 'DELETE' });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Onbekende fout');
+    if (huidigeId === id) {
+      huidigeId = null;
+      report.classList.remove('active');
+    }
+    laadHistory();
+  } catch (err) {
+    alert('Verwijderen mislukt: ' + err.message);
   }
 }
 
