@@ -1,0 +1,10 @@
+{
+  "name": "documentscreening",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.1"
+  }
+}
