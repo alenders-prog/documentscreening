@@ -430,7 +430,7 @@ async function downloadWord() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `screening-${(huidigeBestandsnaam || 'rapport').replace(/\.[^.]+$/, '')}.docx`;
+    a.download = `screening-${(huidigeBestandsnaam || 'rapport').replace(/\.[^.]+$/, '')}.rtf`;
     document.body.appendChild(a);
     a.click();
     a.remove();
