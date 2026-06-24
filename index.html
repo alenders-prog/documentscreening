@@ -288,7 +288,7 @@ analyseBtn.addEventListener('click', async () => {
     if (!res.ok) throw new Error(json.error || 'Onbekende fout');
 
     huidigeId = null;
-    huidigeBestandsnaam = gekozenBestand.name;
+    huidigeBestandsnaam = samenstellenBestandsnaam(json.classificatie, gekozenBestand.name);
     voegStandaardveldenToe(json.rapport);
     toonRapport(json.classificatie, json.rapport);
   } catch (err) {
@@ -308,6 +308,15 @@ function voegStandaardveldenToe(rapport) {
       if (item.opmerking === undefined) item.opmerking = '';
     });
   }
+}
+
+// "Naam persoon 1 - Naam persoon 2, documentnaam" — valt terug op de
+// originele bestandsnaam als er geen namen gevonden zijn.
+function samenstellenBestandsnaam(classificatie, origineleNaam) {
+  const a = (classificatie.partij_a_naam || '').trim();
+  const b = (classificatie.partij_b_naam || '').trim();
+  if (!a && !b) return origineleNaam;
+  return `${a || 'Partij 1'} - ${b || 'Partij 2'}, ${origineleNaam}`;
 }
 
 function lijst(items, render, lege_tekst) {
@@ -342,6 +351,7 @@ function toonRapport(classificatie, rapportData) {
   report.innerHTML = `
     <div class="report-head">
       <span class="doctype">${classificatie.doc_type}</span>
+      <p style="font-weight:500;color:var(--ink);margin-bottom:4px;">${huidigeBestandsnaam}</p>
       <p>${classificatie.samenvatting}</p>
     </div>
 

@@ -47,9 +47,11 @@ const classificatieTool = {
     properties: {
       doc_type: { type: 'string', enum: ['convenant', 'ouderschapsplan', 'onbekend'] },
       situatie_kenmerken: { type: 'array', items: { type: 'string' } },
+      partij_a_naam: { type: 'string', description: 'Voor- en achternaam van de eerste partij ("de man" of vergelijkbaar), zoals genoemd in het document. Leeg laten als dit niet te vinden is.' },
+      partij_b_naam: { type: 'string', description: 'Voor- en achternaam van de tweede partij ("de vrouw" of vergelijkbaar), zoals genoemd in het document. Leeg laten als dit niet te vinden is.' },
       samenvatting: { type: 'string' },
     },
-    required: ['doc_type', 'situatie_kenmerken', 'samenvatting'],
+    required: ['doc_type', 'situatie_kenmerken', 'partij_a_naam', 'partij_b_naam', 'samenvatting'],
   },
 };
 
@@ -146,7 +148,7 @@ export default async function handler(req, res) {
     const kenmerkenLijst = kenmerken.map((k) => `${k.key} (${k.label})`).join(', ');
 
     const classificatie = await askClaudeForJson(
-      `Je classificeert een Nederlands echtscheidingsdocument.
+      `Je classificeert een Nederlands echtscheidingsdocument en haalt de namen van beide partijen eruit.
 Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijst}`,
       documentTekst.slice(0, 6000),
       classificatieTool,
