@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inloggen — Documentscreening</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF6F0; --paper:#FFFFFF; --line:#E8E1D6;
+    --ink:#2B2825; --ink-soft:#6B6358;
+    --coral:#E8714A; --coral-dark:#C75A38; --terra:#C75D4D;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;background:var(--bg);display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Sans',sans-serif;color:var(--ink);}
+
+  .login-wrap{width:100%;max-width:420px;padding:32px 24px;}
+
+  .logo{text-align:center;margin-bottom:40px;}
+  .logo h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.8rem;margin:0 0 4px;letter-spacing:-.01em;}
+  .logo p{margin:0;color:var(--ink-soft);font-size:.95rem;}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:32px;}
+
+  label{display:block;font-size:.88rem;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  input{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:8px;
+    font-family:inherit;font-size:.97rem;color:var(--ink);background:var(--bg);
+    outline:none;transition:border-color .15s;margin-bottom:16px;}
+  input:focus{border-color:var(--coral);}
+
+  button{width:100%;padding:13px;background:var(--coral);color:#fff;border:none;
+    border-radius:10px;font-size:1rem;font-weight:600;font-family:inherit;cursor:pointer;
+    transition:background .15s;margin-top:4px;}
+  button:hover{background:var(--coral-dark);}
+  button:disabled{background:#D8CFC2;cursor:not-allowed;}
+
+  .fout{margin-top:16px;padding:12px 14px;border-radius:8px;
+    background:#FCEFEC;border:1px solid #F0C8BE;color:var(--terra);font-size:.9rem;}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="logo">
+    <h1>Documentscreening</h1>
+    <p>Zorgzaam Scheiden</p>
+  </div>
+  <div class="card">
+    <label for="email">E-mailadres</label>
+    <input type="email" id="email" autocomplete="email" placeholder="naam@zorgzaamscheiden.nl">
+
+    <label for="wachtwoord">Wachtwoord</label>
+    <input type="password" id="wachtwoord" autocomplete="current-password" placeholder="••••••••">
+
+    <button id="inlogBtn">Inloggen</button>
+    <div class="fout" id="fout" style="display:none;"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Al ingelogd? Direct doorsturen.
+db.auth.getSession().then(({ data: { session } }) => {
+  if (session) window.location.replace('index.html');
+});
+
+async function inloggen() {
+  const email = document.getElementById('email').value.trim();
+  const ww    = document.getElementById('wachtwoord').value;
+  const fout  = document.getElementById('fout');
+  const btn   = document.getElementById('inlogBtn');
+
+  if (!email || !ww) {
+    fout.textContent    = 'Vul je e-mailadres en wachtwoord in.';
+    fout.style.display  = 'block';
+    return;
+  }
+
+  fout.style.display  = 'none';
+  btn.disabled        = true;
+  btn.textContent     = 'Bezig...';
+
+  const { error } = await db.auth.signInWithPassword({ email, password: ww });
+
+  if (error) {
+    fout.textContent   = 'Inloggen mislukt. Controleer je e-mailadres en wachtwoord.';
+    fout.style.display = 'block';
+    btn.disabled       = false;
+    btn.textContent    = 'Inloggen';
+  } else {
+    window.location.replace('index.html');
+  }
+}
+
+document.getElementById('inlogBtn').addEventListener('click', inloggen);
+document.addEventListener('keydown', e => { if (e.key === 'Enter') inloggen(); });
+</script>
+</body>
+</html>

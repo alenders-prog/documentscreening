@@ -166,6 +166,17 @@
     background:#FCFAF7;}
   .opmerking::placeholder{color:#B6AC9C;}
 
+  /* ── App-header (titel + uitloggen) ────────────────── */
+  .app-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:0;}
+  .app-top > div{flex:1;}
+  .uitloggen-btn{
+    flex-shrink:0;margin-top:6px;
+    padding:7px 14px;background:none;border:1px solid var(--line);border-radius:8px;
+    font-family:inherit;font-size:.85rem;color:var(--ink-soft);cursor:pointer;
+    transition:background .15s,color .15s;white-space:nowrap;
+  }
+  .uitloggen-btn:hover{background:#FCEFEC;color:var(--terra);border-color:var(--terra);}
+
   @media(max-width:780px){
     .split-body{grid-template-columns:1fr;grid-template-rows:45% 55%;}
     .panel-doc{border-right:none;border-bottom:1px solid var(--line);}
@@ -174,12 +185,17 @@
   }
 </style>
 </head>
-<body>
+<body style="display:none">
 
 <!-- ═══ Upload-scherm ════════════════════════════════════ -->
 <div class="wrap" id="mainView">
-  <h1>Documentscreening</h1>
-  <p class="sub">Upload een <strong>concept-convenant</strong> of <strong>ouderschapsplan</strong> (.docx of .pdf). Je krijgt een check op grammatica, juridische juistheid, volledigheid en balans.</p>
+  <div class="app-top">
+    <div>
+      <h1>Documentscreening</h1>
+      <p class="sub">Upload een <strong>concept-convenant</strong> of <strong>ouderschapsplan</strong> (.docx of .pdf). Je krijgt een check op grammatica, juridische juistheid, volledigheid en balans.</p>
+    </div>
+    <button class="uitloggen-btn" id="uitloggenBtn">Uitloggen</button>
+  </div>
 
   <div class="tabs">
     <button class="tab active" data-tab="nieuw">Nieuwe analyse</button>
@@ -217,6 +233,7 @@
       <button class="secundair" id="opslaanBtn">Opslaan</button>
       <button class="secundair" id="downloadBtn">Download Word</button>
       <span class="opslagstatus" id="opslagStatus"></span>
+      <button class="uitloggen-btn" id="uitloggenBtn2">Uitloggen</button>
     </div>
   </div>
   <div class="split-body">
@@ -236,6 +253,24 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Authenticatie ─────────────────────────────────────
+// Controleer sessie vóór initialisatie; stuur door naar login als niet ingelogd.
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) {
+    window.location.replace('login.html');
+    return;
+  }
+  document.body.style.display = ''; // toon pagina pas ná succesvolle sessie-check
+})();
+
+async function uitloggen() {
+  await db.auth.signOut();
+  window.location.replace('login.html');
+}
+document.getElementById('uitloggenBtn').addEventListener('click', uitloggen);
+document.getElementById('uitloggenBtn2').addEventListener('click', uitloggen);
 
 // ── Tool-schema's ─────────────────────────────────────
 const classificatieTool = {
