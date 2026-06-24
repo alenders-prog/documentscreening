@@ -8,197 +8,178 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FAF6F0;
-    --paper:#FFFFFF;
-    --line:#E8E1D6;
-    --ink:#2B2825;
-    --ink-soft:#6B6358;
-    --coral:#E8714A;
-    --coral-dark:#C75A38;
-    --sage:#6B8F71;
-    --amber:#D9A04B;
-    --terra:#C75D4D;
+    --bg:#FAF6F0; --paper:#FFFFFF; --line:#E8E1D6;
+    --ink:#2B2825; --ink-soft:#6B6358;
+    --coral:#E8714A; --coral-dark:#C75A38;
+    --sage:#6B8F71; --amber:#D9A04B; --terra:#C75D4D;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--ink);
-    font-family:'IBM Plex Sans', sans-serif;
-    line-height:1.55;
-  }
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;line-height:1.55;}
+
+  /* ── Upload-scherm ──────────────────────────────────── */
   .wrap{max-width:720px;margin:0 auto;padding:64px 24px 120px;}
-  h1{
-    font-family:'Source Serif 4', serif;
-    font-weight:600;
-    font-size:2rem;
-    margin:0 0 8px;
-    letter-spacing:-0.01em;
-  }
+  h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:2rem;margin:0 0 8px;letter-spacing:-.01em;}
   .sub{color:var(--ink-soft);margin:0 0 48px;font-size:1.05rem;}
   .sub strong{color:var(--ink);font-weight:500;}
 
-  .dropzone{
-    border:1.5px dashed var(--line);
-    border-radius:14px;
-    background:var(--paper);
-    padding:48px 24px;
-    text-align:center;
-    cursor:pointer;
-    transition:border-color .2s, background .2s;
-    position:relative;
-  }
+  .dropzone{border:1.5px dashed var(--line);border-radius:14px;background:var(--paper);padding:48px 24px;
+    text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
   .dropzone.drag{border-color:var(--coral);background:#FFF8F4;}
   .dropzone input{display:none;}
-  .dropicon{
-    width:40px;height:40px;margin:0 auto 16px;
-    border-radius:50%;
-    background:var(--coral);
-    display:flex;align-items:center;justify-content:center;
-  }
+  .dropicon{width:40px;height:40px;margin:0 auto 16px;border-radius:50%;background:var(--coral);
+    display:flex;align-items:center;justify-content:center;}
   .dropicon svg{width:18px;height:18px;stroke:#fff;}
   .dropzone p{margin:0;color:var(--ink-soft);}
-  .dropzone .filename{color:var(--ink);font-weight:500;margin-top:4px;}
+  .dropzone .filename{color:var(--ink);font-weight:500;}
 
-  button.primary{
-    margin-top:24px;
-    width:100%;
-    padding:14px 20px;
-    background:var(--coral);
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    font-size:1rem;
-    font-weight:600;
-    font-family:inherit;
-    cursor:pointer;
-    transition:background .15s, transform .1s;
-  }
+  button.primary{margin-top:24px;width:100%;padding:14px 20px;background:var(--coral);color:#fff;
+    border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:inherit;cursor:pointer;
+    transition:background .15s,transform .1s;}
   button.primary:hover{background:var(--coral-dark);}
-  button.primary:active{transform:scale(0.99);}
+  button.primary:active{transform:scale(.99);}
   button.primary:disabled{background:#D8CFC2;cursor:not-allowed;}
 
-  /* Scan-animatie: signature element tijdens analyse */
   .scanning{display:none;margin-top:40px;text-align:center;}
   .scanning.active{display:block;}
-  .scan-doc{
-    width:64px;height:80px;margin:0 auto 20px;
-    border:1.5px solid var(--line);
-    border-radius:6px;
-    background:var(--paper);
-    position:relative;
-    overflow:hidden;
-  }
-  .scan-doc::before, .scan-doc::after{
-    content:'';position:absolute;left:12px;right:12px;height:2px;background:var(--line);
-  }
-  .scan-doc::before{top:18px;}
-  .scan-doc::after{top:30px;}
-  .scan-line{
-    position:absolute;left:0;right:0;height:2px;background:var(--coral);
-    box-shadow:0 0 8px var(--coral);
-    animation:scan 1.6s ease-in-out infinite;
-  }
-  @keyframes scan{
-    0%{top:6px;opacity:0;}
-    10%{opacity:1;}
-    90%{opacity:1;}
-    100%{top:74px;opacity:0;}
-  }
+  .scan-doc{width:64px;height:80px;margin:0 auto 20px;border:1.5px solid var(--line);border-radius:6px;
+    background:var(--paper);position:relative;overflow:hidden;}
+  .scan-doc::before,.scan-doc::after{content:'';position:absolute;left:12px;right:12px;height:2px;background:var(--line);}
+  .scan-doc::before{top:18px;} .scan-doc::after{top:30px;}
+  .scan-line{position:absolute;left:0;right:0;height:2px;background:var(--coral);
+    box-shadow:0 0 8px var(--coral);animation:scan 1.6s ease-in-out infinite;}
+  @keyframes scan{0%{top:6px;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:74px;opacity:0;}}
   .scanning p{color:var(--ink-soft);font-size:.95rem;margin:0;}
 
-  .error{
-    margin-top:24px;padding:16px 18px;border-radius:10px;
-    background:#FCEFEC;border:1px solid #F0C8BE;color:var(--terra);font-size:.95rem;
-  }
-
-  .report{display:none;margin-top:56px;}
-  .report.active{display:block;}
-  .report-head{margin-bottom:32px;}
-  .report-head .doctype{
-    display:inline-block;font-family:'IBM Plex Mono', monospace;font-size:.75rem;
-    letter-spacing:.04em;text-transform:uppercase;color:var(--coral-dark);
-    background:#FFF1EA;padding:4px 10px;border-radius:6px;margin-bottom:10px;
-  }
-  .report-head p{margin:0;color:var(--ink-soft);}
-
-  .section{margin-bottom:40px;}
-  .section h2{
-    font-family:'Source Serif 4', serif;font-weight:600;font-size:1.3rem;
-    margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--line);
-  }
-  .card{
-    background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
-    border-radius:8px;padding:16px 18px;margin-bottom:10px;
-  }
-  .card.sev-laag, .card.status-aanwezig{border-left-color:var(--sage);}
-  .card.sev-midden, .card.status-onvolledig{border-left-color:var(--amber);}
-  .card.sev-hoog, .card.status-ontbreekt{border-left-color:var(--terra);}
-  .card .label{font-weight:600;font-size:.95rem;}
-  .card .meta{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
-  .card .cite{
-    display:inline-block;margin-top:8px;font-family:'IBM Plex Mono', monospace;
-    font-size:.8rem;color:var(--coral-dark);background:#FFF1EA;padding:2px 8px;border-radius:4px;
-  }
-  .empty{color:var(--ink-soft);font-size:.9rem;font-style:italic;}
-  .samenvatting{
-    background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;padding:18px 20px;
-    font-size:1.02rem;
-  }
+  .error-box{margin-top:24px;padding:16px 18px;border-radius:10px;
+    background:#FCEFEC;border:1px solid #F0C8BE;color:var(--terra);font-size:.95rem;}
 
   .tabs{display:flex;gap:4px;margin-bottom:40px;border-bottom:1px solid var(--line);}
-  .tab{
-    padding:10px 4px;margin-right:24px;background:none;border:none;font-family:inherit;
+  .tab{padding:10px 4px;margin-right:24px;background:none;border:none;font-family:inherit;
     font-size:.95rem;font-weight:500;color:var(--ink-soft);cursor:pointer;
-    border-bottom:2px solid transparent;margin-bottom:-1px;
-  }
+    border-bottom:2px solid transparent;margin-bottom:-1px;}
   .tab.active{color:var(--coral-dark);border-bottom-color:var(--coral);}
-  .view{display:none;}
-  .view.active{display:block;}
-
-  .item-row{display:flex;align-items:flex-start;gap:10px;}
-  .item-row input[type=checkbox]{
-    margin-top:3px;width:18px;height:18px;accent-color:var(--sage);cursor:pointer;flex:none;
-  }
-  .item-body{flex:1;}
-  .opmerking{
-    margin-top:8px;width:100%;font-family:inherit;font-size:.85rem;color:var(--ink);
-    border:1px solid var(--line);border-radius:6px;padding:8px 10px;resize:vertical;min-height:34px;
-    background:#FCFAF7;
-  }
-  .opmerking::placeholder{color:#B6AC9C;}
-
-  .actiebalk{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;}
-  button.secundair{
-    padding:12px 20px;background:var(--paper);color:var(--coral-dark);
-    border:1.5px solid var(--coral);border-radius:10px;font-size:.95rem;font-weight:600;
-    font-family:inherit;cursor:pointer;transition:background .15s;
-  }
-  button.secundair:hover{background:#FFF1EA;}
-  button.secundair:disabled{opacity:.5;cursor:not-allowed;}
-  .opslagstatus{align-self:center;color:var(--ink-soft);font-size:.85rem;}
+  .view{display:none;} .view.active{display:block;}
 
   .historylijst{display:flex;flex-direction:column;gap:10px;}
-  .history-item{
-    background:var(--paper);border:1px solid var(--line);border-radius:10px;
-    padding:16px 18px;cursor:pointer;transition:border-color .15s;
-  }
+  .history-item{background:var(--paper);border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;cursor:pointer;transition:border-color .15s;}
   .history-item:hover{border-color:var(--coral);}
   .history-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
   .history-item .naam{font-weight:600;}
-  .history-item .meta{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
-  .history-item .samen{color:var(--ink-soft);font-size:.9rem;margin-top:6px;}
-  .verwijderBtn{
-    flex:none;background:none;border:none;color:var(--ink-soft);font-size:1rem;
-    cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;
-  }
+  .history-item .meta,.history-item .samen{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
+  .verwijderBtn{flex:none;background:none;border:none;color:var(--ink-soft);font-size:1rem;
+    cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;}
   .verwijderBtn:hover{color:var(--terra);background:#FCEFEC;}
+  .empty{color:var(--ink-soft);font-size:.9rem;font-style:italic;}
+
+  /* ── Split-overlay ──────────────────────────────────── */
+  .split-overlay{display:none;position:fixed;inset:0;z-index:200;flex-direction:column;background:var(--bg);}
+  .split-overlay.active{display:flex;}
+
+  .split-header{display:flex;align-items:center;gap:14px;padding:10px 20px;
+    background:var(--paper);border-bottom:1px solid var(--line);flex-shrink:0;}
+  .back-btn{padding:7px 14px;background:none;border:1px solid var(--line);border-radius:8px;
+    font-family:inherit;font-size:.88rem;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
+    transition:background .15s;}
+  .back-btn:hover{background:var(--bg);}
+  .split-meta{flex:1;display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden;}
+  .split-meta .doctype{flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--coral-dark);
+    background:#FFF1EA;padding:3px 9px;border-radius:5px;}
+  .split-meta .titel{font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .split-acties{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  button.secundair{padding:8px 16px;background:var(--paper);color:var(--coral-dark);
+    border:1.5px solid var(--coral);border-radius:8px;font-size:.88rem;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:background .15s;white-space:nowrap;}
+  button.secundair:hover{background:#FFF1EA;}
+  .opslagstatus{color:var(--ink-soft);font-size:.82rem;}
+
+  .split-body{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+
+  /* ── Document-panel ─────────────────────────────────── */
+  .panel-doc{overflow:auto;background:#888;padding:20px;display:flex;flex-direction:column;align-items:center;}
+  .panel-doc.tekst-modus{background:var(--paper);padding:32px;display:block;align-items:unset;
+    font-size:.93rem;line-height:1.75;}
+  .panel-doc.tekst-modus p{margin:0 0 4px;}
+  .panel-doc.tekst-modus .doc-br{height:10px;}
+  .panel-doc.tekst-modus .doc-leeg{color:var(--ink-soft);font-style:italic;}
+
+  /* PDF-pagina's */
+  .pdf-pagina{position:relative;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.3);flex-shrink:0;}
+  .pdf-pagina canvas{display:block;}
+
+  /* PDF tekst-laag — transparante spans voor selectie & highlight */
+  .textLayer{position:absolute;inset:0;overflow:hidden;line-height:1;user-select:text;}
+  .textLayer span{
+    color:transparent;position:absolute;white-space:pre;
+    cursor:text;transform-origin:0% 0%;
+  }
+  .textLayer span.hl-match{
+    background:rgba(255,213,0,.55);
+    border-radius:2px;
+    scroll-margin-top:40vh;
+  }
+
+  /* DOCX HTML */
+  .docx-inhoud{background:var(--paper);padding:40px 48px;width:100%;max-width:800px;
+    box-shadow:0 2px 10px rgba(0,0,0,.3);font-size:.93rem;line-height:1.75;}
+  .docx-inhoud h1,.docx-inhoud h2,.docx-inhoud h3{font-family:'Source Serif 4',serif;font-weight:600;}
+  .docx-inhoud p{margin:0 0 6px;}
+  .docx-inhoud table{border-collapse:collapse;width:100%;margin-bottom:12px;}
+  .docx-inhoud td,.docx-inhoud th{border:1px solid var(--line);padding:6px 8px;}
+  mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
+
+  /* Laad-indicator in doc-panel */
+  .doc-laad{color:#ddd;font-size:.9rem;font-style:italic;text-align:center;padding-top:60px;width:100%;}
+
+  /* ── Analyse-panel ──────────────────────────────────── */
+  .panel-analyse{overflow-y:auto;padding:28px 32px;background:var(--bg);}
+  .a-sectie{margin-bottom:36px;}
+  .a-sectie h2{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.2rem;
+    margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  .samenvatting{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;
+    padding:16px 18px;font-size:.97rem;}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
+    border-radius:8px;padding:14px 16px;margin-bottom:9px;transition:border-color .15s,box-shadow .15s;}
+  .card.sev-laag,.card.status-aanwezig{border-left-color:var(--sage);}
+  .card.sev-midden,.card.status-onvolledig{border-left-color:var(--amber);}
+  .card.sev-hoog,.card.status-ontbreekt{border-left-color:var(--terra);}
+  .card.heeft-passage{cursor:pointer;}
+  .card.heeft-passage:hover{border-color:var(--coral);box-shadow:0 1px 6px rgba(232,113,74,.15);}
+  .card.actief{border-color:var(--coral)!important;box-shadow:0 0 0 2px rgba(232,113,74,.25);}
+
+  .item-row{display:flex;align-items:flex-start;gap:10px;}
+  .item-row input[type=checkbox]{margin-top:3px;width:17px;height:17px;accent-color:var(--sage);cursor:pointer;flex:none;}
+  .item-body{flex:1;min-width:0;}
+  .card-kop{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+  .card-kop .label{font-weight:600;font-size:.93rem;}
+  .scroll-pin{flex:none;font-size:.75rem;color:var(--coral-dark);opacity:.5;
+    margin-top:2px;transition:opacity .15s;user-select:none;white-space:nowrap;}
+  .card.heeft-passage:hover .scroll-pin,.card.actief .scroll-pin{opacity:1;}
+  .card .meta{color:var(--ink-soft);font-size:.83rem;margin-top:2px;}
+  .card .cite{display:inline-block;margin-top:7px;font-family:'IBM Plex Mono',monospace;
+    font-size:.78rem;color:var(--coral-dark);background:#FFF1EA;padding:2px 8px;border-radius:4px;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .opmerking{margin-top:8px;width:100%;font-family:inherit;font-size:.83rem;color:var(--ink);
+    border:1px solid var(--line);border-radius:6px;padding:7px 10px;resize:vertical;min-height:32px;
+    background:#FCFAF7;}
+  .opmerking::placeholder{color:#B6AC9C;}
+
+  @media(max-width:780px){
+    .split-body{grid-template-columns:1fr;grid-template-rows:45% 55%;}
+    .panel-doc{border-right:none;border-bottom:1px solid var(--line);}
+    .split-header{flex-wrap:wrap;gap:8px;}
+    .split-acties{width:100%;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- ═══ Upload-scherm ════════════════════════════════════ -->
+<div class="wrap" id="mainView">
   <h1>Documentscreening</h1>
-  <p class="sub">Upload een <strong>concept-convenant</strong> of <strong>ouderschapsplan</strong> (.docx of .pdf). Je krijgt een check op grammatica, juridische juistheid, volledigheid en balans tussen partijen.</p>
+  <p class="sub">Upload een <strong>concept-convenant</strong> of <strong>ouderschapsplan</strong> (.docx of .pdf). Je krijgt een check op grammatica, juridische juistheid, volledigheid en balans.</p>
 
   <div class="tabs">
     <button class="tab active" data-tab="nieuw">Nieuwe analyse</button>
@@ -206,22 +187,17 @@
   </div>
 
   <div class="view active" id="view-nieuw">
-  <div class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept=".docx,.pdf">
-    <div class="dropicon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></div>
-    <p id="dropText">Klik om een bestand te kiezen, of sleep het hierheen</p>
-  </div>
-
-  <button class="primary" id="analyseBtn" disabled>Analyseer document</button>
-
-  <div class="scanning" id="scanning">
-    <div class="scan-doc"><div class="scan-line"></div></div>
-    <p id="scanText">Tekst uit het document halen...</p>
-  </div>
-
-  <div class="error" id="error" style="display:none;"></div>
-
-  <div class="report" id="report"></div>
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept=".docx,.pdf">
+      <div class="dropicon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></div>
+      <p id="dropText">Klik om een bestand te kiezen, of sleep het hierheen</p>
+    </div>
+    <button class="primary" id="analyseBtn" disabled>Analyseer document</button>
+    <div class="scanning" id="scanning">
+      <div class="scan-doc"><div class="scan-line"></div></div>
+      <p id="scanText">Tekst uit het document halen en analyseren...</p>
+    </div>
+    <div class="error-box" id="errorBox" style="display:none;"></div>
   </div>
 
   <div class="view" id="view-opgeslagen">
@@ -229,76 +205,648 @@
   </div>
 </div>
 
+<!-- ═══ Split-overlay (rapport + document) ══════════════ -->
+<div class="split-overlay" id="splitOverlay">
+  <div class="split-header">
+    <button class="back-btn" id="backBtn">← Terug</button>
+    <div class="split-meta">
+      <span class="doctype" id="splitDoctype"></span>
+      <span class="titel"   id="splitTitel"></span>
+    </div>
+    <div class="split-acties">
+      <button class="secundair" id="opslaanBtn">Opslaan</button>
+      <button class="secundair" id="downloadBtn">Download Word</button>
+      <span class="opslagstatus" id="opslagStatus"></span>
+    </div>
+  </div>
+  <div class="split-body">
+    <div class="panel-doc"     id="documentPanel"></div>
+    <div class="panel-analyse" id="analysePanel"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
-const dropText = document.getElementById('dropText');
-const analyseBtn = document.getElementById('analyseBtn');
-const scanning = document.getElementById('scanning');
-const scanText = document.getElementById('scanText');
-const errorBox = document.getElementById('error');
-const report = document.getElementById('report');
+'use strict';
 
-let gekozenBestand = null;
-let huidigeId = null;          // null = nog niet opgeslagen
-let huidigeBestandsnaam = null;
-let huidigeClassificatie = null;
-let huidigRapport = null;
+// ── Init ──────────────────────────────────────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ---------- Tabs ----------
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('view-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'opgeslagen') laadHistory();
+// ── Tool-schema's ─────────────────────────────────────
+const classificatieTool = {
+  name: 'classificeer_document',
+  description: 'Registreert de classificatie van een echtscheidingsdocument.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      doc_type:           { type: 'string', enum: ['convenant','ouderschapsplan','onbekend'] },
+      situatie_kenmerken: { type: 'array', items: { type: 'string' } },
+      partij_a_naam:      { type: 'string' },
+      partij_b_naam:      { type: 'string' },
+      samenvatting:       { type: 'string' },
+    },
+    required: ['doc_type','situatie_kenmerken','partij_a_naam','partij_b_naam','samenvatting'],
+  },
+};
+
+const rapportTool = {
+  name: 'registreer_rapport',
+  description: 'Registreert het screeningsrapport van een echtscheidingsdocument.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      samenvatting: { type: 'string' },
+      grammatica: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            locatie:  { type: 'string' },
+            probleem: { type: 'string' },
+            suggestie:{ type: 'string' },
+            passage:  { type: 'string', description: 'Letterlijke tekst (max 80 tekens) uit het document die de fout bevat.' },
+          },
+          required: ['locatie','probleem','suggestie'],
+        },
+      },
+      juridisch: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            onderwerp: { type: 'string' },
+            bevinding: { type: 'string' },
+            citaat:    { type: 'string', description: 'Directe quote (max 80 tekens) uit het document.' },
+            ernst:     { type: 'string', enum: ['laag','midden','hoog'] },
+          },
+          required: ['onderwerp','bevinding','ernst'],
+        },
+      },
+      volledigheid: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            sectie:     { type: 'string' },
+            status:     { type: 'string', enum: ['aanwezig','onvolledig','ontbreekt'] },
+            toelichting:{ type: 'string' },
+            passage:    { type: 'string', description: 'Beginregel of koptekst van de sectie zoals in het document; leeg als ontbreekt.' },
+          },
+          required: ['sectie','status','toelichting'],
+        },
+      },
+      balans: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            signalering: { type: 'string' },
+            ernst:       { type: 'string', enum: ['laag','midden','hoog'] },
+            passage:     { type: 'string', description: 'Quote (max 80 tekens) waaruit de onevenwichtigheid blijkt.' },
+          },
+          required: ['signalering','ernst'],
+        },
+      },
+    },
+    required: ['samenvatting','grammatica','juridisch','volledigheid','balans'],
+  },
+};
+
+// ── Tekst extraheren voor analyse ─────────────────────
+async function extractText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  if (file.name.toLowerCase().endsWith('.docx')) {
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  }
+  if (file.name.toLowerCase().endsWith('.pdf')) {
+    const pdf  = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    let text   = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page    = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it => it.str).join(' ') + '\n';
+    }
+    return text;
+  }
+  throw new Error('Alleen .docx en .pdf worden ondersteund.');
+}
+
+// ── Claude API ────────────────────────────────────────
+async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+      tools: [tool],
+      tool_choice: { type: 'tool', name: tool.name },
+    }),
   });
+  if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
+  const json    = await res.json();
+  const toolUse = json.content.find(b => b.type === 'tool_use');
+  if (!toolUse) throw new Error('Claude gaf geen tool-aanroep terug.');
+  return toolUse.input;
+}
+
+// ── Document analyseren ───────────────────────────────
+async function analyseDocument(file) {
+  const documentTekst = await extractText(file);
+  if (documentTekst.trim().length < 200)
+    throw new Error('Kon weinig tot geen tekst uit het bestand halen. Is het leesbaar?');
+
+  const { data: kenmerken } = await db.from('situatie_kenmerken').select('key, label, categorie');
+  const kenmerkenLijst = (kenmerken ?? []).map(k => `${k.key} (${k.label})`).join(', ');
+
+  const classificatie = await askClaudeForJson(
+    `Je classificeert een Nederlands echtscheidingsdocument en haalt de namen van beide partijen eruit.
+Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijst}`,
+    documentTekst.slice(0, 6000), classificatieTool, 1024
+  );
+
+  const { data: templates } = await db
+    .from('document_templates')
+    .select('section_name, required, applies_when, instructions')
+    .eq('doc_type', classificatie.doc_type === 'onbekend' ? 'convenant' : classificatie.doc_type)
+    .order('section_order');
+  const checklist = (templates ?? []).filter(
+    t => !t.applies_when || t.applies_when.every(tag => classificatie.situatie_kenmerken.includes(tag))
+  );
+
+  const { data: wetteksten } = await db
+    .from('legal_chunks')
+    .select('citation, content, topic_tags')
+    .overlaps('topic_tags', classificatie.situatie_kenmerken)
+    .limit(20);
+
+  const checklistTekst = checklist.map(c => `- ${c.section_name}: ${c.instructions ?? '(vaste tekst)'}`).join('\n');
+  const wetTekst       = (wetteksten ?? []).map(w => `[${w.citation}] ${w.content}`).join('\n\n');
+
+  const rapport = await askClaudeForJson(
+    `Je bent een ervaren familiemediator die een opgesteld echtscheidingsdocument controleert.
+Wees specifiek en beknopt. Doorloop bij "volledigheid" de volledige checklist, ook aanwezige punten.
+Verzin geen wetsartikelen die niet in de context staan; laat "citaat" dan leeg.
+Vul bij elk punt het veld "passage" met een letterlijke quote (max 80 tekens) uit het document.`,
+    `DOCUMENTTEKST:\n${documentTekst}\n\nVERWACHTE SECTIES:\n${checklistTekst}\n\nWETSARTIKELEN:\n${wetTekst || '(geen)'}`,
+    rapportTool, 8192
+  );
+
+  rapport._document_tekst = documentTekst; // tekst bewaren als fallback
+  return { classificatie, rapport };
+}
+
+// ── RTF-export (client-side) ──────────────────────────
+function rtfEscape(t) {
+  return String(t ?? '').split('').map(ch => {
+    const c = ch.codePointAt(0);
+    if (ch==='\\') return '\\\\'; if (ch==='{') return '\\{'; if (ch==='}') return '\\}';
+    if (c > 127) return `\\u${c}?`; return ch;
+  }).join('');
+}
+function rtfPar(t, {bold=false,italic=false,kleur=false,size=22}={}) {
+  let c=`\\fs${size} `;
+  if (kleur) c+='\\cf1 '; if (bold) c+='\\b '; if (italic) c+='\\i ';
+  return `${c}${rtfEscape(t)}\\b0\\i0\\cf0\\par\n`;
+}
+function rtfItem({vinkjeAan,koptekst,body,citaat,opmerking}) {
+  let r=rtfPar((vinkjeAan?'☑ ':'☐ ')+koptekst,{bold:true,size:24});
+  if (body)     r+=rtfPar(body,{size:22});
+  if (citaat)   r+=rtfPar(citaat,{italic:true,size:20});
+  if (opmerking) r+=rtfPar(`Opmerking: ${opmerking}`,{italic:true,kleur:true,size:20});
+  return r;
+}
+function rtfSectie(titel,items,fn) {
+  let r=rtfPar(titel,{bold:true,size:30});
+  if (!items||!items.length) return r+rtfPar('Geen opmerkingen.',{italic:true});
+  for (const it of items) r+=fn(it); return r;
+}
+function buildRtf(naam,cls,rp) {
+  let b=rtfPar('Documentscreening',{bold:true,size:40})+rtfPar(naam||'(onbekend)',{italic:true})
+    +rtfPar(`Type: ${cls.doc_type}`,{size:22})+rtfPar(cls.samenvatting||'',{size:22});
+  b+=rtfSectie('Samenvatting',[1],()=>rtfPar(rp.samenvatting||'',{size:22}));
+  b+=rtfSectie('Volledigheid',rp.volledigheid,v=>rtfItem({vinkjeAan:v.afgehandeld,koptekst:`${v.sectie} — ${v.status}`,body:v.toelichting,opmerking:v.opmerking}));
+  b+=rtfSectie('Juridische juistheid',rp.juridisch,j=>rtfItem({vinkjeAan:j.afgehandeld,koptekst:`${j.onderwerp} (${j.ernst})`,body:j.bevinding,citaat:j.citaat,opmerking:j.opmerking}));
+  b+=rtfSectie('Balans',rp.balans,b2=>rtfItem({vinkjeAan:b2.afgehandeld,koptekst:`${b2.signalering} (${b2.ernst})`,opmerking:b2.opmerking}));
+  b+=rtfSectie('Grammatica & taal',rp.grammatica,g=>rtfItem({vinkjeAan:g.afgehandeld,koptekst:g.locatie,body:`${g.probleem} → ${g.suggestie}`,opmerking:g.opmerking}));
+  return '{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0 Calibri;}}{\\colortbl;\\red199\\green90\\blue56;}\\f0\n'+b+'}';
+}
+
+// ── Document-panel rendering ──────────────────────────
+let huidigeBestand = null;  // File-object bij verse analyse; null bij laden uit history
+let huidigePdfDoc  = null;  // Gecachede PDF.js instantie
+let docModus       = null;  // 'pdf' | 'docx' | 'tekst'
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Wordt aangeroepen bij openen overlay (geen search) én bij klikken op kaart (met search).
+async function renderDocPanel(searchText) {
+  const panel = document.getElementById('documentPanel');
+
+  if (huidigeBestand) {
+    const naam = huidigeBestand.name.toLowerCase();
+    if (naam.endsWith('.pdf')) {
+      await toonPdf(panel, searchText);
+    } else if (naam.endsWith('.docx')) {
+      await toonDocx(panel, searchText);
+    }
+  } else {
+    toonTekstFallback(panel, searchText);
+  }
+}
+
+// ── PDF weergave ──────────────────────────────────────
+async function toonPdf(panel, searchText) {
+  panel.classList.remove('tekst-modus');
+
+  // Eerste keer: laden en renderen
+  if (!huidigePdfDoc) {
+    panel.innerHTML = '<p class="doc-laad">PDF laden...</p>';
+    const buf  = await huidigeBestand.arrayBuffer();
+    huidigePdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+    await renderPdfPaginas(panel, huidigePdfDoc);
+  }
+
+  // Highlight
+  highlightInPdf(searchText || '');
+}
+
+async function renderPdfPaginas(panel, pdf) {
+  panel.innerHTML = '';
+
+  // Schaal: pas aan zodat breedte past in paneel
+  const panelBreedte = panel.clientWidth - 40;
+  const proefPagina  = await pdf.getPage(1);
+  const proefVp      = proefPagina.getViewport({ scale: 1 });
+  const schaal       = Math.min(1.8, Math.max(0.8, panelBreedte / proefVp.width));
+
+  for (let nr = 1; nr <= pdf.numPages; nr++) {
+    const page     = await pdf.getPage(nr);
+    const viewport = page.getViewport({ scale: schaal });
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pdf-pagina';
+    wrap.style.width  = viewport.width  + 'px';
+    wrap.style.height = viewport.height + 'px';
+
+    const canvas  = document.createElement('canvas');
+    canvas.width  = viewport.width;
+    canvas.height = viewport.height;
+
+    const tekstlaag = document.createElement('div');
+    tekstlaag.className = 'textLayer';
+
+    wrap.appendChild(canvas);
+    wrap.appendChild(tekstlaag);
+    panel.appendChild(wrap);
+
+    // Canvas renderen
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+    // Tekst-laag renderen (voor selectie en highlight)
+    const tekstInhoud = await page.getTextContent();
+    const taak = pdfjsLib.renderTextLayer({
+      textContent: tekstInhoud,
+      container:   tekstlaag,
+      viewport,
+      textDivs:    [],
+    });
+    if (taak && taak.promise) await taak.promise;
+    else if (taak && taak.then) await taak;
+  }
+}
+
+function highlightInPdf(searchText) {
+  // Verwijder vorige highlights
+  document.querySelectorAll('.textLayer span.hl-match').forEach(el => el.classList.remove('hl-match'));
+  if (!searchText.trim()) return;
+
+  // Verzamel alle spans over alle pagina's
+  const spans    = Array.from(document.querySelectorAll('.textLayer span'));
+  const volleTekst = spans.map(s => s.textContent).join('');
+
+  const idx = volleTekst.toLowerCase().indexOf(searchText.toLowerCase());
+  if (idx === -1) return;
+
+  const einde = idx + searchText.length;
+  let pos = 0;
+  let eersteSpan = null;
+
+  for (const span of spans) {
+    const start = pos;
+    const stop  = pos + span.textContent.length;
+    if (stop > idx && start < einde) {
+      span.classList.add('hl-match');
+      if (!eersteSpan) eersteSpan = span;
+    }
+    pos = stop;
+  }
+
+  if (eersteSpan) eersteSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── DOCX weergave ─────────────────────────────────────
+async function toonDocx(panel, searchText) {
+  panel.classList.remove('tekst-modus');
+
+  // Eerste keer: omzetten naar HTML
+  if (!panel.querySelector('.docx-inhoud')) {
+    panel.innerHTML = '<p class="doc-laad">Document laden...</p>';
+    const buf    = await huidigeBestand.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer: buf });
+    const div    = document.createElement('div');
+    div.className = 'docx-inhoud';
+    div.innerHTML = result.value;
+    panel.innerHTML = '';
+    panel.appendChild(div);
+  }
+
+  highlightInDocx(searchText || '');
+}
+
+function highlightInDocx(searchText) {
+  const content = document.querySelector('.docx-inhoud');
+  if (!content) return;
+
+  // Herstel vorige highlights door <mark> te vervangen door tekst
+  content.querySelectorAll('mark.hl-match').forEach(m => {
+    m.replaceWith(document.createTextNode(m.textContent));
+  });
+  content.normalize();
+  if (!searchText.trim()) return;
+
+  // Doorloop alle tekst-nodes met TreeWalker en voeg <mark> in
+  const re     = new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+  const nodes  = [];
+  let node;
+  while ((node = walker.nextNode())) nodes.push(node);
+
+  let eersteEl = null;
+  for (const tekstNode of nodes) {
+    const tekst = tekstNode.nodeValue;
+    if (!re.test(tekst)) { re.lastIndex = 0; continue; }
+    re.lastIndex = 0;
+
+    const frag = document.createDocumentFragment();
+    let li = 0, match;
+    while ((match = re.exec(tekst)) !== null) {
+      frag.appendChild(document.createTextNode(tekst.slice(li, match.index)));
+      const mark = document.createElement('mark');
+      mark.className = 'hl-match';
+      mark.textContent = match[0];
+      frag.appendChild(mark);
+      if (!eersteEl) eersteEl = mark;
+      li = match.index + match[0].length;
+    }
+    frag.appendChild(document.createTextNode(tekst.slice(li)));
+    tekstNode.parentNode.replaceChild(frag, tekstNode);
+  }
+  if (eersteEl) eersteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Tekst-fallback (opgeslagen analyses zonder bestand) ──
+function toonTekstFallback(panel, searchText) {
+  panel.classList.add('tekst-modus');
+  const tekst = huidigRapport?._document_tekst || '';
+  if (!tekst) {
+    panel.innerHTML = '<p class="doc-leeg">Documenttekst niet beschikbaar — analyse werd opgeslagen vóór deze functie bestond.</p>';
+    return;
+  }
+  const zoek = (searchText || '').trim();
+  const re   = zoek ? new RegExp(zoek.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi') : null;
+  let html   = '', eersteMatch = true;
+
+  for (const regel of tekst.split('\n')) {
+    if (!regel.trim()) { html += '<div class="doc-br"></div>'; continue; }
+    if (!re) { html += `<p>${escH(regel)}</p>`; continue; }
+
+    let inhoud = '', li = 0, match;
+    let heeftMatch = false;
+    re.lastIndex = 0;
+    while ((match = re.exec(regel)) !== null) {
+      inhoud     += escH(regel.slice(li, match.index));
+      const id    = eersteMatch ? ' id="eerste-match"' : '';
+      inhoud     += `<mark class="hl-match"${id}>${escH(match[0])}</mark>`;
+      li          = match.index + match[0].length;
+      heeftMatch  = true;
+      eersteMatch = false;
+    }
+    inhoud += escH(regel.slice(li));
+    html   += `<p>${inhoud}</p>`;
+  }
+
+  panel.innerHTML = html;
+  if (re) {
+    const el = panel.querySelector('#eerste-match');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// ── Rapport renderen ──────────────────────────────────
+let huidigeId            = null;
+let huidigeBestandsnaam  = null;
+let huidigeClassificatie = null;
+let huidigRapport        = null;
+let actieveKaart         = null;
+
+function voegStandaardveldenToe(rapport) {
+  for (const cat of ['grammatica','juridisch','volledigheid','balans']) {
+    (rapport[cat]||[]).forEach(item => {
+      if (item.afgehandeld===undefined) item.afgehandeld = false;
+      if (item.opmerking  ===undefined) item.opmerking   = '';
+    });
+  }
+}
+
+function samenstellenBestandsnaam(cls, origineel) {
+  const a=(cls.partij_a_naam||'').trim(), b=(cls.partij_b_naam||'').trim();
+  if (!a&&!b) return origineel;
+  return `${a||'Partij 1'} - ${b||'Partij 2'}, ${origineel}`;
+}
+
+function getPassage(item, cat) {
+  return cat==='juridisch' ? (item.citaat||item.passage||'') : (item.passage||'');
+}
+
+function kaart(cat, idx, extraClass, kopHtml, metaHtml, citaatHtml) {
+  const item     = huidigRapport[cat][idx];
+  const passage  = getPassage(item, cat);
+  const klikbaar = !!passage;
+  return `
+  <div class="card ${extraClass}${klikbaar?' heeft-passage':''}" data-cat="${cat}" data-idx="${idx}">
+    <div class="item-row">
+      <input type="checkbox" ${item.afgehandeld?'checked':''}
+        onchange="huidigRapport['${cat}'][${idx}].afgehandeld=this.checked">
+      <div class="item-body">
+        <div class="card-kop">
+          <div class="label">${kopHtml}</div>
+          ${klikbaar?'<span class="scroll-pin" title="Klik om passage te markeren in document">↗ passage</span>':''}
+        </div>
+        ${metaHtml?`<div class="meta">${metaHtml}</div>`:''}
+        ${citaatHtml||''}
+        <textarea class="opmerking" placeholder="Opmerking toevoegen..."
+          oninput="huidigRapport['${cat}'][${idx}].opmerking=this.value">${item.opmerking||''}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+function lijstKaarten(cat, items, renderFn, leegTekst) {
+  if (!items||!items.length) return `<p class="empty">${leegTekst}</p>`;
+  return items.map((it,i) => renderFn(it,i)).join('');
+}
+
+async function toonRapport(cls, rp) {
+  huidigeClassificatie = cls;
+  huidigRapport        = rp;
+
+  document.getElementById('splitDoctype').textContent = cls.doc_type;
+  document.getElementById('splitTitel').textContent   = huidigeBestandsnaam;
+
+  // Analyse-panel opbouwen
+  document.getElementById('analysePanel').innerHTML = `
+    <div class="a-sectie">
+      <h2>Samenvatting</h2>
+      <div class="samenvatting">${escH(rp.samenvatting)}</div>
+    </div>
+    <div class="a-sectie">
+      <h2>Volledigheid</h2>
+      ${lijstKaarten('volledigheid',rp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.')}
+    </div>
+    <div class="a-sectie">
+      <h2>Juridische juistheid</h2>
+      ${lijstKaarten('juridisch',rp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,escH(j.onderwerp),escH(j.bevinding),j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')}
+    </div>
+    <div class="a-sectie">
+      <h2>Balans tussen partijen</h2>
+      ${lijstKaarten('balans',rp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.')}
+    </div>
+    <div class="a-sectie">
+      <h2>Grammatica &amp; taal</h2>
+      ${lijstKaarten('grammatica',rp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.')}
+    </div>`;
+
+  openSplitView();
+  await renderDocPanel(''); // document tonen (geen highlight)
+}
+
+// ── Klik op kaart → passage markeren ────────────────
+document.getElementById('analysePanel').addEventListener('click', async e => {
+  if (e.target.closest('input,textarea,button')) return;
+  const card = e.target.closest('.card.heeft-passage');
+  if (!card) return;
+  const cat     = card.dataset.cat;
+  const idx     = parseInt(card.dataset.idx, 10);
+  const passage = getPassage(huidigRapport[cat][idx], cat);
+  if (!passage) return;
+
+  if (actieveKaart) actieveKaart.classList.remove('actief');
+  card.classList.add('actief');
+  actieveKaart = card;
+
+  await renderDocPanel(passage);
 });
 
-// ---------- Upload ----------
-dropzone.addEventListener('click', () => fileInput.click());
-['dragover','dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
-['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
-dropzone.addEventListener('drop', e => { if (e.dataTransfer.files[0]) zetBestand(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', e => { if (e.target.files[0]) zetBestand(e.target.files[0]); });
+// ── Split-overlay ─────────────────────────────────────
+function openSplitView() {
+  document.getElementById('splitOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeSplitView() {
+  document.getElementById('splitOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  actieveKaart = null;
+}
+document.getElementById('backBtn').addEventListener('click', closeSplitView);
+
+// ── Opslaan ───────────────────────────────────────────
+async function opslaan() {
+  const status = document.getElementById('opslagStatus');
+  status.textContent = 'Opslaan...';
+  try {
+    let data, error;
+    if (huidigeId) {
+      ({data,error} = await db.from('screeningen')
+        .update({classificatie:huidigeClassificatie,rapport:huidigRapport,updated_at:new Date().toISOString()})
+        .eq('id',huidigeId).select('id').single());
+    } else {
+      ({data,error} = await db.from('screeningen')
+        .insert({bestandsnaam:huidigeBestandsnaam,classificatie:huidigeClassificatie,rapport:huidigRapport})
+        .select('id').single());
+    }
+    if (error) throw error;
+    huidigeId          = data.id;
+    status.textContent = 'Opgeslagen ✓';
+  } catch (err) { status.textContent = 'Opslaan mislukt: '+err.message; }
+}
+document.getElementById('opslaanBtn').addEventListener('click', opslaan);
+
+// ── Download Word ─────────────────────────────────────
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  try {
+    const rtf  = buildRtf(huidigeBestandsnaam,huidigeClassificatie,huidigRapport);
+    const blob = new Blob([rtf],{type:'application/rtf'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `screening-${(huidigeBestandsnaam||'rapport').replace(/\.[^.]+$/,'').replace(/[^a-z0-9_-]+/gi,'_')}.rtf`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) { document.getElementById('opslagStatus').textContent='Download mislukt: '+err.message; }
+});
+
+// ── Upload-scherm ─────────────────────────────────────
+const dropzone   = document.getElementById('dropzone');
+const fileInput  = document.getElementById('fileInput');
+const analyseBtn = document.getElementById('analyseBtn');
+const scanning   = document.getElementById('scanning');
+const errorBox   = document.getElementById('errorBox');
+let   gekozenBestand = null;
+
+dropzone.addEventListener('click', ()=>fileInput.click());
+['dragover','dragenter'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('drag');}));
+dropzone.addEventListener('drop', e=>{if(e.dataTransfer.files[0]) zetBestand(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change', e=>{if(e.target.files[0]) zetBestand(e.target.files[0]);});
 
 function zetBestand(file) {
   gekozenBestand = file;
-  dropText.innerHTML = `<span class="filename">${file.name}</span>`;
+  document.getElementById('dropText').innerHTML = `<span class="filename">${escH(file.name)}</span>`;
   analyseBtn.disabled = false;
 }
 
 analyseBtn.addEventListener('click', async () => {
   if (!gekozenBestand) return;
   errorBox.style.display = 'none';
-  report.classList.remove('active');
-  analyseBtn.disabled = true;
+  analyseBtn.disabled    = true;
   scanning.classList.add('active');
-  scanText.textContent = 'Tekst uit het document halen en analyseren...';
 
   try {
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(gekozenBestand);
-    });
-
-    const res = await fetch('/api/screen', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: gekozenBestand.name, content_base64: base64 }),
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Onbekende fout');
-
-    huidigeId = null;
-    huidigeBestandsnaam = samenstellenBestandsnaam(json.classificatie, gekozenBestand.name);
-    voegStandaardveldenToe(json.rapport);
-    toonRapport(json.classificatie, json.rapport);
+    const {classificatie, rapport} = await analyseDocument(gekozenBestand);
+    huidigeId           = null;
+    huidigeBestand      = gekozenBestand;  // bewaar voor rendering
+    huidigePdfDoc       = null;            // reset PDF-cache
+    huidigeBestandsnaam = samenstellenBestandsnaam(classificatie, gekozenBestand.name);
+    voegStandaardveldenToe(rapport);
+    await toonRapport(classificatie, rapport);
   } catch (err) {
-    errorBox.textContent = 'Kon het document niet analyseren: ' + err.message;
+    errorBox.textContent   = 'Kon het document niet analyseren: '+err.message;
     errorBox.style.display = 'block';
   } finally {
     scanning.classList.remove('active');
@@ -306,227 +854,62 @@ analyseBtn.addEventListener('click', async () => {
   }
 });
 
-// Elk item krijgt afgehandeld/opmerking, ook als het net van Claude komt.
-function voegStandaardveldenToe(rapport) {
-  for (const cat of ['grammatica', 'juridisch', 'volledigheid', 'balans']) {
-    (rapport[cat] || []).forEach(item => {
-      if (item.afgehandeld === undefined) item.afgehandeld = false;
-      if (item.opmerking === undefined) item.opmerking = '';
-    });
-  }
-}
+// ── Tabs ──────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-'+tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab==='opgeslagen') laadHistory();
+  });
+});
 
-// "Naam persoon 1 - Naam persoon 2, documentnaam" — valt terug op de
-// originele bestandsnaam als er geen namen gevonden zijn.
-function samenstellenBestandsnaam(classificatie, origineleNaam) {
-  const a = (classificatie.partij_a_naam || '').trim();
-  const b = (classificatie.partij_b_naam || '').trim();
-  if (!a && !b) return origineleNaam;
-  return `${a || 'Partij 1'} - ${b || 'Partij 2'}, ${origineleNaam}`;
-}
-
-function lijst(items, render, lege_tekst) {
-  if (!items || items.length === 0) return `<p class="empty">${lege_tekst}</p>`;
-  return items.map(render).join('');
-}
-
-// Bouwt één kaart met vinkje + opmerkingenveld. `categorie` + `index` zorgen
-// dat de inputs het juiste item in huidigRapport bijwerken.
-function kaart(categorie, index, extraClass, koptekstHtml, bodyHtml, citaatHtml) {
-  const item = huidigRapport[categorie][index];
-  return `
-    <div class="card ${extraClass}">
-      <div class="item-row">
-        <input type="checkbox" ${item.afgehandeld ? 'checked' : ''}
-          onchange="huidigRapport.${categorie}[${index}].afgehandeld = this.checked">
-        <div class="item-body">
-          <div class="label">${koptekstHtml}</div>
-          ${bodyHtml ? `<div class="meta">${bodyHtml}</div>` : ''}
-          ${citaatHtml || ''}
-          <textarea class="opmerking" placeholder="Opmerking toevoegen..."
-            oninput="huidigRapport.${categorie}[${index}].opmerking = this.value">${item.opmerking || ''}</textarea>
-        </div>
-      </div>
-    </div>`;
-}
-
-function toonRapport(classificatie, rapportData) {
-  huidigeClassificatie = classificatie;
-  huidigRapport = rapportData;
-
-  report.innerHTML = `
-    <div class="report-head">
-      <span class="doctype">${classificatie.doc_type}</span>
-      <p style="font-weight:500;color:var(--ink);margin-bottom:4px;">${huidigeBestandsnaam}</p>
-      <p>${classificatie.samenvatting}</p>
-    </div>
-
-    <div class="section">
-      <h2>Samenvatting</h2>
-      <div class="samenvatting">${huidigRapport.samenvatting}</div>
-    </div>
-
-    <div class="section">
-      <h2>Volledigheid</h2>
-      ${lijst(huidigRapport.volledigheid, (v, i) => kaart('volledigheid', i, 'status-' + v.status,
-          v.sectie, `${v.status} — ${v.toelichting}`), 'Geen volledigheidscontrole beschikbaar.')}
-    </div>
-
-    <div class="section">
-      <h2>Juridische juistheid</h2>
-      ${lijst(huidigRapport.juridisch, (j, i) => kaart('juridisch', i, 'sev-' + j.ernst,
-          j.onderwerp, j.bevinding, j.citaat ? `<span class="cite">${j.citaat}</span>` : ''), 'Geen juridische opmerkingen.')}
-    </div>
-
-    <div class="section">
-      <h2>Balans tussen partijen</h2>
-      ${lijst(huidigRapport.balans, (b, i) => kaart('balans', i, 'sev-' + b.ernst,
-          b.signalering, ''), 'Geen onevenwichtigheden gesignaleerd.')}
-    </div>
-
-    <div class="section">
-      <h2>Grammatica &amp; taal</h2>
-      ${lijst(huidigRapport.grammatica, (g, i) => kaart('grammatica', i, '',
-          g.locatie, `${g.probleem} → <em>${g.suggestie}</em>`), 'Geen taalkundige opmerkingen.')}
-    </div>
-
-    <div class="actiebalk">
-      <button class="secundair" id="opslaanBtn">Opslaan</button>
-      <button class="secundair" id="downloadBtn">Download als Word</button>
-      <span class="opslagstatus" id="opslagStatus"></span>
-    </div>
-  `;
-  report.classList.add('active');
-
-  document.getElementById('opslaanBtn').addEventListener('click', opslaan);
-  document.getElementById('downloadBtn').addEventListener('click', downloadWord);
-}
-
-async function opslaan() {
-  const status = document.getElementById('opslagStatus');
-  status.textContent = 'Opslaan...';
-  try {
-    const res = await fetch('/api/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: huidigeId,
-        bestandsnaam: huidigeBestandsnaam,
-        classificatie: huidigeClassificatie,
-        rapport: huidigRapport,
-      }),
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Onbekende fout');
-    huidigeId = json.id;
-    status.textContent = 'Opgeslagen ✓ (terug te vinden onder "Opgeslagen analyses")';
-  } catch (err) {
-    status.textContent = 'Opslaan mislukt: ' + err.message;
-  }
-}
-
-async function downloadWord() {
-  const status = document.getElementById('opslagStatus');
-  status.textContent = 'Word-bestand maken...';
-  try {
-    const res = await fetch('/api/export-docx', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bestandsnaam: huidigeBestandsnaam,
-        classificatie: huidigeClassificatie,
-        rapport: huidigRapport,
-      }),
-    });
-    if (!res.ok) {
-      const json = await res.json();
-      throw new Error(json.error || 'Onbekende fout');
-    }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `screening-${(huidigeBestandsnaam || 'rapport').replace(/\.[^.]+$/, '')}.rtf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    status.textContent = '';
-  } catch (err) {
-    status.textContent = 'Download mislukt: ' + err.message;
-  }
-}
-
-// ---------- Opgeslagen analyses ----------
+// ── Opgeslagen analyses ───────────────────────────────
 async function laadHistory() {
   const lijstEl = document.getElementById('historyList');
   lijstEl.innerHTML = '<p class="empty">Bezig met laden...</p>';
   try {
-    const res = await fetch('/api/screenings');
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Onbekende fout');
-    if (json.screeningen.length === 0) {
-      lijstEl.innerHTML = '<p class="empty">Nog geen opgeslagen analyses.</p>';
-      return;
-    }
-    lijstEl.innerHTML = json.screeningen.map(s => `
+    const {data,error} = await db.from('screeningen')
+      .select('id,bestandsnaam,classificatie,created_at,updated_at')
+      .order('updated_at',{ascending:false}).limit(200);
+    if (error) throw error;
+    if (!data.length) { lijstEl.innerHTML='<p class="empty">Nog geen opgeslagen analyses.</p>'; return; }
+    lijstEl.innerHTML = data.map(s=>`
       <div class="history-item" data-id="${s.id}">
         <div class="history-item-top">
-          <div class="naam">${s.bestandsnaam}</div>
+          <div class="naam">${escH(s.bestandsnaam)}</div>
           <button class="verwijderBtn" data-id="${s.id}" title="Verwijderen">✕</button>
         </div>
-        <div class="meta">${s.classificatie?.doc_type ?? ''} — ${new Date(s.updated_at).toLocaleString('nl-NL')}</div>
-        <div class="samen">${s.classificatie?.samenvatting ?? ''}</div>
+        <div class="meta">${escH(s.classificatie?.doc_type??'')} — ${new Date(s.updated_at).toLocaleString('nl-NL')}</div>
+        <div class="samen">${escH(s.classificatie?.samenvatting??'')}</div>
       </div>`).join('');
-    lijstEl.querySelectorAll('.history-item').forEach(el => {
-      el.addEventListener('click', () => laadScreening(el.dataset.id));
-    });
-    lijstEl.querySelectorAll('.verwijderBtn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        verwijderScreening(btn.dataset.id);
-      });
-    });
-  } catch (err) {
-    lijstEl.innerHTML = `<p class="empty">Kon de lijst niet laden: ${err.message}</p>`;
-  }
+    lijstEl.querySelectorAll('.history-item').forEach(el=>el.addEventListener('click',()=>laadScreening(el.dataset.id)));
+    lijstEl.querySelectorAll('.verwijderBtn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();verwijderScreening(btn.dataset.id);}));
+  } catch (err) { lijstEl.innerHTML=`<p class="empty">Kon de lijst niet laden: ${err.message}</p>`; }
 }
 
 async function verwijderScreening(id) {
   if (!confirm('Deze analyse definitief verwijderen?')) return;
   try {
-    const res = await fetch('/api/screening?id=' + id, { method: 'DELETE' });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Onbekende fout');
-    if (huidigeId === id) {
-      huidigeId = null;
-      report.classList.remove('active');
-    }
+    const {error} = await db.from('screeningen').delete().eq('id',id);
+    if (error) throw error;
+    if (huidigeId===id) { huidigeId=null; closeSplitView(); }
     laadHistory();
-  } catch (err) {
-    alert('Verwijderen mislukt: ' + err.message);
-  }
+  } catch (err) { alert('Verwijderen mislukt: '+err.message); }
 }
 
 async function laadScreening(id) {
   try {
-    const res = await fetch('/api/screening?id=' + id);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Onbekende fout');
-
-    huidigeId = data.id;
+    const {data,error} = await db.from('screeningen').select('*').eq('id',id).single();
+    if (error) throw error;
+    huidigeId           = data.id;
     huidigeBestandsnaam = data.bestandsnaam;
+    huidigeBestand      = null;   // geen File-object beschikbaar
+    huidigePdfDoc       = null;
     voegStandaardveldenToe(data.rapport);
-
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelector('.tab[data-tab="nieuw"]').classList.add('active');
-    document.getElementById('view-nieuw').classList.add('active');
-
-    toonRapport(data.classificatie, data.rapport);
-  } catch (err) {
-    alert('Kon de analyse niet laden: ' + err.message);
-  }
+    await toonRapport(data.classificatie, data.rapport);
+  } catch (err) { alert('Kon de analyse niet laden: '+err.message); }
 }
 </script>
 </body>
