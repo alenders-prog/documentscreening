@@ -257,6 +257,11 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
   background:#FCFAF7;}
 .opmerking::placeholder{color:#B6AC9C;}
 
+/* ── Instellingen modal ───────────────────────────── */
+.inst-link{font-size:.82rem;color:var(--ink-soft);text-decoration:none;cursor:pointer;
+  padding:4px 0;background:none;border:none;font-family:inherit;}
+.inst-link:hover{color:var(--coral-dark);}
+
 @media(max-width:780px){
   .split-body{grid-template-columns:1fr;grid-template-rows:45% 55%;}
   .panel-doc{border-right:none;border-bottom:1px solid var(--line);}
@@ -272,8 +277,29 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
       <h1>Documentscreening</h1>
       <p class="sub">Analyseer <strong>concept-convenanten</strong> en <strong>ouderschapsplannen</strong> op grammatica, juridische juistheid, volledigheid en balans.</p>
     </div>
-    <button class="uitloggen-btn" id="uitloggenBtn">Uitloggen</button>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+      <button class="uitloggen-btn" id="uitloggenBtn">Uitloggen</button>
+      <button class="inst-link" id="instellingenBtn">⚙ Praktijkinstellingen</button>
+    </div>
   </div>
+
+<!-- ═══ Instellingen modal ════════════════════════════ -->
+<div class="modal-overlay" id="instellingenModal">
+  <div class="modal-card">
+    <h2>Praktijkinstellingen</h2>
+    <div class="modal-veld">
+      <label for="instPraktijknaam">Naam van uw praktijk</label>
+      <input type="text" id="instPraktijknaam" placeholder="bijv. Mediation Bureau De Vries">
+    </div>
+    <p style="font-size:.82rem;color:var(--ink-soft);margin:0 0 20px">
+      Deze naam verschijnt in de header en footer van het cliëntenrapport (PDF).
+    </p>
+    <div class="modal-acties">
+      <button class="btn-ghost" id="instAnnuleerBtn">Annuleren</button>
+      <button class="secundair" id="instOpslaanBtn">Opslaan</button>
+    </div>
+  </div>
+</div>
 
   <div class="tabs">
     <button class="tab active" data-tab="dossiers">Dossiers</button>
@@ -385,7 +411,8 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
       <input type="text" class="versie-label-header" id="versieLabelHeaderInput"
         placeholder="Versielabel (optioneel)" style="display:none">
       <button class="secundair" id="opslaanBtn">Opslaan</button>
-      <button class="secundair" id="downloadBtn">Download Word</button>
+      <button class="secundair" id="downloadPdfBtn">↓ PDF-rapport</button>
+      <button class="secundair" id="downloadBtn">↓ Word</button>
       <span class="opslagstatus" id="opslagStatus"></span>
       <button class="uitloggen-btn" id="uitloggenBtn3">Uitloggen</button>
     </div>
@@ -401,6 +428,8 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js"></script>
 <script>
 'use strict';
 
@@ -414,6 +443,26 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const { data: { session } } = await db.auth.getSession();
   if (!session) { window.location.replace('login.html'); return; }
   document.body.style.display = '';
+
+  // Statusoverzicht-brug: ?naam=Familie+De+Vries&so=1 opent direct de analyse-tab
+  const params = new URLSearchParams(window.location.search);
+  const soNaam = params.get('naam');
+  if (soNaam) {
+    // Zoek of er al een dossier bestaat met deze naam
+    const { data: bestaand } = await db.from('dossiers')
+      .select('id, naam').ilike('naam', soNaam).limit(1);
+    if (bestaand && bestaand.length) {
+      // Bestaand dossier gevonden — open direct de detail-overlay
+      toonDossierDetail(bestaand[0].id);
+    } else {
+      // Nieuw dossier voorbereiden: zet naam alvast in modal en open het
+      document.getElementById('dossierNaamInput').value = soNaam;
+      document.getElementById('nieuwDossierModal').classList.add('active');
+    }
+    // Schoon de URL op (geen reload)
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
   laadDossiers();
 })();
 
@@ -1006,12 +1055,206 @@ async function opslaan() {
       document.getElementById('versieLabelHeaderInput').style.display = 'none';
     }
 
+    // Versie-info in rapport bewaren voor PDF-rapport
+    huidigRapport._versie_nr    = versieNr;
+    huidigRapport._versie_label = versieLabel;
+
     status.textContent = 'Opgeslagen ✓';
   } catch (err) {
     status.textContent = 'Opslaan mislukt: ' + err.message;
   }
 }
 document.getElementById('opslaanBtn').addEventListener('click', opslaan);
+
+// ── Praktijkinstellingen ──────────────────────────────
+function getPraktijknaam() { return localStorage.getItem('praktijknaam') || ''; }
+
+document.getElementById('instellingenBtn').addEventListener('click', () => {
+  document.getElementById('instPraktijknaam').value = getPraktijknaam();
+  document.getElementById('instellingenModal').classList.add('active');
+  setTimeout(() => document.getElementById('instPraktijknaam').focus(), 50);
+});
+document.getElementById('instAnnuleerBtn').addEventListener('click', () => {
+  document.getElementById('instellingenModal').classList.remove('active');
+});
+document.getElementById('instOpslaanBtn').addEventListener('click', () => {
+  localStorage.setItem('praktijknaam', document.getElementById('instPraktijknaam').value.trim());
+  document.getElementById('instellingenModal').classList.remove('active');
+});
+document.getElementById('instellingenModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('instellingenModal'))
+    document.getElementById('instellingenModal').classList.remove('active');
+});
+
+// ── PDF cliëntenrapport ───────────────────────────────
+function buildPdfDef(naam, cls, rp, versieNr, versieLabel) {
+  const praktijknaam = getPraktijknaam();
+  const datum  = new Date().toLocaleDateString('nl-NL', { day:'2-digit', month:'long', year:'numeric' });
+  const CORAL  = '#E8714A', INK = '#2B2825', SOFT = '#6B6358', LINE = '#E8E1D6';
+  const BG     = '#FAF6F0', SAGE = '#6B8F71', AMBER = '#D9A04B', TERRA = '#C75D4D';
+
+  const jur     = rp.juridisch    || [];
+  const vol     = rp.volledigheid || [];
+  const balans  = rp.balans       || [];
+  const gram    = rp.grammatica   || [];
+  const hoog    = jur.filter(j => j.ernst === 'hoog').length;
+  const midden  = jur.filter(j => j.ernst === 'midden').length;
+  const laag    = jur.filter(j => j.ernst === 'laag').length;
+  const aanw    = vol.filter(v => v.status === 'aanwezig').length;
+  const partijen = [cls.partij_a_naam, cls.partij_b_naam].filter(Boolean).join(' & ');
+  const versieStr = versieNr ? `V${versieNr}${versieLabel ? ' — ' + versieLabel : ''}` : '—';
+
+  function hr() {
+    return { canvas:[{ type:'line', x1:0, y1:0, x2:515, y2:0, lineWidth:.5, lineColor:LINE }], margin:[0,0,0,8] };
+  }
+  function sectieKop(t) {
+    return [{ text:t, fontSize:13, bold:true, color:INK, margin:[0,0,0,6] }, hr()];
+  }
+  function ernstKleur(e) { return e==='hoog' ? TERRA : e==='midden' ? AMBER : SAGE; }
+  function bullet(kleur) {
+    return { canvas:[{ type:'rect', x:0, y:3, w:5, h:12, r:2, color:kleur }], width:12, margin:[0,0,4,0] };
+  }
+  function suggestieRij(s) {
+    return s ? { text:`💡 ${s}`, fontSize:9, color:'#1a3a5c', italics:true, margin:[0,3,0,0] } : null;
+  }
+
+  const content = [];
+
+  // Header
+  content.push({ columns:[
+    { text: praktijknaam || 'Documentscreening', fontSize:11, bold:true, color:CORAL },
+    { text: datum, fontSize:10, color:SOFT, alignment:'right' }
+  ], margin:[0,0,0,6] });
+  content.push({ canvas:[{ type:'line', x1:0, y1:0, x2:515, y2:0, lineWidth:1, lineColor:LINE }], margin:[0,0,0,18] });
+
+  // Titel
+  content.push({ text:'Screeningsrapport', fontSize:22, bold:true, color:INK, margin:[0,0,0,4] });
+  content.push({ text:naam, fontSize:12, color:SOFT, margin:[0,0,0,20] });
+
+  // Meta-tabel
+  content.push({
+    table:{ widths:['*','*','*'], body:[[
+      [{ text:'Documenttype', fontSize:8, bold:true, color:SOFT, margin:[0,0,0,2] }, { text:cls.doc_type||'—', fontSize:11 }],
+      [{ text:'Partijen',     fontSize:8, bold:true, color:SOFT, margin:[0,0,0,2] }, { text:partijen||'—',   fontSize:11 }],
+      [{ text:'Versie',       fontSize:8, bold:true, color:SOFT, margin:[0,0,0,2] }, { text:versieStr,       fontSize:11 }],
+    ]]},
+    layout:{ hLineWidth:()=>0, vLineWidth:()=>0, fillColor:()=>BG,
+      paddingLeft:()=>12, paddingRight:()=>12, paddingTop:()=>10, paddingBottom:()=>10 },
+    margin:[0,0,0,24]
+  });
+
+  // Samenvatting
+  content.push(...sectieKop('Samenvatting'));
+  content.push({ text:rp.samenvatting||'', fontSize:10.5, color:INK, lineHeight:1.5, margin:[0,0,0,22] });
+
+  // Scores-overzicht
+  content.push(...sectieKop('Bevindingen op hoofdlijnen'));
+  const scoreRijen = [
+    ['Volledigheid',         vol.length    ? `${aanw} van ${vol.length} secties aanwezig`               : '—', aanw===vol.length ? SAGE : aanw>=vol.length*.7 ? AMBER : TERRA],
+    ['Juridische juistheid', jur.length    ? `${hoog} hoog · ${midden} midden · ${laag} laag`           : 'Geen opmerkingen', hoog?TERRA:midden?AMBER:SAGE],
+    ['Balans',               balans.length ? `${balans.length} signalering${balans.length!==1?'en':''}`  : 'Geen signaleringen', balans.some(b=>b.ernst==='hoog')?TERRA:balans.length?AMBER:SAGE],
+    ['Grammatica & taal',    gram.length   ? `${gram.length} opmerking${gram.length!==1?'en':''}`        : 'Geen opmerkingen', gram.length?AMBER:SAGE],
+  ];
+  content.push({
+    table:{ widths:[130,'*',10], body: scoreRijen.map(([lbl,val,kleur]) => [
+      { text:lbl, fontSize:10, bold:true, color:SOFT, border:[false,false,false,true], borderColor:[null,null,null,LINE], margin:[0,6,0,6] },
+      { text:val, fontSize:10, color:INK,             border:[false,false,false,true], borderColor:[null,null,null,LINE], margin:[0,6,0,6] },
+      { canvas:[{ type:'rect', x:0, y:2, w:6, h:14, r:3, color:kleur }],
+        border:[false,false,false,true], borderColor:[null,null,null,LINE], margin:[0,6,0,6] },
+    ])},
+    layout:{ paddingLeft:()=>0, paddingRight:()=>8 },
+    margin:[0,0,0,24]
+  });
+
+  // Volledigheid
+  if (vol.length) {
+    content.push(...sectieKop('Volledigheid'));
+    vol.forEach(v => {
+      const kl = v.status==='aanwezig' ? SAGE : v.status==='onvolledig' ? AMBER : TERRA;
+      content.push({ columns:[ bullet(kl), { stack:[
+        { text:v.sectie, fontSize:10.5, bold:true, color:INK },
+        { text:`${v.status} — ${v.toelichting}`, fontSize:9.5, color:SOFT, lineHeight:1.4 },
+        suggestieRij(v.suggestie),
+      ].filter(Boolean) }], margin:[0,0,0,8] });
+    });
+    content.push({ text:'', margin:[0,4,0,0] });
+  }
+
+  // Juridisch
+  if (jur.length) {
+    content.push(...sectieKop('Juridische juistheid'));
+    jur.forEach(j => {
+      content.push({ columns:[ bullet(ernstKleur(j.ernst)), { stack:[
+        { columns:[
+          { text:j.onderwerp, fontSize:10.5, bold:true, color:INK, width:'*' },
+          { text:j.ernst,     fontSize:8,    bold:true, color:ernstKleur(j.ernst), width:'auto', margin:[4,2,0,0] },
+        ]},
+        { text:j.bevinding, fontSize:9.5, color:SOFT, lineHeight:1.4 },
+        j.citaat ? { text:`"${j.citaat}"`, fontSize:9, color:CORAL, italics:true, margin:[0,2,0,0] } : null,
+        suggestieRij(j.suggestie),
+      ].filter(Boolean) }], margin:[0,0,0,10] });
+    });
+    content.push({ text:'', margin:[0,4,0,0] });
+  }
+
+  // Balans
+  if (balans.length) {
+    content.push(...sectieKop('Balans tussen partijen'));
+    balans.forEach(b => {
+      content.push({ columns:[ bullet(ernstKleur(b.ernst)), { stack:[
+        { text:b.signalering, fontSize:10.5, bold:true, color:INK },
+        b.passage  ? { text:`"${b.passage}"`,  fontSize:9, color:CORAL, italics:true, margin:[0,2,0,0] } : null,
+        suggestieRij(b.suggestie),
+      ].filter(Boolean) }], margin:[0,0,0,8] });
+    });
+    content.push({ text:'', margin:[0,4,0,0] });
+  }
+
+  // Grammatica
+  if (gram.length) {
+    content.push(...sectieKop('Grammatica & taal'));
+    gram.forEach(g => {
+      content.push({ columns:[ bullet('#B0B0B0'), { stack:[
+        { text:g.locatie, fontSize:10.5, bold:true, color:INK },
+        { text:`${g.probleem} → ${g.suggestie}`, fontSize:9.5, color:SOFT, lineHeight:1.4 },
+        g.passage ? { text:`"${g.passage}"`, fontSize:9, color:CORAL, italics:true, margin:[0,2,0,0] } : null,
+      ].filter(Boolean) }], margin:[0,0,0,8] });
+    });
+  }
+
+  // Disclaimer
+  content.push({
+    text:'Dit rapport is opgesteld ter ondersteuning van het mediationproces en vervangt niet het oordeel van de betrokken mediator of juridisch adviseur. De mediator blijft te allen tijde verantwoordelijk voor de inhoud van het definitieve document.',
+    fontSize:8.5, color:SOFT, italics:true, lineHeight:1.5, margin:[0,28,0,0]
+  });
+
+  return {
+    content,
+    pageMargins:[50,50,50,60],
+    footer:(pg,tot) => ({ columns:[
+      { text: praktijknaam || 'Documentscreening', fontSize:8, color:SOFT },
+      { text: `Screeningsdatum: ${datum}`, fontSize:8, color:SOFT, alignment:'center' },
+      { text: `${pg} / ${tot}`, fontSize:8, color:SOFT, alignment:'right' },
+    ], margin:[50,12] }),
+    defaultStyle:{ font:'Roboto', fontSize:10.5, color:INK, lineHeight:1.4 }
+  };
+}
+
+document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+  try {
+    const def  = buildPdfDef(
+      huidigeBestandsnaam,
+      huidigeClassificatie,
+      huidigRapport,
+      huidigRapport?._versie_nr,
+      huidigRapport?._versie_label
+    );
+    const naam = `rapport-${(huidigeBestandsnaam||'screening').replace(/\.[^.]+$/,'').replace(/[^a-z0-9_-]+/gi,'_')}.pdf`;
+    pdfMake.createPdf(def).download(naam);
+  } catch (err) {
+    document.getElementById('opslagStatus').textContent = 'PDF mislukt: ' + err.message;
+  }
+});
 
 // ── Download Word ─────────────────────────────────────
 document.getElementById('downloadBtn').addEventListener('click', () => {
