@@ -7,233 +7,300 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#FAF6F0; --paper:#FFFFFF; --line:#E8E1D6;
-    --ink:#2B2825; --ink-soft:#6B6358;
-    --coral:#E8714A; --coral-dark:#C75A38;
-    --sage:#6B8F71; --amber:#D9A04B; --terra:#C75D4D;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;line-height:1.55;}
+:root{
+  --bg:#FAF6F0; --paper:#FFFFFF; --line:#E8E1D6;
+  --ink:#2B2825; --ink-soft:#6B6358;
+  --coral:#E8714A; --coral-dark:#C75A38;
+  --sage:#6B8F71; --amber:#D9A04B; --terra:#C75D4D;
+  --blue:#4A90D9;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;line-height:1.55;}
 
-  /* ── Upload-scherm ──────────────────────────────────── */
-  .wrap{max-width:720px;margin:0 auto;padding:64px 24px 120px;}
-  h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:2rem;margin:0 0 8px;letter-spacing:-.01em;}
-  .sub{color:var(--ink-soft);margin:0 0 48px;font-size:1.05rem;}
-  .sub strong{color:var(--ink);font-weight:500;}
+/* ── Hoofdscherm ──────────────────────────────────── */
+.wrap{max-width:720px;margin:0 auto;padding:48px 24px 120px;}
+h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:2rem;margin:0 0 8px;letter-spacing:-.01em;}
+.sub{color:var(--ink-soft);margin:0 0 40px;font-size:1.05rem;}
+.sub strong{color:var(--ink);font-weight:500;}
 
-  .dropzone{border:1.5px dashed var(--line);border-radius:14px;background:var(--paper);padding:48px 24px;
-    text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
-  .dropzone.drag{border-color:var(--coral);background:#FFF8F4;}
-  .dropzone input{display:none;}
-  .dropicon{width:40px;height:40px;margin:0 auto 16px;border-radius:50%;background:var(--coral);
-    display:flex;align-items:center;justify-content:center;}
-  .dropicon svg{width:18px;height:18px;stroke:#fff;}
-  .dropzone p{margin:0;color:var(--ink-soft);}
-  .dropzone .filename{color:var(--ink);font-weight:500;}
+/* ── Tabs ────────────────────────────────────────── */
+.tabs{display:flex;gap:4px;margin-bottom:32px;border-bottom:1px solid var(--line);}
+.tab{padding:10px 4px;margin-right:24px;background:none;border:none;font-family:inherit;
+  font-size:.95rem;font-weight:500;color:var(--ink-soft);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tab.active{color:var(--coral-dark);border-bottom-color:var(--coral);}
+.view{display:none;} .view.active{display:block;}
 
-  button.primary{margin-top:24px;width:100%;padding:14px 20px;background:var(--coral);color:#fff;
-    border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:inherit;cursor:pointer;
-    transition:background .15s,transform .1s;}
-  button.primary:hover{background:var(--coral-dark);}
-  button.primary:active{transform:scale(.99);}
-  button.primary:disabled{background:#D8CFC2;cursor:not-allowed;}
+/* ── Dropzone ─────────────────────────────────────── */
+.dropzone{border:1.5px dashed var(--line);border-radius:14px;background:var(--paper);padding:40px 24px;
+  text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.dropzone.drag{border-color:var(--coral);background:#FFF8F4;}
+.dropzone input{display:none;}
+.dropicon{width:40px;height:40px;margin:0 auto 16px;border-radius:50%;background:var(--coral);
+  display:flex;align-items:center;justify-content:center;}
+.dropicon svg{width:18px;height:18px;stroke:#fff;}
+.dropzone p{margin:0;color:var(--ink-soft);}
+.dropzone .filename{color:var(--ink);font-weight:500;}
+.bestanden-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px;}
+.bestand-chip{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:500;
+  color:var(--coral-dark);background:#FFF1EA;border:1px solid #F0DCCB;
+  border-radius:20px;padding:3px 10px;max-width:200px;}
+.bestand-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-  .scanning{display:none;margin-top:40px;text-align:center;}
-  .scanning.active{display:block;}
-  .scan-doc{width:64px;height:80px;margin:0 auto 20px;border:1.5px solid var(--line);border-radius:6px;
-    background:var(--paper);position:relative;overflow:hidden;}
-  .scan-doc::before,.scan-doc::after{content:'';position:absolute;left:12px;right:12px;height:2px;background:var(--line);}
-  .scan-doc::before{top:18px;} .scan-doc::after{top:30px;}
-  .scan-line{position:absolute;left:0;right:0;height:2px;background:var(--coral);
-    box-shadow:0 0 8px var(--coral);animation:scan 1.6s ease-in-out infinite;}
-  @keyframes scan{0%{top:6px;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:74px;opacity:0;}}
-  .scanning p{color:var(--ink-soft);font-size:.95rem;margin:0;}
+/* ── Versie-context balk ─────────────────────────── */
+.versie-context{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;
+  padding:14px 16px;margin-bottom:20px;display:none;}
+.versie-context.zichtbaar{display:block;}
+.versie-context-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.versie-context-top .vc-naam{font-weight:600;flex:1;font-size:.95rem;}
+.vc-wis{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:5px;}
+.vc-wis:hover{color:var(--terra);background:#FCEFEC;}
+.versie-label-input{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;
+  font-family:inherit;font-size:.9rem;background:var(--bg);outline:none;}
+.versie-label-input:focus{border-color:var(--coral);}
 
-  .error-box{margin-top:24px;padding:16px 18px;border-radius:10px;
-    background:#FCEFEC;border:1px solid #F0C8BE;color:var(--terra);font-size:.95rem;}
+/* ── Knoppen ──────────────────────────────────────── */
+button.primary{margin-top:20px;width:100%;padding:14px 20px;background:var(--coral);color:#fff;
+  border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:inherit;cursor:pointer;
+  transition:background .15s;}
+button.primary:hover{background:var(--coral-dark);}
+button.primary:disabled{background:#D8CFC2;cursor:not-allowed;}
+button.secundair{padding:8px 16px;background:var(--paper);color:var(--coral-dark);
+  border:1.5px solid var(--coral);border-radius:8px;font-size:.88rem;font-weight:600;
+  font-family:inherit;cursor:pointer;transition:background .15s;white-space:nowrap;}
+button.secundair:hover{background:#FFF1EA;}
+.btn-ghost{padding:7px 14px;background:none;border:1px solid var(--line);border-radius:8px;
+  font-family:inherit;font-size:.85rem;color:var(--ink-soft);cursor:pointer;
+  transition:background .15s;white-space:nowrap;}
+.btn-ghost:hover{background:var(--bg);}
 
-  .tabs{display:flex;gap:4px;margin-bottom:40px;border-bottom:1px solid var(--line);}
-  .tab{padding:10px 4px;margin-right:24px;background:none;border:none;font-family:inherit;
-    font-size:.95rem;font-weight:500;color:var(--ink-soft);cursor:pointer;
-    border-bottom:2px solid transparent;margin-bottom:-1px;}
-  .tab.active{color:var(--coral-dark);border-bottom-color:var(--coral);}
-  .view{display:none;} .view.active{display:block;}
+/* ── Scan-animatie ────────────────────────────────── */
+.scanning{display:none;margin-top:32px;text-align:center;}
+.scanning.active{display:block;}
+.scan-doc{width:64px;height:80px;margin:0 auto 20px;border:1.5px solid var(--line);border-radius:6px;
+  background:var(--paper);position:relative;overflow:hidden;}
+.scan-doc::before,.scan-doc::after{content:'';position:absolute;left:12px;right:12px;height:2px;background:var(--line);}
+.scan-doc::before{top:18px;} .scan-doc::after{top:30px;}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:var(--coral);
+  box-shadow:0 0 8px var(--coral);animation:scan 1.6s ease-in-out infinite;}
+@keyframes scan{0%{top:6px;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:74px;opacity:0;}}
+.scanning p{color:var(--ink-soft);font-size:.95rem;margin:0;}
+.error-box{margin-top:20px;padding:16px 18px;border-radius:10px;
+  background:#FCEFEC;border:1px solid #F0C8BE;color:var(--terra);font-size:.95rem;}
 
-  .historylijst{display:flex;flex-direction:column;gap:10px;}
-  .history-item{background:var(--paper);border:1px solid var(--line);border-radius:10px;
-    padding:16px 18px;cursor:pointer;transition:border-color .15s;}
-  .history-item:hover{border-color:var(--coral);}
-  .history-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
-  .history-item .naam{font-weight:600;}
-  .history-item .meta,.history-item .samen{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
-  .verwijderBtn{flex:none;background:none;border:none;color:var(--ink-soft);font-size:1rem;
-    cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;}
-  .verwijderBtn:hover{color:var(--terra);background:#FCEFEC;}
-  .empty{color:var(--ink-soft);font-size:.9rem;font-style:italic;}
+/* ── Dossier lijst ────────────────────────────────── */
+.dossier-toolbar{display:flex;justify-content:flex-end;margin-bottom:16px;}
+.dossierlijst{display:flex;flex-direction:column;gap:10px;}
+.dossier-item{background:var(--paper);border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px;cursor:pointer;transition:border-color .15s;}
+.dossier-item:hover{border-color:var(--coral);}
+.dossier-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.dossier-naam{font-weight:600;font-size:1rem;}
+.dossier-partijen{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
+.dossier-meta{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.82rem;color:var(--ink-soft);}
+.status-tag{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;
+  text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
+.status-actief{background:#E8F5EA;color:#2E7D32;}
+.status-afgerond{background:#E3F2FD;color:#1565C0;}
+.status-gearchiveerd{background:#F5F5F5;color:#757575;}
 
-  /* ── Split-overlay ──────────────────────────────────── */
-  .split-overlay{display:none;position:fixed;inset:0;z-index:200;flex-direction:column;background:var(--bg);}
-  .split-overlay.active{display:flex;}
+/* ── Dossier detail overlay ───────────────────────── */
+.dossier-overlay{display:none;position:fixed;inset:0;z-index:150;flex-direction:column;background:var(--bg);}
+.dossier-overlay.active{display:flex;}
+.dossier-header{display:flex;align-items:center;gap:12px;padding:10px 20px;
+  background:var(--paper);border-bottom:1px solid var(--line);flex-shrink:0;}
+.dossier-meta-header{flex:1;display:flex;align-items:center;gap:10px;min-width:0;}
+.dossier-meta-header .naam{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dossier-meta-header .partijen{font-size:.82rem;color:var(--ink-soft);white-space:nowrap;}
+.dossier-status-sel{padding:5px 10px;border:1px solid var(--line);border-radius:7px;
+  font-family:inherit;font-size:.82rem;background:var(--bg);cursor:pointer;}
+.dossier-body{flex:1;overflow-y:auto;padding:28px 32px;}
+.dossier-body-inner{max-width:720px;margin:0 auto;}
 
-  .split-header{display:flex;align-items:center;gap:14px;padding:10px 20px;
-    background:var(--paper);border-bottom:1px solid var(--line);flex-shrink:0;}
-  .back-btn{padding:7px 14px;background:none;border:1px solid var(--line);border-radius:8px;
-    font-family:inherit;font-size:.88rem;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
-    transition:background .15s;}
-  .back-btn:hover{background:var(--bg);}
-  .split-meta{flex:1;display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden;}
-  .split-meta .doctype{flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:.72rem;
-    letter-spacing:.04em;text-transform:uppercase;color:var(--coral-dark);
-    background:#FFF1EA;padding:3px 9px;border-radius:5px;}
-  .split-meta .titel{font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .split-acties{display:flex;align-items:center;gap:10px;flex-shrink:0;}
-  button.secundair{padding:8px 16px;background:var(--paper);color:var(--coral-dark);
-    border:1.5px solid var(--coral);border-radius:8px;font-size:.88rem;font-weight:600;
-    font-family:inherit;cursor:pointer;transition:background .15s;white-space:nowrap;}
-  button.secundair:hover{background:#FFF1EA;}
-  .opslagstatus{color:var(--ink-soft);font-size:.82rem;}
+/* ── Versie cards ─────────────────────────────────── */
+.versie-badge{font-family:'IBM Plex Mono',monospace;font-size:.7rem;font-weight:600;
+  padding:3px 9px;background:#FFF1EA;color:var(--coral-dark);border-radius:5px;flex-shrink:0;}
+.versie-card{background:var(--paper);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;
+  transition:border-color .15s;}
+.versie-card:hover{border-color:var(--coral);}
+.versie-info{flex:1;min-width:0;}
+.versie-label-tekst{font-weight:600;font-size:.93rem;}
+.versie-submeta{color:var(--ink-soft);font-size:.82rem;margin-top:3px;}
+.versie-scores{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;}
+.score-chip{font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:4px;}
+.score-hoog{background:#FCEFEC;color:var(--terra);}
+.score-midden{background:#FFF8E1;color:#B45309;}
+.score-ok{background:#E8F5EA;color:#2E7D32;}
+.score-grijs{background:#F0F0F0;color:#666;}
 
-  .split-body{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+/* ── Nieuw dossier modal ──────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.4);
+  align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal-card{background:var(--paper);border-radius:16px;padding:32px;width:100%;max-width:440px;margin:16px;}
+.modal-card h2{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.3rem;margin:0 0 24px;}
+.modal-veld{margin-bottom:14px;}
+.modal-veld label{display:block;font-size:.85rem;font-weight:600;color:var(--ink-soft);margin-bottom:5px;}
+.modal-veld input,.modal-veld select{width:100%;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:8px;font-family:inherit;font-size:.95rem;background:var(--bg);outline:none;}
+.modal-veld input:focus,.modal-veld select:focus{border-color:var(--coral);}
+.modal-acties{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
 
-  /* ── Document-panel ─────────────────────────────────── */
-  .panel-doc{overflow:auto;background:#888;padding:20px;display:flex;flex-direction:column;align-items:center;}
-  .panel-doc.tekst-modus{background:var(--paper);padding:32px;display:block;align-items:unset;
-    font-size:.93rem;line-height:1.75;}
-  .panel-doc.tekst-modus p{margin:0 0 4px;}
-  .panel-doc.tekst-modus .doc-br{height:10px;}
-  .panel-doc.tekst-modus .doc-leeg{color:var(--ink-soft);font-style:italic;}
+/* ── Losse analyses (history) ─────────────────────── */
+.historylijst{display:flex;flex-direction:column;gap:10px;}
+.history-item{background:var(--paper);border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px;cursor:pointer;transition:border-color .15s;}
+.history-item:hover{border-color:var(--coral);}
+.history-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.history-item .naam{font-weight:600;}
+.history-item .meta,.history-item .samen{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
+.verwijderBtn{flex:none;background:none;border:none;color:var(--ink-soft);font-size:1rem;
+  cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;}
+.verwijderBtn:hover{color:var(--terra);background:#FCEFEC;}
+.empty{color:var(--ink-soft);font-size:.9rem;font-style:italic;}
 
-  /* PDF-pagina's */
-  .pdf-pagina{position:relative;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.3);flex-shrink:0;}
-  .pdf-pagina canvas{display:block;}
+/* ── App-header ───────────────────────────────────── */
+.app-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:0;}
+.app-top > div{flex:1;}
+.uitloggen-btn{flex-shrink:0;margin-top:6px;padding:7px 14px;background:none;
+  border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:.85rem;
+  color:var(--ink-soft);cursor:pointer;transition:background .15s,color .15s;}
+.uitloggen-btn:hover{background:#FCEFEC;color:var(--terra);border-color:var(--terra);}
 
-  /* PDF tekst-laag — transparante spans voor selectie & highlight */
-  .textLayer{position:absolute;inset:0;overflow:hidden;line-height:1;user-select:text;}
-  .textLayer span{
-    color:transparent;position:absolute;white-space:pre;
-    cursor:text;transform-origin:0% 0%;
-  }
-  .textLayer span.hl-match{
-    background:rgba(255,213,0,.55);
-    border-radius:2px;
-    scroll-margin-top:40vh;
-  }
+/* ── Split-overlay (analyse) ──────────────────────── */
+.split-overlay{display:none;position:fixed;inset:0;z-index:200;flex-direction:column;background:var(--bg);}
+.split-overlay.active{display:flex;}
+.split-header{display:flex;align-items:center;gap:12px;padding:10px 20px;
+  background:var(--paper);border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap;}
+.back-btn{padding:7px 14px;background:none;border:1px solid var(--line);border-radius:8px;
+  font-family:inherit;font-size:.88rem;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
+  transition:background .15s;}
+.back-btn:hover{background:var(--bg);}
+.split-meta{flex:1;display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden;}
+.split-meta .doctype{flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:.72rem;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--coral-dark);
+  background:#FFF1EA;padding:3px 9px;border-radius:5px;}
+.split-meta .titel{font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.split-acties{display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;}
+.versie-label-header{padding:7px 10px;border:1px solid var(--line);border-radius:7px;
+  font-family:inherit;font-size:.83rem;background:var(--bg);outline:none;min-width:180px;}
+.versie-label-header:focus{border-color:var(--coral);}
+.opslagstatus{color:var(--ink-soft);font-size:.82rem;}
+.split-body{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
 
-  /* DOCX HTML */
-  .docx-inhoud{background:var(--paper);padding:40px 48px;width:100%;max-width:800px;
-    box-shadow:0 2px 10px rgba(0,0,0,.3);font-size:.93rem;line-height:1.75;}
-  .docx-inhoud h1,.docx-inhoud h2,.docx-inhoud h3{font-family:'Source Serif 4',serif;font-weight:600;}
-  .docx-inhoud p{margin:0 0 6px;}
-  .docx-inhoud table{border-collapse:collapse;width:100%;margin-bottom:12px;}
-  .docx-inhoud td,.docx-inhoud th{border:1px solid var(--line);padding:6px 8px;}
-  mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
+/* ── Document-panel ───────────────────────────────── */
+.panel-doc{overflow:auto;background:#888;padding:20px;display:flex;flex-direction:column;align-items:center;}
+.panel-doc.tekst-modus{background:var(--paper);padding:32px;display:block;align-items:unset;
+  font-size:.93rem;line-height:1.75;}
+.panel-doc.tekst-modus p{margin:0 0 4px;}
+.panel-doc.tekst-modus .doc-br{height:10px;}
+.panel-doc.tekst-modus .doc-leeg{color:var(--ink-soft);font-style:italic;}
+.pdf-pagina{position:relative;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.3);flex-shrink:0;}
+.pdf-pagina canvas{display:block;}
+.textLayer{position:absolute;inset:0;overflow:hidden;line-height:1;user-select:text;}
+.textLayer span{color:transparent;position:absolute;white-space:pre;cursor:text;transform-origin:0% 0%;}
+.textLayer span.hl-match{background:rgba(255,213,0,.55);border-radius:2px;scroll-margin-top:40vh;}
+.docx-inhoud{background:var(--paper);padding:40px 48px;width:100%;max-width:800px;
+  box-shadow:0 2px 10px rgba(0,0,0,.3);font-size:.93rem;line-height:1.75;}
+.docx-inhoud h1,.docx-inhoud h2,.docx-inhoud h3{font-family:'Source Serif 4',serif;font-weight:600;}
+.docx-inhoud p{margin:0 0 6px;}
+.docx-inhoud table{border-collapse:collapse;width:100%;margin-bottom:12px;}
+.docx-inhoud td,.docx-inhoud th{border:1px solid var(--line);padding:6px 8px;}
+mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
+.doc-laad{color:#ddd;font-size:.9rem;font-style:italic;text-align:center;padding-top:60px;width:100%;}
+.doc-scheiding{width:100%;max-width:800px;margin:16px 0 8px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.doc-scheiding span{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.04em;
+  text-transform:uppercase;color:#ccc;background:rgba(0,0,0,.3);
+  padding:3px 10px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;}
+.doc-scheiding::before,.doc-scheiding::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.15);}
 
-  /* Laad-indicator in doc-panel */
-  .doc-laad{color:#ddd;font-size:.9rem;font-style:italic;text-align:center;padding-top:60px;width:100%;}
+/* ── Analyse-panel ────────────────────────────────── */
+.panel-analyse{overflow-y:auto;padding:28px 32px;background:var(--bg);}
+.a-sectie{margin-bottom:28px;}
+.a-sectie h2{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.2rem;
+  margin:0;padding:10px 0 10px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+.a-sectie h2:hover{color:var(--coral-dark);}
+.a-chevron{font-style:normal;font-size:.85rem;color:var(--ink-soft);
+  transition:transform .2s;display:inline-block;margin-left:8px;flex-shrink:0;}
+.a-sectie.dicht .a-chevron{transform:rotate(-90deg);}
+.a-inhoud{padding-top:14px;}
+.a-sectie.dicht .a-inhoud{display:none;}
+.samenvatting{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;padding:16px 18px;font-size:.97rem;}
+.card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
+  border-radius:8px;padding:14px 16px;margin-bottom:9px;transition:border-color .15s,box-shadow .15s;}
+.card.sev-laag,.card.status-aanwezig{border-left-color:var(--sage);}
+.card.sev-midden,.card.status-onvolledig{border-left-color:var(--amber);}
+.card.sev-hoog,.card.status-ontbreekt{border-left-color:var(--terra);}
+.card.heeft-passage{cursor:pointer;}
+.card.heeft-passage:hover{border-color:var(--coral);box-shadow:0 1px 6px rgba(232,113,74,.15);}
+.card.actief{border-color:var(--coral)!important;box-shadow:0 0 0 2px rgba(232,113,74,.25);}
+.item-row{display:flex;align-items:flex-start;gap:10px;}
+.item-row input[type=checkbox]{margin-top:3px;width:17px;height:17px;accent-color:var(--sage);cursor:pointer;flex:none;}
+.item-body{flex:1;min-width:0;}
+.card-kop{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+.card-kop .label{font-weight:600;font-size:.93rem;}
+.scroll-pin{flex:none;font-size:.75rem;color:var(--coral-dark);opacity:.5;
+  margin-top:2px;transition:opacity .15s;user-select:none;white-space:nowrap;}
+.card.heeft-passage:hover .scroll-pin,.card.actief .scroll-pin{opacity:1;}
+.card .meta{color:var(--ink-soft);font-size:.83rem;margin-top:2px;}
+.card .cite{display:inline-block;margin-top:7px;font-family:'IBM Plex Mono',monospace;
+  font-size:.78rem;color:var(--coral-dark);background:#FFF1EA;padding:2px 8px;border-radius:4px;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.suggestie-wrap{margin-top:9px;padding:9px 11px;background:#F0F7FF;
+  border-left:3px solid var(--blue);border-radius:0 6px 6px 0;font-size:.83rem;color:#1a3a5c;}
+.suggestie-label{font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--blue);margin-bottom:3px;}
+.opmerking{margin-top:8px;width:100%;font-family:inherit;font-size:.83rem;color:var(--ink);
+  border:1px solid var(--line);border-radius:6px;padding:7px 10px;resize:vertical;min-height:32px;
+  background:#FCFAF7;}
+.opmerking::placeholder{color:#B6AC9C;}
 
-  /* Scheiding tussen meerdere documenten in het paneel */
-  .doc-scheiding{
-    width:100%;max-width:800px;margin:16px 0 8px;
-    display:flex;align-items:center;gap:10px;flex-shrink:0;
-  }
-  .doc-scheiding span{
-    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.04em;
-    text-transform:uppercase;color:#ccc;background:rgba(0,0,0,.3);
-    padding:3px 10px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;
-  }
-  .doc-scheiding::before,.doc-scheiding::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.15);}
-
-  /* Bestand-chip in dropzone bij meerdere bestanden */
-  .bestanden-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px;}
-  .bestand-chip{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:500;
-    color:var(--coral-dark);background:#FFF1EA;border:1px solid #F0DCCB;
-    border-radius:20px;padding:3px 10px;max-width:180px;overflow:hidden;}
-  .bestand-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-  /* ── Analyse-panel ──────────────────────────────────── */
-  .panel-analyse{overflow-y:auto;padding:28px 32px;background:var(--bg);}
-  .a-sectie{margin-bottom:28px;}
-  .a-sectie h2{
-    font-family:'Source Serif 4',serif;font-weight:600;font-size:1.2rem;
-    margin:0;padding:10px 0 10px;border-bottom:1px solid var(--line);
-    display:flex;align-items:center;justify-content:space-between;
-    cursor:pointer;user-select:none;
-  }
-  .a-sectie h2:hover{color:var(--coral-dark);}
-  .a-chevron{
-    font-style:normal;font-size:.85rem;color:var(--ink-soft);
-    transition:transform .2s;display:inline-block;margin-left:8px;flex-shrink:0;
-  }
-  .a-sectie.dicht .a-chevron{transform:rotate(-90deg);}
-  .a-inhoud{padding-top:14px;}
-  .a-sectie.dicht .a-inhoud{display:none;}
-  .samenvatting{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;
-    padding:16px 18px;font-size:.97rem;}
-
-  .card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
-    border-radius:8px;padding:14px 16px;margin-bottom:9px;transition:border-color .15s,box-shadow .15s;}
-  .card.sev-laag,.card.status-aanwezig{border-left-color:var(--sage);}
-  .card.sev-midden,.card.status-onvolledig{border-left-color:var(--amber);}
-  .card.sev-hoog,.card.status-ontbreekt{border-left-color:var(--terra);}
-  .card.heeft-passage{cursor:pointer;}
-  .card.heeft-passage:hover{border-color:var(--coral);box-shadow:0 1px 6px rgba(232,113,74,.15);}
-  .card.actief{border-color:var(--coral)!important;box-shadow:0 0 0 2px rgba(232,113,74,.25);}
-
-  .item-row{display:flex;align-items:flex-start;gap:10px;}
-  .item-row input[type=checkbox]{margin-top:3px;width:17px;height:17px;accent-color:var(--sage);cursor:pointer;flex:none;}
-  .item-body{flex:1;min-width:0;}
-  .card-kop{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
-  .card-kop .label{font-weight:600;font-size:.93rem;}
-  .scroll-pin{flex:none;font-size:.75rem;color:var(--coral-dark);opacity:.5;
-    margin-top:2px;transition:opacity .15s;user-select:none;white-space:nowrap;}
-  .card.heeft-passage:hover .scroll-pin,.card.actief .scroll-pin{opacity:1;}
-  .card .meta{color:var(--ink-soft);font-size:.83rem;margin-top:2px;}
-  .card .cite{display:inline-block;margin-top:7px;font-family:'IBM Plex Mono',monospace;
-    font-size:.78rem;color:var(--coral-dark);background:#FFF1EA;padding:2px 8px;border-radius:4px;
-    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .opmerking{margin-top:8px;width:100%;font-family:inherit;font-size:.83rem;color:var(--ink);
-    border:1px solid var(--line);border-radius:6px;padding:7px 10px;resize:vertical;min-height:32px;
-    background:#FCFAF7;}
-  .opmerking::placeholder{color:#B6AC9C;}
-
-  /* ── App-header (titel + uitloggen) ────────────────── */
-  .app-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:0;}
-  .app-top > div{flex:1;}
-  .uitloggen-btn{
-    flex-shrink:0;margin-top:6px;
-    padding:7px 14px;background:none;border:1px solid var(--line);border-radius:8px;
-    font-family:inherit;font-size:.85rem;color:var(--ink-soft);cursor:pointer;
-    transition:background .15s,color .15s;white-space:nowrap;
-  }
-  .uitloggen-btn:hover{background:#FCEFEC;color:var(--terra);border-color:var(--terra);}
-
-  @media(max-width:780px){
-    .split-body{grid-template-columns:1fr;grid-template-rows:45% 55%;}
-    .panel-doc{border-right:none;border-bottom:1px solid var(--line);}
-    .split-header{flex-wrap:wrap;gap:8px;}
-    .split-acties{width:100%;}
-  }
+@media(max-width:780px){
+  .split-body{grid-template-columns:1fr;grid-template-rows:45% 55%;}
+  .panel-doc{border-right:none;border-bottom:1px solid var(--line);}
+}
 </style>
 </head>
 <body style="display:none">
 
-<!-- ═══ Upload-scherm ════════════════════════════════════ -->
+<!-- ═══ Hoofdscherm ══════════════════════════════════ -->
 <div class="wrap" id="mainView">
   <div class="app-top">
     <div>
       <h1>Documentscreening</h1>
-      <p class="sub">Upload een <strong>concept-convenant</strong> of <strong>ouderschapsplan</strong> (.docx of .pdf). Je krijgt een check op grammatica, juridische juistheid, volledigheid en balans.</p>
+      <p class="sub">Analyseer <strong>concept-convenanten</strong> en <strong>ouderschapsplannen</strong> op grammatica, juridische juistheid, volledigheid en balans.</p>
     </div>
     <button class="uitloggen-btn" id="uitloggenBtn">Uitloggen</button>
   </div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="nieuw">Nieuwe analyse</button>
-    <button class="tab" data-tab="opgeslagen">Opgeslagen analyses</button>
+    <button class="tab active" data-tab="dossiers">Dossiers</button>
+    <button class="tab" data-tab="analyse">Nieuwe analyse</button>
+    <button class="tab" data-tab="losse">Losse analyses</button>
   </div>
 
-  <div class="view active" id="view-nieuw">
+  <!-- Tab: Dossiers -->
+  <div class="view active" id="view-dossiers">
+    <div class="dossier-toolbar">
+      <button class="secundair" id="nieuwDossierBtn">+ Nieuw dossier</button>
+    </div>
+    <div id="dossierLijst" class="dossierlijst"><p class="empty">Bezig met laden...</p></div>
+  </div>
+
+  <!-- Tab: Nieuwe analyse -->
+  <div class="view" id="view-analyse">
+    <!-- Versie-context balk (zichtbaar als er een dossier-context is) -->
+    <div class="versie-context" id="versieContextBalk">
+      <div class="versie-context-top">
+        <span class="vc-naam">Nieuwe versie voor: <strong id="versieContextNaam"></strong></span>
+        <button class="vc-wis" id="vcWisBtn" title="Loskoppelen van dossier">×</button>
+      </div>
+      <input type="text" class="versie-label-input" id="versieLabelInput"
+        placeholder="Versielabel (optioneel) — bijv. 'Na overleg 15 juni'">
+    </div>
+
     <div class="dropzone" id="dropzone">
       <input type="file" id="fileInput" accept=".docx,.pdf" multiple>
       <div class="dropicon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></div>
@@ -242,17 +309,71 @@
     <button class="primary" id="analyseBtn" disabled>Analyseer document</button>
     <div class="scanning" id="scanning">
       <div class="scan-doc"><div class="scan-line"></div></div>
-      <p id="scanText">Tekst uit het document halen en analyseren...</p>
+      <p id="scanText">Document analyseren...</p>
     </div>
     <div class="error-box" id="errorBox" style="display:none;"></div>
   </div>
 
-  <div class="view" id="view-opgeslagen">
+  <!-- Tab: Losse analyses -->
+  <div class="view" id="view-losse">
     <div id="historyList" class="historylijst"><p class="empty">Bezig met laden...</p></div>
   </div>
 </div>
 
-<!-- ═══ Split-overlay (rapport + document) ══════════════ -->
+<!-- ═══ Dossier detail overlay ═══════════════════════ -->
+<div class="dossier-overlay" id="dossierOverlay">
+  <div class="dossier-header">
+    <button class="back-btn" id="dossierBackBtn">← Dossiers</button>
+    <div class="dossier-meta-header">
+      <span class="naam" id="dossierNaamTitel"></span>
+      <span class="partijen" id="dossierPartijen"></span>
+    </div>
+    <select class="dossier-status-sel" id="dossierStatusSel">
+      <option value="actief">Actief</option>
+      <option value="afgerond">Afgerond</option>
+      <option value="gearchiveerd">Gearchiveerd</option>
+    </select>
+    <button class="secundair" id="nieuweVersieBtn">+ Nieuwe versie</button>
+    <button class="uitloggen-btn" id="uitloggenBtn2">Uitloggen</button>
+  </div>
+  <div class="dossier-body">
+    <div class="dossier-body-inner" id="dossierContent"></div>
+  </div>
+</div>
+
+<!-- ═══ Nieuw dossier modal ══════════════════════════ -->
+<div class="modal-overlay" id="nieuwDossierModal">
+  <div class="modal-card">
+    <h2>Nieuw dossier</h2>
+    <div class="modal-veld">
+      <label for="dossierNaamInput">Naam <span style="color:var(--terra)">*</span></label>
+      <input type="text" id="dossierNaamInput" placeholder="bijv. Familie De Vries">
+    </div>
+    <div class="modal-veld">
+      <label for="dossierPartijAInput">Partij A</label>
+      <input type="text" id="dossierPartijAInput" placeholder="Voornaam of naam">
+    </div>
+    <div class="modal-veld">
+      <label for="dossierPartijBInput">Partij B</label>
+      <input type="text" id="dossierPartijBInput" placeholder="Voornaam of naam">
+    </div>
+    <div class="modal-veld">
+      <label for="dossierTypeInput">Documenttype</label>
+      <select id="dossierTypeInput">
+        <option value="">Nog onbekend</option>
+        <option value="convenant">Convenant</option>
+        <option value="ouderschapsplan">Ouderschapsplan</option>
+        <option value="beide">Beide</option>
+      </select>
+    </div>
+    <div class="modal-acties">
+      <button class="btn-ghost" id="modalAnnuleerBtn">Annuleren</button>
+      <button class="secundair" id="modalAanmakenBtn">Aanmaken</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Split-overlay (rapport + document) ══════════ -->
 <div class="split-overlay" id="splitOverlay">
   <div class="split-header">
     <button class="back-btn" id="backBtn">← Terug</button>
@@ -261,10 +382,12 @@
       <span class="titel"   id="splitTitel"></span>
     </div>
     <div class="split-acties">
+      <input type="text" class="versie-label-header" id="versieLabelHeaderInput"
+        placeholder="Versielabel (optioneel)" style="display:none">
       <button class="secundair" id="opslaanBtn">Opslaan</button>
       <button class="secundair" id="downloadBtn">Download Word</button>
       <span class="opslagstatus" id="opslagStatus"></span>
-      <button class="uitloggen-btn" id="uitloggenBtn2">Uitloggen</button>
+      <button class="uitloggen-btn" id="uitloggenBtn3">Uitloggen</button>
     </div>
   </div>
   <div class="split-body">
@@ -274,8 +397,6 @@
 </div>
 
 <script src="config.js"></script>
-<!-- config.local.js bestaat alleen lokaal (staat in .gitignore) en bevat ANTHROPIC_API_KEY.
-     Op Vercel geeft dit een 404 — dat is prima, dan gebruikt askClaudeForJson de /api/claude proxy. -->
 <script src="config.local.js" onerror="void 0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
@@ -289,14 +410,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── Authenticatie ─────────────────────────────────────
-// Controleer sessie vóór initialisatie; stuur door naar login als niet ingelogd.
 (async () => {
   const { data: { session } } = await db.auth.getSession();
-  if (!session) {
-    window.location.replace('login.html');
-    return;
-  }
-  document.body.style.display = ''; // toon pagina pas ná succesvolle sessie-check
+  if (!session) { window.location.replace('login.html'); return; }
+  document.body.style.display = '';
+  laadDossiers();
 })();
 
 async function uitloggen() {
@@ -305,6 +423,7 @@ async function uitloggen() {
 }
 document.getElementById('uitloggenBtn').addEventListener('click', uitloggen);
 document.getElementById('uitloggenBtn2').addEventListener('click', uitloggen);
+document.getElementById('uitloggenBtn3').addEventListener('click', uitloggen);
 
 // ── Tool-schema's ─────────────────────────────────────
 const classificatieTool = {
@@ -335,10 +454,10 @@ const rapportTool = {
         items: {
           type: 'object',
           properties: {
-            locatie:  { type: 'string' },
-            probleem: { type: 'string' },
-            suggestie:{ type: 'string' },
-            passage:  { type: 'string', description: 'Letterlijke tekst (max 80 tekens) uit het document die de fout bevat.' },
+            locatie:   { type: 'string' },
+            probleem:  { type: 'string' },
+            suggestie: { type: 'string', description: 'Concrete alternatieve formulering die de mediator direct kan overnemen.' },
+            passage:   { type: 'string', description: 'Letterlijke tekst (max 80 tekens) uit het document.' },
           },
           required: ['locatie','probleem','suggestie'],
         },
@@ -348,10 +467,11 @@ const rapportTool = {
         items: {
           type: 'object',
           properties: {
-            onderwerp: { type: 'string' },
-            bevinding: { type: 'string' },
-            citaat:    { type: 'string', description: 'Directe quote (max 80 tekens) uit het document.' },
-            ernst:     { type: 'string', enum: ['laag','midden','hoog'] },
+            onderwerp:  { type: 'string' },
+            bevinding:  { type: 'string' },
+            suggestie:  { type: 'string', description: 'Exacte tekst of formulering die het juridische probleem oplost.' },
+            citaat:     { type: 'string', description: 'Quote (max 80 tekens) uit het document.' },
+            ernst:      { type: 'string', enum: ['laag','midden','hoog'] },
           },
           required: ['onderwerp','bevinding','ernst'],
         },
@@ -361,10 +481,11 @@ const rapportTool = {
         items: {
           type: 'object',
           properties: {
-            sectie:     { type: 'string' },
-            status:     { type: 'string', enum: ['aanwezig','onvolledig','ontbreekt'] },
-            toelichting:{ type: 'string' },
-            passage:    { type: 'string', description: 'Beginregel of koptekst van de sectie zoals in het document; leeg als ontbreekt.' },
+            sectie:      { type: 'string' },
+            status:      { type: 'string', enum: ['aanwezig','onvolledig','ontbreekt'] },
+            toelichting: { type: 'string' },
+            suggestie:   { type: 'string', description: 'Bij onvolledig of ontbreekt: concrete tekst die kan worden toegevoegd.' },
+            passage:     { type: 'string', description: 'Beginregel of koptekst zoals in het document; leeg als ontbreekt.' },
           },
           required: ['sectie','status','toelichting'],
         },
@@ -376,6 +497,7 @@ const rapportTool = {
           properties: {
             signalering: { type: 'string' },
             ernst:       { type: 'string', enum: ['laag','midden','hoog'] },
+            suggestie:   { type: 'string', description: 'Alternatieve formulering die de balans herstelt.' },
             passage:     { type: 'string', description: 'Quote (max 80 tekens) waaruit de onevenwichtigheid blijkt.' },
           },
           required: ['signalering','ernst'],
@@ -386,15 +508,15 @@ const rapportTool = {
   },
 };
 
-// ── Tekst extraheren voor analyse ─────────────────────
+// ── Tekst extraheren ──────────────────────────────────
 async function extractText(file) {
-  const arrayBuffer = await file.arrayBuffer();
+  const ab = await file.arrayBuffer();
   if (file.name.toLowerCase().endsWith('.docx')) {
-    const result = await mammoth.extractRawText({ arrayBuffer });
+    const result = await mammoth.extractRawText({ arrayBuffer: ab });
     return result.value;
   }
   if (file.name.toLowerCase().endsWith('.pdf')) {
-    const pdf  = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    const pdf  = await pdfjsLib.getDocument({ data: new Uint8Array(ab) }).promise;
     let text   = '';
     for (let i = 1; i <= pdf.numPages; i++) {
       const page    = await pdf.getPage(i);
@@ -406,9 +528,17 @@ async function extractText(file) {
   throw new Error('Alleen .docx en .pdf worden ondersteund.');
 }
 
+async function extractAllText(bestanden) {
+  const delen = [];
+  for (const bestand of bestanden) {
+    const tekst = await extractText(bestand);
+    if (bestanden.length > 1) delen.push(`=== ${bestand.name} ===\n${tekst}`);
+    else delen.push(tekst);
+  }
+  return delen.join('\n\n');
+}
+
 // ── Claude API ────────────────────────────────────────
-// Lokaal: ANTHROPIC_API_KEY is geladen via config.local.js → directe browseraanroep.
-// Op Vercel: config.local.js bestaat niet → proxy via /api/claude (key blijft server-side).
 async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096) {
   const body = {
     model: 'claude-sonnet-4-6',
@@ -418,10 +548,8 @@ async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096
     tools: [tool],
     tool_choice: { type: 'tool', name: tool.name },
   };
-
   let res;
   if (typeof ANTHROPIC_API_KEY !== 'undefined') {
-    // Lokale ontwikkeling: direct naar Anthropic
     res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -433,14 +561,12 @@ async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096
       body: JSON.stringify(body),
     });
   } else {
-    // Productie (Vercel): via server-side proxy
     res = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
   }
-
   if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
   const json    = await res.json();
   const toolUse = json.content.find(b => b.type === 'tool_use');
@@ -449,20 +575,6 @@ async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096
 }
 
 // ── Document analyseren ───────────────────────────────
-// Tekst uit meerdere bestanden samenvoegen (elk bestand afgebakend met de bestandsnaam)
-async function extractAllText(bestanden) {
-  const delen = [];
-  for (const bestand of bestanden) {
-    const tekst = await extractText(bestand);
-    if (bestanden.length > 1) {
-      delen.push(`=== ${bestand.name} ===\n${tekst}`);
-    } else {
-      delen.push(tekst);
-    }
-  }
-  return delen.join('\n\n');
-}
-
 async function analyseDocument(bestanden) {
   const documentTekst = await extractAllText(bestanden);
   if (documentTekst.trim().length < 200)
@@ -492,23 +604,24 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
     .overlaps('topic_tags', classificatie.situatie_kenmerken)
     .limit(20);
 
-  const checklistTekst = checklist.map(c => `- ${c.section_name}: ${c.instructions ?? '(vaste tekst)'}`).join('\n');
+  const checklistTekst = checklist.map(c => `- ${c.section_name}: ${c.instructions ?? ''}`).join('\n');
   const wetTekst       = (wetteksten ?? []).map(w => `[${w.citation}] ${w.content}`).join('\n\n');
 
   const rapport = await askClaudeForJson(
     `Je bent een ervaren familiemediator die een opgesteld echtscheidingsdocument controleert.
 Wees specifiek en beknopt. Doorloop bij "volledigheid" de volledige checklist, ook aanwezige punten.
 Verzin geen wetsartikelen die niet in de context staan; laat "citaat" dan leeg.
-Vul bij elk punt het veld "passage" met een letterlijke quote (max 80 tekens) uit het document.`,
+Vul bij elk punt het veld "passage" met een letterlijke quote (max 80 tekens) uit het document.
+Geef bij elk bevindingspunt in "suggestie" een concrete tekst die de mediator direct in het document kan overnemen — geef de exacte formulering, niet een beschrijving.`,
     `DOCUMENTTEKST:\n${documentTekst}\n\nVERWACHTE SECTIES:\n${checklistTekst}\n\nWETSARTIKELEN:\n${wetTekst || '(geen)'}`,
     rapportTool, 8192
   );
 
-  rapport._document_tekst = documentTekst; // tekst bewaren als fallback
+  rapport._document_tekst = documentTekst;
   return { classificatie, rapport };
 }
 
-// ── RTF-export (client-side) ──────────────────────────
+// ── RTF-export ────────────────────────────────────────
 function rtfEscape(t) {
   return String(t ?? '').split('').map(ch => {
     const c = ch.codePointAt(0);
@@ -545,40 +658,29 @@ function buildRtf(naam,cls,rp) {
 }
 
 // ── Document-panel rendering ──────────────────────────
-let huidigeBestandenLijst = []; // Array van File-objecten (meerdere documenten mogelijk)
-let huidigePdfDocCache    = {}; // bestandsnaam → gecachede PDF.js instantie
-let docPanelGereed        = false; // voorkomt dubbel renderen
+let huidigeBestandenLijst = [];
+let huidigePdfDocCache    = {};
+let docPanelGereed        = false;
 
 function escH(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// Wordt aangeroepen bij openen overlay (geen search) én bij klikken op kaart (met search).
 async function renderDocPanel(searchText) {
   const panel = document.getElementById('documentPanel');
+  if (!huidigeBestandenLijst.length) { toonTekstFallback(panel, searchText); return; }
 
-  if (!huidigeBestandenLijst.length) {
-    toonTekstFallback(panel, searchText);
-    return;
-  }
-
-  // Eerste keer: alle bestanden in het paneel renderen
   if (!docPanelGereed) {
     panel.classList.remove('tekst-modus');
-    panel.innerHTML = '<p class="doc-laad">Document laden...</p>';
     panel.innerHTML = '';
-
     for (let i = 0; i < huidigeBestandenLijst.length; i++) {
       const bestand = huidigeBestandenLijst[i];
-
-      // Scheiding met bestandsnaam (behalve vóór het eerste bestand)
       if (i > 0) {
-        const scheiding = document.createElement('div');
-        scheiding.className = 'doc-scheiding';
-        scheiding.innerHTML = `<span>${escH(bestand.name)}</span>`;
-        panel.appendChild(scheiding);
+        const sch = document.createElement('div');
+        sch.className = 'doc-scheiding';
+        sch.innerHTML = `<span>${escH(bestand.name)}</span>`;
+        panel.appendChild(sch);
       }
-
       const naam = bestand.name.toLowerCase();
       if (naam.endsWith('.pdf')) {
         const buf    = await bestand.arrayBuffer();
@@ -596,16 +698,11 @@ async function renderDocPanel(searchText) {
     }
     docPanelGereed = true;
   }
-
-  // Highlights bijwerken over alle renders
   highlightInPdf(searchText  || '');
   highlightInDocx(searchText || '');
 }
 
 async function renderPdfPaginas(panel, pdf) {
-  panel.innerHTML = '';
-
-  // Schaal: pas aan zodat breedte past in paneel
   const panelBreedte = panel.clientWidth - 40;
   const proefPagina  = await pdf.getPage(1);
   const proefVp      = proefPagina.getViewport({ scale: 1 });
@@ -614,94 +711,64 @@ async function renderPdfPaginas(panel, pdf) {
   for (let nr = 1; nr <= pdf.numPages; nr++) {
     const page     = await pdf.getPage(nr);
     const viewport = page.getViewport({ scale: schaal });
-
-    const wrap = document.createElement('div');
+    const wrap     = document.createElement('div');
     wrap.className = 'pdf-pagina';
     wrap.style.width  = viewport.width  + 'px';
     wrap.style.height = viewport.height + 'px';
-
     const canvas  = document.createElement('canvas');
     canvas.width  = viewport.width;
     canvas.height = viewport.height;
-
     const tekstlaag = document.createElement('div');
     tekstlaag.className = 'textLayer';
-
     wrap.appendChild(canvas);
     wrap.appendChild(tekstlaag);
     panel.appendChild(wrap);
-
-    // Canvas renderen
     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-
-    // Tekst-laag renderen (voor selectie en highlight)
     const tekstInhoud = await page.getTextContent();
-    const taak = pdfjsLib.renderTextLayer({
-      textContent: tekstInhoud,
-      container:   tekstlaag,
-      viewport,
-      textDivs:    [],
-    });
+    const taak = pdfjsLib.renderTextLayer({ textContent: tekstInhoud, container: tekstlaag, viewport, textDivs: [] });
     if (taak && taak.promise) await taak.promise;
     else if (taak && taak.then) await taak;
   }
 }
 
 function highlightInPdf(searchText) {
-  // Verwijder vorige highlights
   document.querySelectorAll('.textLayer span.hl-match').forEach(el => el.classList.remove('hl-match'));
   if (!searchText.trim()) return;
-
-  // Verzamel alle spans over alle pagina's
-  const spans    = Array.from(document.querySelectorAll('.textLayer span'));
+  const spans      = Array.from(document.querySelectorAll('.textLayer span'));
   const volleTekst = spans.map(s => s.textContent).join('');
-
-  const idx = volleTekst.toLowerCase().indexOf(searchText.toLowerCase());
+  const idx        = volleTekst.toLowerCase().indexOf(searchText.toLowerCase());
   if (idx === -1) return;
-
   const einde = idx + searchText.length;
-  let pos = 0;
-  let eersteSpan = null;
-
+  let pos = 0, eersteSpan = null;
   for (const span of spans) {
-    const start = pos;
-    const stop  = pos + span.textContent.length;
+    const start = pos, stop = pos + span.textContent.length;
     if (stop > idx && start < einde) {
       span.classList.add('hl-match');
       if (!eersteSpan) eersteSpan = span;
     }
     pos = stop;
   }
-
   if (eersteSpan) eersteSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ── DOCX highlight (werkt over meerdere .docx-inhoud divs) ──
 function highlightInDocx(searchText) {
   const contents = Array.from(document.querySelectorAll('.docx-inhoud'));
   if (!contents.length) return;
-
-  // Herstel vorige highlights
   contents.forEach(c => {
     c.querySelectorAll('mark.hl-match').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
     c.normalize();
   });
   if (!searchText.trim()) return;
-
   const re = new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
   let eersteEl = null;
-
   for (const content of contents) {
     const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
-    const nodes  = [];
-    let node;
+    const nodes = []; let node;
     while ((node = walker.nextNode())) nodes.push(node);
-
     for (const tekstNode of nodes) {
       const tekst = tekstNode.nodeValue;
       if (!re.test(tekst)) { re.lastIndex = 0; continue; }
       re.lastIndex = 0;
-
       const frag = document.createDocumentFragment();
       let li = 0, match;
       while ((match = re.exec(tekst)) !== null) {
@@ -720,42 +787,29 @@ function highlightInDocx(searchText) {
   if (eersteEl) eersteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ── Tekst-fallback (opgeslagen analyses zonder bestand) ──
 function toonTekstFallback(panel, searchText) {
   panel.classList.add('tekst-modus');
   const tekst = huidigRapport?._document_tekst || '';
-  if (!tekst) {
-    panel.innerHTML = '<p class="doc-leeg">Documenttekst niet beschikbaar — analyse werd opgeslagen vóór deze functie bestond.</p>';
-    return;
-  }
+  if (!tekst) { panel.innerHTML = '<p class="doc-leeg">Documenttekst niet beschikbaar.</p>'; return; }
   const zoek = (searchText || '').trim();
   const re   = zoek ? new RegExp(zoek.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi') : null;
   let html   = '', eersteMatch = true;
-
   for (const regel of tekst.split('\n')) {
     if (!regel.trim()) { html += '<div class="doc-br"></div>'; continue; }
     if (!re) { html += `<p>${escH(regel)}</p>`; continue; }
-
-    let inhoud = '', li = 0, match;
-    let heeftMatch = false;
-    re.lastIndex = 0;
+    let inhoud = '', li = 0, match; re.lastIndex = 0;
     while ((match = re.exec(regel)) !== null) {
-      inhoud     += escH(regel.slice(li, match.index));
-      const id    = eersteMatch ? ' id="eerste-match"' : '';
-      inhoud     += `<mark class="hl-match"${id}>${escH(match[0])}</mark>`;
-      li          = match.index + match[0].length;
-      heeftMatch  = true;
-      eersteMatch = false;
+      inhoud += escH(regel.slice(li, match.index));
+      const id = eersteMatch ? ' id="eerste-match"' : '';
+      inhoud += `<mark class="hl-match"${id}>${escH(match[0])}</mark>`;
+      li = match.index + match[0].length; eersteMatch = false;
     }
     inhoud += escH(regel.slice(li));
-    html   += `<p>${inhoud}</p>`;
+    html += `<p>${inhoud}</p>`;
   }
-
   panel.innerHTML = html;
-  if (re) {
-    const el = panel.querySelector('#eerste-match');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+  const el = panel.querySelector('#eerste-match');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ── Rapport renderen ──────────────────────────────────
@@ -764,6 +818,7 @@ let huidigeBestandsnaam  = null;
 let huidigeClassificatie = null;
 let huidigRapport        = null;
 let actieveKaart         = null;
+let splitOrigin          = 'main'; // 'main' | 'dossier'
 
 function voegStandaardveldenToe(rapport) {
   for (const cat of ['grammatica','juridisch','volledigheid','balans']) {
@@ -783,13 +838,14 @@ function samenstellenBestandsnaam(cls, bestanden) {
 }
 
 function getPassage(item, cat) {
-  return cat==='juridisch' ? (item.citaat||item.passage||'') : (item.passage||'');
+  return cat === 'juridisch' ? (item.citaat || item.passage || '') : (item.passage || '');
 }
 
 function kaart(cat, idx, extraClass, kopHtml, metaHtml, citaatHtml) {
   const item     = huidigRapport[cat][idx];
   const passage  = getPassage(item, cat);
   const klikbaar = !!passage;
+  const suggestie = item.suggestie || '';
   return `
   <div class="card ${extraClass}${klikbaar?' heeft-passage':''}" data-cat="${cat}" data-idx="${idx}">
     <div class="item-row">
@@ -798,10 +854,11 @@ function kaart(cat, idx, extraClass, kopHtml, metaHtml, citaatHtml) {
       <div class="item-body">
         <div class="card-kop">
           <div class="label">${kopHtml}</div>
-          ${klikbaar?'<span class="scroll-pin" title="Klik om passage te markeren in document">↗ passage</span>':''}
+          ${klikbaar?'<span class="scroll-pin" title="Klik om passage te markeren">↗ passage</span>':''}
         </div>
         ${metaHtml?`<div class="meta">${metaHtml}</div>`:''}
         ${citaatHtml||''}
+        ${suggestie?`<div class="suggestie-wrap"><div class="suggestie-label">💡 Suggestie</div>${escH(suggestie)}</div>`:''}
         <textarea class="opmerking" placeholder="Opmerking toevoegen..."
           oninput="huidigRapport['${cat}'][${idx}].opmerking=this.value">${item.opmerking||''}</textarea>
       </div>
@@ -817,12 +874,9 @@ function lijstKaarten(cat, items, renderFn, leegTekst) {
 async function toonRapport(cls, rp) {
   huidigeClassificatie = cls;
   huidigRapport        = rp;
-
   document.getElementById('splitDoctype').textContent = cls.doc_type;
   document.getElementById('splitTitel').textContent   = huidigeBestandsnaam;
 
-  // Analyse-panel opbouwen
-  // Helper: bouw één uitklapbare sectie
   const sectie = (titel, inhoud) => `
     <div class="a-sectie dicht">
       <h2>${titel}<span class="a-chevron">▾</span></h2>
@@ -840,16 +894,15 @@ async function toonRapport(cls, rp) {
     sectie('Grammatica &amp; taal',
       lijstKaarten('grammatica',rp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'));
 
-  // Klik op h2 → sectie in/uitklappen
   document.querySelectorAll('#analysePanel .a-sectie h2').forEach(h2 => {
     h2.addEventListener('click', () => h2.closest('.a-sectie').classList.toggle('dicht'));
   });
 
   openSplitView();
-  await renderDocPanel(''); // document tonen (geen highlight)
+  await renderDocPanel('');
 }
 
-// ── Klik op kaart → passage markeren ────────────────
+// ── Klik op kaart → passage markeren ─────────────────
 document.getElementById('analysePanel').addEventListener('click', async e => {
   if (e.target.closest('input,textarea,button')) return;
   const card = e.target.closest('.card.heeft-passage');
@@ -858,33 +911,44 @@ document.getElementById('analysePanel').addEventListener('click', async e => {
   const idx     = parseInt(card.dataset.idx, 10);
   const passage = getPassage(huidigRapport[cat][idx], cat);
   if (!passage) return;
-
   if (actieveKaart) actieveKaart.classList.remove('actief');
   card.classList.add('actief');
   actieveKaart = card;
-
   await renderDocPanel(passage);
 });
 
 // ── Split-overlay ─────────────────────────────────────
 function openSplitView() {
+  // Toon versielabel-veld alleen in dossier-context voor nieuwe analyses
+  const heeftDossier = !!huidigeDossierId;
+  const isNieuw = !huidigeId;
+  document.getElementById('versieLabelHeaderInput').style.display =
+    (heeftDossier && isNieuw) ? 'block' : 'none';
   document.getElementById('splitOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 function closeSplitView() {
   document.getElementById('splitOverlay').classList.remove('active');
   document.body.style.overflow = '';
-  actieveKaart      = null;
-  docPanelGereed    = false; // panel wordt opnieuw opgebouwd bij volgende opening
+  actieveKaart   = null;
+  docPanelGereed = false;
   huidigePdfDocCache = {};
 }
-document.getElementById('backBtn').addEventListener('click', closeSplitView);
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  const origin = splitOrigin;
+  const dossierId = huidigeDossierId;
+  closeSplitView();
+  if (origin === 'dossier' && dossierId) {
+    toonDossierDetail(dossierId);
+  }
+});
 
 // ── Opslaan ───────────────────────────────────────────
 async function opslaan() {
   const status = document.getElementById('opslagStatus');
   try {
-    // 1. Originele bestanden uploaden naar Supabase Storage (eenmalig)
+    // 1. Bestanden uploaden naar Storage (eenmalig)
     if (huidigeBestandenLijst.length > 0 && !huidigRapport._document_bestanden) {
       status.textContent = `Document${huidigeBestandenLijst.length > 1 ? 'en' : ''} uploaden...`;
       const geupload = [];
@@ -892,47 +956,100 @@ async function opslaan() {
         const ext = bestand.name.split('.').pop().toLowerCase();
         const pad = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: upErr } = await db.storage.from('documenten').upload(pad, bestand);
-        if (upErr) {
-          console.warn('Bestand uploaden mislukt (analyse wordt wel opgeslagen):', bestand.name, upErr.message);
-        } else {
-          geupload.push({ pad, naam: bestand.name });
-        }
+        if (upErr) console.warn('Upload mislukt:', bestand.name, upErr.message);
+        else geupload.push({ pad, naam: bestand.name });
       }
       if (geupload.length) huidigRapport._document_bestanden = geupload;
     }
 
-    // 2. Analyse opslaan / bijwerken
+    // 2. Versienummer berekenen voor nieuwe dossier-versie
+    let versieNr    = 1;
+    let versieLabel = null;
+    if (huidigeDossierId && !huidigeId) {
+      const { count } = await db.from('screeningen')
+        .select('id', { count: 'exact', head: true })
+        .eq('dossier_id', huidigeDossierId);
+      versieNr    = (count || 0) + 1;
+      versieLabel = document.getElementById('versieLabelHeaderInput')?.value.trim() || null;
+      if (!versieLabel) {
+        const versieLabelMain = document.getElementById('versieLabelInput')?.value.trim();
+        if (versieLabelMain) versieLabel = versieLabelMain;
+      }
+    }
+
+    // 3. Analyse opslaan / bijwerken
     status.textContent = 'Opslaan...';
     let data, error;
     if (huidigeId) {
-      ({data,error} = await db.from('screeningen')
-        .update({classificatie:huidigeClassificatie,rapport:huidigRapport,updated_at:new Date().toISOString()})
-        .eq('id',huidigeId).select('id').single());
+      ({ data, error } = await db.from('screeningen')
+        .update({ classificatie: huidigeClassificatie, rapport: huidigRapport, updated_at: new Date().toISOString() })
+        .eq('id', huidigeId).select('id').single());
     } else {
-      ({data,error} = await db.from('screeningen')
-        .insert({bestandsnaam:huidigeBestandsnaam,classificatie:huidigeClassificatie,rapport:huidigRapport})
+      ({ data, error } = await db.from('screeningen')
+        .insert({
+          bestandsnaam:    huidigeBestandsnaam,
+          classificatie:   huidigeClassificatie,
+          rapport:         huidigRapport,
+          dossier_id:      huidigeDossierId || null,
+          versie_nr:       versieNr,
+          versie_label:    versieLabel,
+        })
         .select('id').single());
     }
     if (error) throw error;
-    huidigeId          = data.id;
+    huidigeId = data.id;
+
+    // 4. Dossier updated_at bijwerken
+    if (huidigeDossierId) {
+      await db.from('dossiers').update({ updated_at: new Date().toISOString() }).eq('id', huidigeDossierId);
+      splitOrigin = 'dossier'; // Terug-knop gaat nu naar dossier
+      document.getElementById('versieLabelHeaderInput').style.display = 'none';
+    }
+
     status.textContent = 'Opgeslagen ✓';
-  } catch (err) { status.textContent = 'Opslaan mislukt: '+err.message; }
+  } catch (err) {
+    status.textContent = 'Opslaan mislukt: ' + err.message;
+  }
 }
 document.getElementById('opslaanBtn').addEventListener('click', opslaan);
 
 // ── Download Word ─────────────────────────────────────
 document.getElementById('downloadBtn').addEventListener('click', () => {
   try {
-    const rtf  = buildRtf(huidigeBestandsnaam,huidigeClassificatie,huidigRapport);
-    const blob = new Blob([rtf],{type:'application/rtf'});
+    const rtf  = buildRtf(huidigeBestandsnaam, huidigeClassificatie, huidigRapport);
+    const blob = new Blob([rtf], { type: 'application/rtf' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
     a.download = `screening-${(huidigeBestandsnaam||'rapport').replace(/\.[^.]+$/,'').replace(/[^a-z0-9_-]+/gi,'_')}.rtf`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
-  } catch (err) { document.getElementById('opslagStatus').textContent='Download mislukt: '+err.message; }
+  } catch (err) {
+    document.getElementById('opslagStatus').textContent = 'Download mislukt: ' + err.message;
+  }
 });
+
+// ── Dossier-context in upload-scherm ──────────────────
+let huidigeDossierId  = null;
+let huidigDossierNaam = null;
+
+function zetDossierContext(id, naam) {
+  huidigeDossierId  = id;
+  huidigDossierNaam = naam;
+  document.getElementById('versieContextNaam').textContent = naam;
+  document.getElementById('versieContextBalk').classList.add('zichtbaar');
+  document.getElementById('versieLabelInput').value = '';
+  splitOrigin = 'dossier';
+}
+
+function wisDossierContext() {
+  huidigeDossierId  = null;
+  huidigDossierNaam = null;
+  document.getElementById('versieContextBalk').classList.remove('zichtbaar');
+  document.getElementById('versieLabelInput').value = '';
+  splitOrigin = 'main';
+}
+document.getElementById('vcWisBtn').addEventListener('click', wisDossierContext);
 
 // ── Upload-scherm ─────────────────────────────────────
 const dropzone   = document.getElementById('dropzone');
@@ -940,24 +1057,22 @@ const fileInput  = document.getElementById('fileInput');
 const analyseBtn = document.getElementById('analyseBtn');
 const scanning   = document.getElementById('scanning');
 const errorBox   = document.getElementById('errorBox');
-let   gekozenBestanden = []; // array ipv enkel bestand
+let   gekozenBestanden = [];
 
-dropzone.addEventListener('click', ()=>fileInput.click());
-['dragover','dragenter'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('drag');}));
-['dragleave','drop'].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('drag');}));
-dropzone.addEventListener('drop', e=>{ e.preventDefault(); dropzone.classList.remove('drag'); if(e.dataTransfer.files.length) zetBestanden(e.dataTransfer.files); });
-fileInput.addEventListener('change', e=>{ if(e.target.files.length) zetBestanden(e.target.files); });
+dropzone.addEventListener('click', () => fileInput.click());
+['dragover','dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+dropzone.addEventListener('drop', e => { if (e.dataTransfer.files.length) zetBestanden(e.dataTransfer.files); });
+fileInput.addEventListener('change', e => { if (e.target.files.length) zetBestanden(e.target.files); });
 
 function zetBestanden(fileList) {
   gekozenBestanden = Array.from(fileList);
-  const dropText = document.getElementById('dropText');
+  const dropText   = document.getElementById('dropText');
   if (gekozenBestanden.length === 1) {
     dropText.innerHTML = `<span class="filename">${escH(gekozenBestanden[0].name)}</span>`;
   } else {
-    const chips = gekozenBestanden
-      .map(f => `<span class="bestand-chip"><span>${escH(f.name)}</span></span>`)
-      .join('');
-    dropText.innerHTML = `${gekozenBestanden.length} bestanden geselecteerd:<div class="bestanden-chips">${chips}</div>`;
+    const chips = gekozenBestanden.map(f => `<span class="bestand-chip"><span>${escH(f.name)}</span></span>`).join('');
+    dropText.innerHTML = `${gekozenBestanden.length} bestanden:<div class="bestanden-chips">${chips}</div>`;
   }
   analyseBtn.disabled = false;
 }
@@ -970,19 +1085,19 @@ analyseBtn.addEventListener('click', async () => {
   document.getElementById('scanText').textContent =
     gekozenBestanden.length > 1
       ? `${gekozenBestanden.length} documenten samenvoegen en analyseren...`
-      : 'Tekst uit het document halen en analyseren...';
+      : 'Document analyseren...';
 
   try {
-    const {classificatie, rapport} = await analyseDocument(gekozenBestanden);
+    const { classificatie, rapport } = await analyseDocument(gekozenBestanden);
     huidigeId             = null;
-    huidigeBestandenLijst = [...gekozenBestanden]; // bewaar voor rendering
+    huidigeBestandenLijst = [...gekozenBestanden];
     huidigePdfDocCache    = {};
     docPanelGereed        = false;
     huidigeBestandsnaam   = samenstellenBestandsnaam(classificatie, gekozenBestanden);
     voegStandaardveldenToe(rapport);
     await toonRapport(classificatie, rapport);
   } catch (err) {
-    errorBox.textContent   = 'Kon het document niet analyseren: '+err.message;
+    errorBox.textContent   = 'Kon het document niet analyseren: ' + err.message;
     errorBox.style.display = 'block';
   } finally {
     scanning.classList.remove('active');
@@ -992,26 +1107,222 @@ analyseBtn.addEventListener('click', async () => {
 
 // ── Tabs ──────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('view-'+tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab==='opgeslagen') laadHistory();
+    document.getElementById('view-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'dossiers') laadDossiers();
+    if (tab.dataset.tab === 'losse')    laadHistory();
   });
 });
 
-// ── Opgeslagen analyses ───────────────────────────────
+// ── Dossier-lijst laden ───────────────────────────────
+async function laadDossiers() {
+  const el = document.getElementById('dossierLijst');
+  el.innerHTML = '<p class="empty">Bezig met laden...</p>';
+  try {
+    const { data, error } = await db
+      .from('dossiers')
+      .select('id, naam, partij_a, partij_b, doc_type, status, updated_at, screeningen!dossier_id(id, versie_nr)')
+      .order('updated_at', { ascending: false });
+    if (error) throw error;
+    if (!data.length) {
+      el.innerHTML = '<p class="empty">Nog geen dossiers. Klik "+ Nieuw dossier" om te beginnen.</p>';
+      return;
+    }
+    el.innerHTML = data.map(d => {
+      const versies   = d.screeningen || [];
+      const aantalV   = versies.length;
+      const typeTag   = d.doc_type ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--coral-dark)">${escH(d.doc_type)}</span> · ` : '';
+      const partijen  = [d.partij_a, d.partij_b].filter(Boolean).join(' & ');
+      const datumStr  = new Date(d.updated_at).toLocaleDateString('nl-NL', { day:'2-digit', month:'short', year:'numeric' });
+      return `
+      <div class="dossier-item" data-id="${d.id}">
+        <div class="dossier-item-top">
+          <div>
+            <div class="dossier-naam">${escH(d.naam)}</div>
+            ${partijen ? `<div class="dossier-partijen">${escH(partijen)}</div>` : ''}
+          </div>
+          <span class="status-tag status-${escH(d.status)}">${escH(d.status)}</span>
+        </div>
+        <div class="dossier-meta">
+          ${typeTag}${aantalV} ${aantalV === 1 ? 'versie' : 'versies'} · Gewijzigd ${datumStr}
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.dossier-item').forEach(item => {
+      item.addEventListener('click', () => toonDossierDetail(item.dataset.id));
+    });
+  } catch (err) {
+    el.innerHTML = `<p class="empty">Kon dossiers niet laden: ${escH(err.message)}</p>`;
+  }
+}
+
+// ── Dossier detail ────────────────────────────────────
+let huidigDossierData = null;
+
+async function toonDossierDetail(id) {
+  const overlay = document.getElementById('dossierOverlay');
+  const content = document.getElementById('dossierContent');
+  content.innerHTML = '<p class="empty">Bezig met laden...</p>';
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    // Dossier ophalen
+    const { data: dos, error: dosErr } = await db
+      .from('dossiers').select('*').eq('id', id).single();
+    if (dosErr) throw dosErr;
+    huidigDossierData = dos;
+    huidigeDossierId  = dos.id;
+    huidigDossierNaam = dos.naam;
+
+    document.getElementById('dossierNaamTitel').textContent = dos.naam;
+    document.getElementById('dossierPartijen').textContent  =
+      [dos.partij_a, dos.partij_b].filter(Boolean).join(' & ');
+    document.getElementById('dossierStatusSel').value = dos.status;
+
+    // Versies ophalen
+    const { data: versies, error: vErr } = await db
+      .from('screeningen')
+      .select('id, bestandsnaam, versie_nr, versie_label, classificatie, rapport, created_at')
+      .eq('dossier_id', id)
+      .order('versie_nr', { ascending: false });
+    if (vErr) throw vErr;
+
+    if (!versies.length) {
+      content.innerHTML = `
+        <p class="empty" style="margin-bottom:20px">Nog geen analyses in dit dossier.</p>`;
+      return;
+    }
+
+    content.innerHTML = versies.map(v => {
+      const rp       = v.rapport || {};
+      const jur      = rp.juridisch || [];
+      const hoog     = jur.filter(j => j.ernst === 'hoog').length;
+      const midden   = jur.filter(j => j.ernst === 'midden').length;
+      const vol      = rp.volledigheid || [];
+      const aanwezig = vol.filter(x => x.status === 'aanwezig').length;
+      const label    = v.versie_label || `Versie ${v.versie_nr}`;
+      const datum    = new Date(v.created_at).toLocaleDateString('nl-NL', { day:'2-digit', month:'short', year:'numeric' });
+      const doctype  = v.classificatie?.doc_type || '';
+
+      const scores = [
+        vol.length  ? `<span class="score-chip score-ok">${aanwezig}/${vol.length} secties</span>` : '',
+        hoog        ? `<span class="score-chip score-hoog">${hoog} hoog</span>` : '',
+        midden      ? `<span class="score-chip score-midden">${midden} midden</span>` : '',
+        (!hoog && !midden && jur.length === 0) ? '<span class="score-chip score-grijs">Geen bevindingen</span>' : '',
+      ].filter(Boolean).join('');
+
+      return `
+      <div class="versie-card" data-id="${v.id}" style="cursor:pointer">
+        <span class="versie-badge">V${v.versie_nr}</span>
+        <div class="versie-info">
+          <div class="versie-label-tekst">${escH(label)}</div>
+          <div class="versie-submeta">${datum}${doctype ? ' · ' + escH(doctype) : ''}</div>
+          ${scores ? `<div class="versie-scores">${scores}</div>` : ''}
+        </div>
+        <button class="btn-ghost">Bekijken</button>
+      </div>`;
+    }).join('');
+
+    content.querySelectorAll('.versie-card').forEach(card => {
+      card.addEventListener('click', () => laadScreening(card.dataset.id, 'dossier'));
+    });
+  } catch (err) {
+    content.innerHTML = `<p class="empty">Kon het dossier niet laden: ${escH(err.message)}</p>`;
+  }
+}
+
+document.getElementById('dossierBackBtn').addEventListener('click', () => {
+  document.getElementById('dossierOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  huidigDossierData = null;
+  laadDossiers();
+});
+
+document.getElementById('dossierStatusSel').addEventListener('change', async function() {
+  if (!huidigeDossierId) return;
+  await db.from('dossiers').update({ status: this.value }).eq('id', huidigeDossierId);
+});
+
+document.getElementById('nieuweVersieBtn').addEventListener('click', () => {
+  // Sluit dossier overlay, zet context, ga naar analyse-tab
+  document.getElementById('dossierOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  zetDossierContext(huidigeDossierId, huidigDossierNaam);
+  // Switch naar analyse-tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelector('[data-tab="analyse"]').classList.add('active');
+  document.getElementById('view-analyse').classList.add('active');
+  // Reset upload
+  gekozenBestanden = [];
+  document.getElementById('dropText').innerHTML = 'Klik om een bestand te kiezen, of sleep het hierheen';
+  analyseBtn.disabled = true;
+  errorBox.style.display = 'none';
+});
+
+// ── Nieuw dossier modal ───────────────────────────────
+document.getElementById('nieuwDossierBtn').addEventListener('click', () => {
+  document.getElementById('dossierNaamInput').value    = '';
+  document.getElementById('dossierPartijAInput').value = '';
+  document.getElementById('dossierPartijBInput').value = '';
+  document.getElementById('dossierTypeInput').value    = '';
+  document.getElementById('nieuwDossierModal').classList.add('active');
+  setTimeout(() => document.getElementById('dossierNaamInput').focus(), 50);
+});
+document.getElementById('modalAnnuleerBtn').addEventListener('click', () => {
+  document.getElementById('nieuwDossierModal').classList.remove('active');
+});
+document.getElementById('nieuwDossierModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('nieuwDossierModal'))
+    document.getElementById('nieuwDossierModal').classList.remove('active');
+});
+document.getElementById('modalAanmakenBtn').addEventListener('click', maakDossier);
+
+async function maakDossier() {
+  const naam     = document.getElementById('dossierNaamInput').value.trim();
+  const partij_a = document.getElementById('dossierPartijAInput').value.trim();
+  const partij_b = document.getElementById('dossierPartijBInput').value.trim();
+  const doc_type = document.getElementById('dossierTypeInput').value || null;
+  if (!naam) { document.getElementById('dossierNaamInput').focus(); return; }
+
+  const btn = document.getElementById('modalAanmakenBtn');
+  btn.disabled = true; btn.textContent = 'Aanmaken...';
+
+  try {
+    const { data, error } = await db.from('dossiers')
+      .insert({ naam, partij_a: partij_a||null, partij_b: partij_b||null, doc_type })
+      .select('id').single();
+    if (error) throw error;
+    document.getElementById('nieuwDossierModal').classList.remove('active');
+    toonDossierDetail(data.id);
+  } catch (err) {
+    alert('Aanmaken mislukt: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Aanmaken';
+  }
+}
+
+// Enter-toets in modal
+document.getElementById('nieuwDossierModal').addEventListener('keydown', e => {
+  if (e.key === 'Enter') maakDossier();
+});
+
+// ── Losse analyses (zonder dossier) ──────────────────
 async function laadHistory() {
   const lijstEl = document.getElementById('historyList');
   lijstEl.innerHTML = '<p class="empty">Bezig met laden...</p>';
   try {
-    const {data,error} = await db.from('screeningen')
-      .select('id,bestandsnaam,classificatie,created_at,updated_at')
-      .order('updated_at',{ascending:false}).limit(200);
+    const { data, error } = await db.from('screeningen')
+      .select('id, bestandsnaam, classificatie, created_at, updated_at')
+      .is('dossier_id', null)
+      .order('updated_at', { ascending: false }).limit(200);
     if (error) throw error;
-    if (!data.length) { lijstEl.innerHTML='<p class="empty">Nog geen opgeslagen analyses.</p>'; return; }
-    lijstEl.innerHTML = data.map(s=>`
+    if (!data.length) { lijstEl.innerHTML = '<p class="empty">Geen losse analyses.</p>'; return; }
+    lijstEl.innerHTML = data.map(s => `
       <div class="history-item" data-id="${s.id}">
         <div class="history-item-top">
           <div class="naam">${escH(s.bestandsnaam)}</div>
@@ -1020,24 +1331,30 @@ async function laadHistory() {
         <div class="meta">${escH(s.classificatie?.doc_type??'')} — ${new Date(s.updated_at).toLocaleString('nl-NL')}</div>
         <div class="samen">${escH(s.classificatie?.samenvatting??'')}</div>
       </div>`).join('');
-    lijstEl.querySelectorAll('.history-item').forEach(el=>el.addEventListener('click',()=>laadScreening(el.dataset.id)));
-    lijstEl.querySelectorAll('.verwijderBtn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();verwijderScreening(btn.dataset.id);}));
-  } catch (err) { lijstEl.innerHTML=`<p class="empty">Kon de lijst niet laden: ${err.message}</p>`; }
+    lijstEl.querySelectorAll('.history-item').forEach(el =>
+      el.addEventListener('click', () => laadScreening(el.dataset.id, 'main')));
+    lijstEl.querySelectorAll('.verwijderBtn').forEach(btn =>
+      btn.addEventListener('click', e => { e.stopPropagation(); verwijderScreening(btn.dataset.id); }));
+  } catch (err) {
+    lijstEl.innerHTML = `<p class="empty">Kon de lijst niet laden: ${escH(err.message)}</p>`;
+  }
 }
 
 async function verwijderScreening(id) {
   if (!confirm('Deze analyse definitief verwijderen?')) return;
   try {
-    const {error} = await db.from('screeningen').delete().eq('id',id);
+    const { error } = await db.from('screeningen').delete().eq('id', id);
     if (error) throw error;
-    if (huidigeId===id) { huidigeId=null; closeSplitView(); }
+    if (huidigeId === id) { huidigeId = null; closeSplitView(); }
     laadHistory();
-  } catch (err) { alert('Verwijderen mislukt: '+err.message); }
+  } catch (err) { alert('Verwijderen mislukt: ' + err.message); }
 }
 
-async function laadScreening(id) {
+// ── Screening laden ───────────────────────────────────
+async function laadScreening(id, origin = 'main') {
+  splitOrigin = origin;
   try {
-    const {data,error} = await db.from('screeningen').select('*').eq('id',id).single();
+    const { data, error } = await db.from('screeningen').select('*').eq('id', id).single();
     if (error) throw error;
     huidigeId             = data.id;
     huidigeBestandsnaam   = data.bestandsnaam;
@@ -1045,12 +1362,11 @@ async function laadScreening(id) {
     docPanelGereed        = false;
     huidigeBestandenLijst = [];
 
-    // Backward-compat: oud formaat had losse _document_pad/_document_naam
+    // Bestanden ophalen uit Storage (backward compat: enkel of meerdere)
     const bestandenMeta = data.rapport._document_bestanden
       || (data.rapport._document_pad
           ? [{ pad: data.rapport._document_pad, naam: data.rapport._document_naam }]
           : []);
-
     for (const { pad, naam } of bestandenMeta) {
       try {
         const { data: signed, error: signErr } = await db.storage
@@ -1061,13 +1377,19 @@ async function laadScreening(id) {
         const blob = await resp.blob();
         huidigeBestandenLijst.push(new File([blob], naam, { type: blob.type }));
       } catch (e) {
-        console.warn('Bestand laden mislukt, tekst-fallback voor dit document:', naam, e.message);
+        console.warn('Bestand laden mislukt:', naam, e.message);
       }
+    }
+
+    // Dossier-context instellen als de screening bij een dossier hoort
+    if (data.dossier_id) {
+      huidigeDossierId  = data.dossier_id;
+      huidigDossierNaam = document.getElementById('dossierNaamTitel').textContent || '';
     }
 
     voegStandaardveldenToe(data.rapport);
     await toonRapport(data.classificatie, data.rapport);
-  } catch (err) { alert('Kon de analyse niet laden: '+err.message); }
+  } catch (err) { alert('Kon de analyse niet laden: ' + err.message); }
 }
 </script>
 </body>
