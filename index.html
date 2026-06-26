@@ -248,6 +248,9 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 .card .cite{display:inline-block;margin-top:7px;font-family:'IBM Plex Mono',monospace;
   font-size:.78rem;color:var(--coral-dark);background:#FFF1EA;padding:2px 8px;border-radius:4px;
   max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wet-badge{display:inline-block;margin-left:8px;font-size:.68rem;font-weight:700;
+  padding:1px 7px;border-radius:20px;background:#E8F0FB;color:#2D5FA0;border:1px solid #C5D8F5;
+  vertical-align:middle;white-space:nowrap;letter-spacing:.01em;}
 .suggestie-wrap{margin-top:9px;padding:9px 11px;background:#F0F7FF;
   border-left:3px solid var(--blue);border-radius:0 6px 6px 0;font-size:.83rem;color:#1a3a5c;}
 .suggestie-label{font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
@@ -516,11 +519,12 @@ const rapportTool = {
         items: {
           type: 'object',
           properties: {
-            onderwerp:  { type: 'string' },
-            bevinding:  { type: 'string' },
-            suggestie:  { type: 'string', description: 'Exacte tekst of formulering die het juridische probleem oplost.' },
-            citaat:     { type: 'string', description: 'Quote (max 80 tekens) uit het document.' },
-            ernst:      { type: 'string', enum: ['laag','midden','hoog'] },
+            onderwerp:    { type: 'string' },
+            bevinding:    { type: 'string' },
+            suggestie:    { type: 'string', description: 'Exacte tekst of formulering die het juridische probleem oplost.' },
+            citaat:       { type: 'string', description: 'Quote (max 80 tekens) uit het document.' },
+            wetsartikel:  { type: 'string', description: 'Relevant wetsartikel, bijv. "art. 1:157 BW" of "WVPS art. 2". Leeg laten als geen artikel van toepassing is.' },
+            ernst:        { type: 'string', enum: ['laag','midden','hoog'] },
           },
           required: ['onderwerp','bevinding','ernst'],
         },
@@ -647,21 +651,65 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
     t => !t.applies_when || t.applies_when.every(tag => classificatie.situatie_kenmerken.includes(tag))
   );
 
+  // Altijd de doc_type tag meenemen zodat algemene convenant/ouderschapsplan-artikelen ook worden opgehaald
+  const wetsQueryTags = [...new Set([
+    ...(classificatie.situatie_kenmerken || []),
+    classificatie.doc_type === 'onbekend' ? 'convenant' : classificatie.doc_type,
+  ])];
   const { data: wetteksten } = await db
     .from('legal_chunks')
     .select('citation, content, topic_tags')
-    .overlaps('topic_tags', classificatie.situatie_kenmerken)
-    .limit(20);
+    .overlaps('topic_tags', wetsQueryTags)
+    .limit(25);
 
   const checklistTekst = checklist.map(c => `- ${c.section_name}: ${c.instructions ?? ''}`).join('\n');
   const wetTekst       = (wetteksten ?? []).map(w => `[${w.citation}] ${w.content}`).join('\n\n');
 
+  const docTypeLabel = classificatie.doc_type === 'ouderschapsplan' ? 'Ouderschapsplan' : 'Echtscheidingsconvenant';
+  const juridischeChecks = classificatie.doc_type === 'ouderschapsplan' ? `
+Controleer specifiek op de volgende juridische punten:
+1. HOOFDVERBLIJFPLAATS — Wettelijk verplicht (art. 826 Rv). Is er één hoofdverblijfplaats aangewezen?
+2. ZORGREGELING — Zijn de omgangstijden specifiek (welke dagen, weekenden, vakanties, feestdagen)?
+3. INFORMATIEPLICHT — Is de plicht tot informatieverstrekking over het kind opgenomen (art. 1:377b BW)?
+4. KINDERALIMENTATIE — Wordt verwezen naar de Tremanormen of is een afwijking gemotiveerd (art. 1:404 BW)?
+5. GEZAG — Wordt gezamenlijk ouderlijk gezag bevestigd of wordt afwijking gevraagd (art. 1:247 BW)?
+6. GESCHILLENREGELING — Is er een escalatiebepaling of mediationclausule opgenomen (art. 1:253a BW)?
+7. INDEXERING — Wordt kinderalimentatie jaarlijks geïndexeerd?` : `
+Controleer specifiek op de volgende juridische punten:
+1. PARTNERALIMENTATIE — Is er een bedrag of nihilbeding? Bij nihilbeding: bewust en geïnformeerd (art. 1:159 BW)? Termijn vermeld en maximaal 12 jaar (art. 1:157 BW)? Indexering?
+2. KINDERALIMENTATIE — Verwijzing naar Tremanormen of gemotiveerde afwijking (art. 1:404 BW)?
+3. PENSIOENVEREVENING — Is de WVPS-regeling (50/50) toegepast of is er schriftelijk van afgezien (WVPS art. 2 en 5)?
+4. WONING — Is er een leverings-/passeerdatum? Wie neemt hypotheek over of wordt de woning verkocht? Ontslag uit aansprakelijkheid geregeld (art. 3:170 BW)?
+5. BELASTING — Wie is fiscaal partner tot welke datum? Hoe worden aanslagen/teruggaven verdeeld?
+6. VERMOGEN — Is huwelijksgemeenschap of verrekenbeding volledig afgewikkeld (art. 1:94 en 1:121 BW)?
+7. SCHULDEN — Is duidelijk wie welke schulden overneemt? Zijn crediteuren op de hoogte gebracht waar relevant?`;
+
   const rapport = await askClaudeForJson(
-    `Je bent een ervaren familiemediator die een opgesteld echtscheidingsdocument controleert.
-Wees specifiek en beknopt. Doorloop bij "volledigheid" de volledige checklist, ook aanwezige punten.
-Verzin geen wetsartikelen die niet in de context staan; laat "citaat" dan leeg.
-Vul bij elk punt het veld "passage" met een letterlijke quote (max 80 tekens) uit het document.
-Geef bij elk bevindingspunt in "suggestie" een concrete tekst die de mediator direct in het document kan overnemen — geef de exacte formulering, niet een beschrijving.`,
+    `Je bent een ervaren familierechtjurist en mediator die een Nederlands ${docTypeLabel} controleert op juridische volledigheid, correctheid en evenwichtigheid.
+
+DOCUMENTTYPE: ${docTypeLabel}
+
+AANWIJZINGEN PER CATEGORIE:
+
+**volledigheid** — Doorloop ALLE secties uit de checklist hieronder. Geef ook "aanwezig" terug voor secties die er wél in staan. Controleer of de inhoud concreet en afdoende is, niet slechts een vage verwijzing. Laat "passage" leeg als een sectie ontbreekt.
+
+**juridisch** —${juridischeChecks}
+
+Ernst:
+- hoog: Wettelijk vereiste ontbreekt, of een clausule is evident ongeldig/niet-afdwingbaar.
+- midden: Juridisch risico of onduidelijkheid die tot conflict kan leiden.
+- laag: Best practice die ontbreekt, maar geen direct risico.
+Vul "wetsartikel" in met het specifieke artikel (bijv. "art. 1:157 BW") als dat van toepassing is.
+
+**balans** — Kijk naar de verdeling van lusten en lasten: zijn termijnen evenwichtig t.o.v. huwelijksduur? Zijn er eenzijdige boetebedingen, onduidelijke indexering of eenzijdige informatieplichten?
+
+**grammatica** — Alleen taalfouten of intern tegenstrijdige zinnen die de juridische betekenis raken. Geen stilistische opmerkingen.
+
+STRIKTE REGELS:
+- Gebruik uitsluitend wetsartikelen uit de WETSARTIKELEN-sectie, of die je met absolute zekerheid kent.
+- Vul "passage" altijd in met een letterlijke quote (max 80 tekens) als het punt op een specifieke plek slaat.
+- Geef bij "suggestie" de exacte tekst die de mediator direct kan overnemen, niet een beschrijving.
+- Geef alleen bevindingen die daadwerkelijk uit het document blijken. Speculeer niet.`,
     `DOCUMENTTEKST:\n${documentTekst}\n\nVERWACHTE SECTIES:\n${checklistTekst}\n\nWETSARTIKELEN:\n${wetTekst || '(geen)'}`,
     rapportTool, 8192
   );
@@ -937,7 +985,10 @@ async function toonRapport(cls, rp) {
     sectie('Volledigheid',
       lijstKaarten('volledigheid',rp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.')) +
     sectie('Juridische juistheid',
-      lijstKaarten('juridisch',rp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,escH(j.onderwerp),escH(j.bevinding),j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')) +
+      lijstKaarten('juridisch',rp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,
+        escH(j.onderwerp) + (j.wetsartikel ? `<span class="wet-badge">${escH(j.wetsartikel)}</span>` : ''),
+        escH(j.bevinding),
+        j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')) +
     sectie('Balans tussen partijen',
       lijstKaarten('balans',rp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.')) +
     sectie('Grammatica &amp; taal',
