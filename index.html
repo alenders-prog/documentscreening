@@ -851,6 +851,8 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
   const wetsQueryTags = [...new Set([
     ...(classificatie.situatie_kenmerken || []),
     docType,
+    // Voeg HV-tags toe als huwelijkse voorwaarden zijn meegegeven
+    ...(heeftHV ? ['huwelijkse_voorwaarden','verrekenbeding','koude_uitsluiting','uitsluitingsclausule'] : []),
   ])];
   const { data: wetteksten } = await db
     .from('legal_chunks')
@@ -863,6 +865,10 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
 
   onProgress('Stap 3 van 3 — Analyseren… (dit duurt ca. 20–30 seconden)');
   const docTypeLabel = docType === 'ouderschapsplan' ? 'Ouderschapsplan' : 'Echtscheidingsconvenant';
+  // Detecteer aanwezige bijlage-types in de tray
+  const trayTypes = new Set(resolvedItems.map(i => i.type));
+  const heeftHV   = trayTypes.has('huwelijkse_voorwaarden');
+
   const juridischeChecks = docType === 'ouderschapsplan' ? `
 Controleer specifiek op de volgende juridische punten:
 1. HOOFDVERBLIJFPLAATS — Wettelijk verplicht (art. 826 Rv). Is er één hoofdverblijfplaats aangewezen?
@@ -881,6 +887,29 @@ Controleer specifiek op de volgende juridische punten:
 6. VERMOGEN — Is huwelijksgemeenschap of verrekenbeding volledig afgewikkeld (art. 1:94 en 1:121 BW)?
 7. SCHULDEN — Is duidelijk wie welke schulden overneemt? Zijn crediteuren op de hoogte gebracht waar relevant?`;
 
+  // Extra checks als huwelijkse voorwaarden zijn meegegeven
+  const hvChecks = heeftHV ? `
+
+HUWELIJKSE VOORWAARDEN AANWEZIG — voer aanvullende kruiscontroles uit:
+HV-A. STELSEL — Benoem het vermogensrechtelijk stelsel uit de HV (koude uitsluiting / beperkte gemeenschap / verrekenbeding). Controles zijn stelselhankelijk:
+
+  Bij KOUDE UITSLUITING (uitsluiting van iedere gemeenschap zonder verrekenbeding):
+  - Is er toch sprake van gezamenlijk eigendom (woning, rekening)? Zo ja: regelt het convenant de verdeling ervan expliciet?
+  - Bevat het convenant ten onrechte de term "huwelijksgemeenschap" of "verdeling gemeenschap"? (Inconsistentie: hoog)
+  - Is er een "finality clause" of vergoedingsrecht voor onverdeeld gebleven goederen geregeld?
+  - Pensioen: ook bij koude uitsluiting geldt WVPS tenzij partijen schriftelijk afwijken — controleer of dit klopt.
+
+  Bij VERREKENBEDING (periodiek of finaal):
+  - Is er bewijs of bevestiging dat het periodieke verrekenbeding jaarlijks is nagekomen? Zo niet: art. 1:141 lid 3 BW bepaalt dat het totale aanwezige vermogen wordt vermoed te zijn voortgevloeid uit overgespaarde inkomsten. Is dit adresseerd?
+  - Als het verrekenbeding niet is nagekomen: bevat het convenant een finale verrekening of expliciete kwijtschelding van verrekeningsaanspraken?
+  - Wordt het verrekenbeding in het convenant expliciet buiten werking gesteld of afgewikkeld?
+
+HV-B. UITSLUITINGSCLAUSULES — Zijn tijdens het huwelijk erfenissen of schenkingen ontvangen met een uitsluitingsclausule (art. 1:94 lid 3 BW)? Zijn die goederen of de vervangende goederen correct buiten de verdeling/verrekening gehouden?
+
+HV-C. REFERENTIE — Verwijst het convenant expliciet naar de huwelijkse voorwaarden (datum en notaris)? Inconsistentie tussen HV en convenant over het stelsel of de afwikkeling is een hoge ernst.
+
+HV-D. CONSISTENTIE — Controleer of de formulering in het convenant over vermogen, schulden en eigendom niet strijdig is met wat de HV bepaalt.` : '';
+
   const mfnElementen = MFN_ELEMENTEN[docType] || MFN_ELEMENTEN.convenant;
   const mfnLijst = mfnElementen.map((e, i) => `${i + 1}. ${e}`).join('\n');
 
@@ -893,7 +922,7 @@ AANWIJZINGEN PER CATEGORIE:
 
 **volledigheid** — Doorloop ALLE secties uit de checklist hieronder. Geef ook "aanwezig" terug voor secties die er wél in staan. Controleer of de inhoud concreet en afdoende is, niet slechts een vage verwijzing. Laat "passage" leeg als een sectie ontbreekt.
 
-**juridisch** —${juridischeChecks}
+**juridisch** —${juridischeChecks}${hvChecks}
 
 Ernst:
 - hoog: Wettelijk vereiste ontbreekt, of een clausule is evident ongeldig/niet-afdwingbaar.

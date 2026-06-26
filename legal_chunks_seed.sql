@@ -130,7 +130,29 @@ ARRAY['pensioen','pensioenverevening','pensioenverevening_uitgesloten','convenan
 ('10000000-0000-0000-0000-000000000004', 1,
 'art. 3:170 BW',
 'Deelgenoten zijn slechts bevoegd tot beheers- en beschikkingshandelingen over gemeenschappelijk goed indien allen daartoe besluiten. Bij verdeling van een gezamenlijk koophuis moeten beide partijen instemmen met verkoop of toedeling. Het convenant dient te regelen: (1) wie de woning overneemt of dat de woning wordt verkocht, (2) de peildatum voor de waardebepaling, (3) wanneer de overdracht bij de notaris plaatsvindt, en (4) of de andere partij wordt ontslagen uit hoofdelijke aansprakelijkheid voor de hypotheek.',
-ARRAY['woning','hypotheek','verdeling','eigen_woning','convenant']);
+ARRAY['woning','hypotheek','verdeling','eigen_woning','convenant']),
+
+-- ── BW Boek 1 — Huwelijkse voorwaarden ───────────────────────────────
+
+('10000000-0000-0000-0000-000000000001', 10,
+'art. 1:114 BW',
+'Echtgenoten kunnen zowel vóór als tijdens het huwelijk bij notariële akte huwelijkse voorwaarden maken of wijzigen. De huwelijkse voorwaarden bepalen het vermogensrechtelijk stelsel dat van toepassing is. Drie hoofdstelsel: (1) algehele gemeenschap van goederen (vóór 2018 standaard), (2) beperkte gemeenschap (na 1-1-2018 standaard), (3) volledige uitsluiting (koude uitsluiting) of stelsel met verrekenbeding. Bij scheiding dient het convenant expliciet naar de huwelijkse voorwaarden te verwijzen (datum en notaris).',
+ARRAY['huwelijkse_voorwaarden','vermogen','convenant']),
+
+('10000000-0000-0000-0000-000000000001', 11,
+'art. 1:132–133 BW (koude uitsluiting)',
+'Koude uitsluiting houdt in dat echtgenoten élke gemeenschap van goederen uitsluiten zonder een verrekenbeding overeen te komen. Elk der echtgenoten houdt zijn eigen vermogen; wat gezamenlijk is aangeschaft of gefinancierd, is niet automatisch gezamenlijk eigendom. Bij scheiding na koude uitsluiting dient het convenant: (1) expliciet te bevestigen dat geen gemeenschap bestaat; (2) gezamenlijk gehouden goederen (woning, rekeningen) afzonderlijk te verdelen; (3) geen termen als "verdeling huwelijksgemeenschap" te gebruiken — dit is feitelijk onjuist en kan verwarring scheppen bij de notaris. Pensioenverevening geldt onveranderd ook bij koude uitsluiting (WVPS).',
+ARRAY['huwelijkse_voorwaarden','koude_uitsluiting','vermogen','convenant']),
+
+('10000000-0000-0000-0000-000000000001', 12,
+'art. 1:141 BW (verrekenbeding niet nagekomen)',
+'Indien een periodiek verrekenbeding in de huwelijkse voorwaarden niet of niet volledig is nagekomen gedurende het huwelijk, worden op grond van art. 1:141 lid 3 BW alle op dat moment aanwezige goederen vermoed te zijn gevormd uit hetgeen verrekend had moeten worden (het "anti-speculatiebeding"). Dit vermoeden is weerlegbaar maar de bewijslast ligt bij de partij die stelt dat een goed niet uit te verrekenen inkomsten stamt. Het convenant dient: (1) vast te stellen of het periodiek verrekenbeding is nagekomen; (2) zo nee: een finale verrekening op te nemen of expliciet af te zien van verrekeningsaanspraken (kwijtschelding); (3) zo nodig een peildatum en methode voor de berekening te vermelden.',
+ARRAY['huwelijkse_voorwaarden','verrekenbeding','vermogen','convenant']),
+
+('10000000-0000-0000-0000-000000000001', 13,
+'art. 1:94 lid 3 BW (uitsluitingsclausule)',
+'Goederen die krachtens erfopvolging of schenking worden verkregen met een uitsluitingsclausule vallen buiten de huwelijksgemeenschap of buiten de verrekenplicht, ook als ze later worden vervangen (zaaksvervanging, art. 1:95 BW). In het convenant dient te worden vastgesteld: (1) of een der partijen goederen heeft ontvangen onder uitsluitingsclausule; (2) of deze goederen correct buiten de vermogensafwikkeling zijn gebleven; (3) of er vermengd is met gemeenschapsgoederen en zo ja, hoe dat wordt verrekend.',
+ARRAY['huwelijkse_voorwaarden','uitsluitingsclausule','vermogen','convenant']);
 
 -- ── Controleer resultaat ─────────────────────────────────────────────
 SELECT ls.title, lc.citation, lc.topic_tags
