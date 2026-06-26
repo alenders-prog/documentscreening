@@ -160,6 +160,14 @@ button.secundair:hover{background:#FFF1EA;}
 .versie-submeta{color:var(--ink-soft);font-size:.82rem;margin-top:3px;}
 .versie-scores{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;}
 .score-chip{font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:4px;}
+.versie-bestanden{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.versie-bestand-chip{display:inline-flex;align-items:center;gap:4px;
+  background:#F5F2EC;border:1px solid var(--line);border-radius:6px;
+  padding:2px 8px 2px 7px;font-size:.76rem;color:var(--ink-soft);max-width:220px;}
+.versie-bestand-naam{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.versie-bestand-dl{background:none;border:none;cursor:pointer;font-size:.82rem;color:var(--coral);
+  padding:0 2px;line-height:1;flex:none;border-radius:4px;transition:background .12s;}
+.versie-bestand-dl:hover{background:var(--coral);color:#fff;}
 .score-hoog{background:#FCEFEC;color:var(--terra);}
 .score-midden{background:#FFF8E1;color:#B45309;}
 .score-ok{background:#E8F5EA;color:#2E7D32;}
@@ -1942,6 +1950,16 @@ async function toonDossierDetail(id) {
     if (vErr) throw vErr;
     huidigDossierVersies = versies;
 
+    // Tooltip op "Nieuwe versie" knop bijwerken
+    const nvBtn = document.getElementById('nieuweVersieBtn');
+    if (versies.length) {
+      const bestV = versies[0].rapport?._document_bestanden;
+      const tooltip = bestV?.length
+        ? `Nieuwe versie op basis van V${versies[0].versie_nr} — pre-vult tray met: ${bestV.map(b=>b.naam).join(', ')}`
+        : `Nieuwe versie aanmaken voor dit dossier`;
+      nvBtn.title = tooltip;
+    }
+
     if (!versies.length) {
       content.innerHTML = `
         <p class="empty" style="margin-bottom:20px">Nog geen analyses in dit dossier.</p>`;
@@ -1973,6 +1991,19 @@ async function toonDossierDetail(id) {
         (!hoog && !midden && jur.length === 0) ? '<span class="score-chip score-grijs">Geen juridische bevindingen</span>' : '',
       ].filter(Boolean).join('');
 
+      // Bestanden
+      const bestanden = rp._document_bestanden
+        || (rp._document_pad ? [{ pad: rp._document_pad, naam: rp._document_naam }] : []);
+      const bestandenHtml = bestanden.length
+        ? `<div class="versie-bestanden">
+            ${bestanden.map(b => `
+              <span class="versie-bestand-chip">
+                <span class="versie-bestand-naam" title="${escH(b.naam)}">${escH(b.naam)}</span>
+                ${b.pad ? `<button class="versie-bestand-dl" data-pad="${escH(b.pad)}" data-naam="${escH(b.naam)}" title="Download ${escH(b.naam)}" onclick="event.stopPropagation()">↓</button>` : ''}
+              </span>`).join('')}
+          </div>`
+        : '';
+
       return `
       <div class="versie-card" data-id="${v.id}" style="cursor:pointer">
         <span class="versie-badge">V${v.versie_nr}</span>
@@ -1980,13 +2011,46 @@ async function toonDossierDetail(id) {
           <div class="versie-label-tekst">${escH(label)}</div>
           <div class="versie-submeta">${datum}${doctype ? ' · ' + escH(doctype) : ''}</div>
           ${scores ? `<div class="versie-scores">${scores}</div>` : ''}
+          ${bestandenHtml}
         </div>
-        <button class="btn-ghost">Bekijken</button>
+        <button class="btn-ghost" onclick="event.stopPropagation()">Bekijken</button>
       </div>`;
     }).join('');
 
     content.querySelectorAll('.versie-card').forEach(card => {
       card.addEventListener('click', () => laadScreening(card.dataset.id, 'dossier'));
+    });
+
+    // Download-knoppen voor bestanden
+    content.querySelectorAll('.versie-bestand-dl').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const origTekst = btn.textContent;
+        btn.textContent = '…';
+        btn.disabled = true;
+        try {
+          const { data: signed, error: signErr } = await db.storage
+            .from('documenten').createSignedUrl(btn.dataset.pad, 60);
+          if (signErr) throw signErr;
+          const a = document.createElement('a');
+          a.href     = signed.signedUrl;
+          a.download = btn.dataset.naam;
+          a.target   = '_blank';
+          a.click();
+        } catch (e) {
+          alert('Download mislukt: ' + e.message);
+        } finally {
+          btn.textContent = origTekst;
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Bekijken-knoppen (ook stopPropagation al zit in HTML, voor zekerheid)
+    content.querySelectorAll('.btn-ghost').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        laadScreening(btn.closest('.versie-card').dataset.id, 'dossier');
+      });
     });
   } catch (err) {
     content.innerHTML = `<p class="empty">Kon het dossier niet laden: ${escH(err.message)}</p>`;
