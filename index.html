@@ -114,6 +114,8 @@ button.secundair:hover{background:#FFF1EA;}
 .dossier-meta-header .partijen{font-size:.82rem;color:var(--ink-soft);white-space:nowrap;}
 .dossier-status-sel{padding:5px 10px;border:1px solid var(--line);border-radius:7px;
   font-family:inherit;font-size:.82rem;background:var(--bg);cursor:pointer;}
+.dossier-verwijder-btn{color:var(--terra)!important;border-color:var(--terra)!important;opacity:.7;}
+.dossier-verwijder-btn:hover{opacity:1;background:#FCEFEC!important;}
 .dossier-body{flex:1;overflow-y:auto;padding:28px 32px;}
 .dossier-body-inner{max-width:720px;margin:0 auto;}
 
@@ -363,6 +365,7 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
       <option value="gearchiveerd">Gearchiveerd</option>
     </select>
     <button class="secundair" id="nieuweVersieBtn">+ Nieuwe versie</button>
+    <button class="secundair dossier-verwijder-btn" id="dossierVerwijderBtn" title="Dossier verwijderen">🗑 Verwijderen</button>
     <button class="uitloggen-btn" id="uitloggenBtn2">Uitloggen</button>
   </div>
   <div class="dossier-body">
@@ -1534,6 +1537,24 @@ document.getElementById('dossierBackBtn').addEventListener('click', () => {
   document.body.style.overflow = '';
   huidigDossierData = null;
   laadDossiers();
+});
+
+document.getElementById('dossierVerwijderBtn').addEventListener('click', async () => {
+  if (!huidigeDossierId) return;
+  const naam = huidigDossierNaam || 'dit dossier';
+  if (!confirm(`Dossier "${naam}" verwijderen?\n\nDe analyses in dit dossier worden niet verwijderd — ze verschijnen daarna onder "Losse analyses".`)) return;
+  try {
+    const { error } = await db.from('dossiers').delete().eq('id', huidigeDossierId);
+    if (error) throw error;
+    document.getElementById('dossierOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+    huidigeDossierId  = null;
+    huidigDossierNaam = null;
+    huidigDossierData = null;
+    laadDossiers();
+  } catch (err) {
+    alert('Verwijderen mislukt: ' + err.message);
+  }
 });
 
 document.getElementById('dossierStatusSel').addEventListener('change', async function() {
