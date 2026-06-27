@@ -3,19 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Documentscreening — Zorgzaam Scheiden</title>
+<title>Clausula — Documentscreening</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#FAF6F0; --paper:#FFFFFF; --line:#E8E1D6;
-  --ink:#2B2825; --ink-soft:#6B6358;
-  --coral:#E8714A; --coral-dark:#C75A38;
-  --sage:#6B8F71; --amber:#D9A04B; --terra:#C75D4D;
+  --bg:#F3EFE9; --paper:#FFFFFF; --line:#E3DCD5;
+  --ink:#1A1816; --ink-soft:#7A7068; --ink-mid:#443E38; --ink-faint:#A89E96;
+  --coral:#C86A3C; --coral-dark:#A85530;
+  --sage:#2A7260; --amber:#B27820; --terra:#A83838;
   --blue:#4A90D9;
+  --nav-bg:#1B3050; --nav-border:#243F68;
+  --action-light:#FDF1EB; --action-border:#E8C4AE;
+  --ok:#2A7260; --ok-light:#EBF6F4;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
 }
 *{box-sizing:border-box;}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;line-height:1.55;}
+html,body{height:100%;margin:0;}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;}
 
 /* ── Hoofdscherm ──────────────────────────────────── */
 .wrap{max-width:720px;margin:0 auto;padding:48px 24px 120px;}
@@ -76,14 +81,14 @@ h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:2rem;margin:0 0 
   cursor:pointer;padding:4px 8px;border-radius:6px;}
 .tray-wis-btn:hover{color:var(--terra);background:#FCEFEC;}
 
-/* ── Versie-context balk ─────────────────────────── */
+/* ── Versie-context balk (altijd zichtbaar in analyse-scherm) ────────── */
 .versie-context{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;
-  padding:14px 16px;margin-bottom:20px;display:none;}
-.versie-context.zichtbaar{display:block;}
+  padding:14px 16px;margin-bottom:20px;}
 .versie-context-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .versie-context-top .vc-naam{font-weight:600;flex:1;font-size:.95rem;}
-.vc-wis{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:5px;}
-.vc-wis:hover{color:var(--terra);background:#FCEFEC;}
+.vc-wis{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:.85rem;
+  font-family:inherit;padding:4px 8px;border-radius:5px;border:1px solid var(--line);}
+.vc-wis:hover{color:var(--terra);background:#FCEFEC;border-color:var(--terra);}
 .versie-label-input{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;
   font-family:inherit;font-size:.9rem;background:var(--bg);outline:none;}
 .versie-label-input:focus{border-color:var(--coral);}
@@ -114,6 +119,13 @@ button.secundair:hover{background:#FFF1EA;}
   box-shadow:0 0 8px var(--coral);animation:scan 1.6s ease-in-out infinite;}
 @keyframes scan{0%{top:6px;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:74px;opacity:0;}}
 .scanning p{color:var(--ink-soft);font-size:.95rem;margin:0;}
+.scan-voortgang{margin:10px auto 0;max-width:280px;display:none;}
+.scan-voortgang.actief{display:block;}
+.scan-doc-label{font-size:.82rem;font-weight:600;color:var(--ink);margin-bottom:6px;text-align:left;}
+.scan-balk-wrap{display:flex;align-items:center;gap:8px;}
+.scan-balk{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden;}
+.scan-balk-vul{height:100%;width:0%;background:var(--coral);border-radius:3px;transition:width .25s ease-out;}
+.scan-pct{font-size:.78rem;color:var(--ink-soft);min-width:30px;text-align:right;}
 .error-box{margin-top:20px;padding:16px 18px;border-radius:10px;
   background:#FCEFEC;border:1px solid #F0C8BE;color:var(--terra);font-size:.95rem;}
 
@@ -168,6 +180,11 @@ button.secundair:hover{background:#FFF1EA;}
 .versie-bestand-dl{background:none;border:none;cursor:pointer;font-size:.82rem;color:var(--coral);
   padding:0 2px;line-height:1;flex:none;border-radius:4px;transition:background .12s;}
 .versie-bestand-dl:hover{background:var(--coral);color:#fff;}
+.versie-acties{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.versie-verwijder-btn{background:none;border:1px solid transparent;border-radius:6px;
+  cursor:pointer;font-size:.9rem;padding:4px 7px;color:var(--ink-soft);
+  transition:border-color .12s,color .12s,background .12s;line-height:1;}
+.versie-verwijder-btn:hover{border-color:#e57373;color:#c62828;background:#fff5f5;}
 .score-hoog{background:#FCEFEC;color:var(--terra);}
 .score-midden{background:#FFF8E1;color:#B45309;}
 .score-ok{background:#E8F5EA;color:#2E7D32;}
@@ -186,18 +203,139 @@ button.secundair:hover{background:#FFF1EA;}
 .modal-veld input:focus,.modal-veld select:focus{border-color:var(--coral);}
 .modal-acties{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
 
-/* ── Losse analyses (history) ─────────────────────── */
-.historylijst{display:flex;flex-direction:column;gap:10px;}
-.history-item{background:var(--paper);border:1px solid var(--line);border-radius:10px;
-  padding:16px 18px;cursor:pointer;transition:border-color .15s;}
-.history-item:hover{border-color:var(--coral);}
-.history-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
-.history-item .naam{font-weight:600;}
-.history-item .meta,.history-item .samen{color:var(--ink-soft);font-size:.85rem;margin-top:2px;}
-.verwijderBtn{flex:none;background:none;border:none;color:var(--ink-soft);font-size:1rem;
-  cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;}
-.verwijderBtn:hover{color:var(--terra);background:#FCEFEC;}
 .empty{color:var(--ink-soft);font-size:.9rem;font-style:italic;}
+
+/* Concept-badge */
+.concept-badge{display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--coral);color:#fff;font-size:.7rem;font-weight:700;
+  margin-left:5px;vertical-align:middle;}
+
+/* Concept-modal overlay */
+.concept-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;}
+.concept-modal{background:var(--paper);border-radius:16px;width:min(760px,95vw);
+  max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.2);}
+.concept-modal-header{display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px 16px;border-bottom:1px solid var(--line);}
+.concept-modal-header h2{font-family:'Source Serif 4',serif;font-weight:600;
+  font-size:1.2rem;margin:0;color:var(--ink);}
+.concept-sluit{background:none;border:none;font-size:1.2rem;cursor:pointer;
+  color:var(--ink-soft);padding:4px 8px;border-radius:6px;}
+.concept-sluit:hover{background:var(--bg);}
+.concept-modal-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.concept-modal-footer{padding:16px 24px;border-top:1px solid var(--line);
+  display:flex;gap:10px;justify-content:flex-end;}
+
+/* Wijzigingslog tabel */
+.wijzig-log{margin-top:16px;}
+.wijzig-log h3{font-size:.95rem;font-weight:600;margin:0 0 10px;color:var(--ink);}
+.wijzig-item{border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  margin-bottom:8px;font-size:.875rem;}
+.wijzig-item-kop{font-weight:600;color:var(--ink);margin-bottom:4px;}
+.wijzig-item-kop .w-nr{display:inline-block;background:var(--coral);color:#fff;
+  border-radius:4px;padding:1px 7px;font-size:.75rem;margin-right:6px;}
+.wijzig-item-artikel{color:var(--ink-soft);font-size:.82rem;margin-bottom:4px;}
+.wijzig-ook{margin-top:6px;padding:6px 10px;background:#FFF8F0;border-radius:6px;
+  font-size:.8rem;color:var(--coral-dark);}
+.wijzig-ook strong{font-weight:600;}
+button.primair{padding:9px 20px;background:var(--coral);color:#fff;border:none;
+  border-radius:8px;font-weight:600;cursor:pointer;font-size:.92rem;}
+button.primair:hover{background:var(--coral-dark);}
+
+/* ── Concept review full-screen ─────────────────────── */
+.concept-review{position:fixed;inset:0;z-index:600;background:var(--bg);
+  display:flex;flex-direction:column;}
+.concept-review-header{display:flex;align-items:center;gap:16px;
+  padding:12px 24px;background:var(--paper);border-bottom:1px solid var(--line);
+  flex-shrink:0;}
+.concept-review-titel{flex:1;font-family:'Source Serif 4',serif;font-weight:600;
+  font-size:1.05rem;color:var(--ink);}
+.concept-review-body{display:flex;flex:1;overflow:hidden;}
+
+/* Document-preview paneel (links) */
+.concept-doc-panel{flex:1;overflow-y:auto;padding:32px 0;background:#E8E8E8;
+  border-right:1px solid var(--line);}
+
+/* A4-achtig paginavel */
+.concept-doc-panel .cdoc-pagina{
+  background:#fff;
+  max-width:720px;
+  margin:0 auto 32px;
+  padding:56px 64px;
+  box-shadow:0 2px 12px rgba(0,0,0,.12);
+  border-radius:2px;
+  font-family:'Times New Roman',Georgia,serif;
+  font-size:.97rem;
+  line-height:1.7;
+  color:#1a1a1a;
+}
+.concept-doc-panel .cdoc-titel{font-size:1.25rem;font-weight:700;margin:0 0 2px;
+  font-family:'Times New Roman',Georgia,serif;text-align:center;}
+.concept-doc-panel .cdoc-datum{font-size:.82rem;color:var(--ink-soft);
+  margin-bottom:28px;font-style:italic;text-align:center;}
+/* Document-scheidingsteken (=== CONVENANT: file ===) */
+.concept-doc-panel .cdoc-scheiding{font-size:.75rem;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink-soft);
+  border-top:2px solid var(--line);margin:32px 0 20px;padding-top:12px;}
+.concept-doc-panel .cdoc-kop{font-size:1rem;font-weight:700;margin:22px 0 4px;
+  font-family:'Times New Roman',Georgia,serif;text-align:center;}
+.concept-doc-panel .cdoc-sub{font-size:.97rem;font-weight:700;
+  margin:14px 0 2px;font-family:'Times New Roman',Georgia,serif;}
+.concept-doc-panel .cdoc-par{margin:0 0 10px;text-align:justify;}
+.concept-doc-panel .cdoc-lijst{margin:0 0 4px 24px;}
+/* cdoc-paraaf verwijderd — paraaf-paginakoppen worden gestript bij pre-processing */
+.concept-doc-panel .cdoc-leeglijn{height:8px;}
+/* Highlight-staten (klik vanuit wijzigingskaart) */
+.concept-doc-panel .cdoc-hl-actief{background:#FFF9E6;border-radius:2px;
+  outline:2px solid #F5A623;outline-offset:2px;}
+/* Track-changes: inline oud (rood doorgestreept) + nieuw (groen) */
+.concept-doc-panel del.cdoc-del{
+  background:#FDECEA;color:#c0392b;text-decoration:line-through;
+  border-radius:2px;padding:0 2px;font-style:normal;}
+.concept-doc-panel ins.cdoc-ins{
+  background:#E8F5EA;color:#1e6e4a;text-decoration:none;
+  border-radius:2px;padding:0 2px;font-style:normal;font-weight:500;}
+
+/* Wijzigingen-paneel (rechts) */
+.concept-changes-panel{width:380px;flex-shrink:0;overflow-y:auto;
+  padding:20px 16px;background:var(--bg);}
+.concept-changes-panel h3{font-size:.88rem;font-weight:700;
+  color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;
+  margin:0 0 12px;}
+/* Wijziging-kaart */
+.change-card{background:var(--paper);border:1px solid var(--line);
+  border-radius:10px;padding:14px;margin-bottom:10px;cursor:pointer;
+  transition:border-color .15s;}
+.change-card:hover,.change-card.act{border-color:var(--coral);}
+.change-card.act{box-shadow:0 0 0 2px rgba(232,113,74,.18);}
+.change-card-kop{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.change-artikel{font-weight:600;font-size:.88rem;color:var(--ink);}
+.change-beschrijving{font-size:.82rem;color:var(--ink-soft);margin-bottom:10px;
+  line-height:1.5;}
+/* Toggle origineel/aangepast */
+.change-toggle{display:flex;gap:0;margin-bottom:10px;border:1px solid var(--line);
+  border-radius:6px;overflow:hidden;width:fit-content;}
+.toggle-btn{padding:4px 12px;font-size:.78rem;font-weight:600;background:none;
+  border:none;cursor:pointer;color:var(--ink-soft);transition:background .12s,color .12s;}
+.toggle-btn.act{background:var(--coral);color:#fff;}
+/* Tekstvakken */
+.change-tekst{font-size:.82rem;line-height:1.6;padding:8px 10px;border-radius:6px;}
+.change-tekst.nieuw{background:#E8F5EA;color:#1B5E20;}
+.change-tekst.oud{background:#FFF3E0;color:#7B3F00;}
+.change-ook{margin-top:8px;font-size:.76rem;color:var(--coral-dark);
+  padding:5px 8px;background:#FFF1EA;border-radius:5px;}
+
+/* ── Concept-generatie statuschips ───────────────── */
+#conceptGenChips{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.cgen-chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;
+  padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.cgen-chip.bezig{background:#FFF1EA;color:var(--coral-dark);}
+.cgen-chip.klaar{background:#F0FBF4;color:#1e6e4a;cursor:pointer;border:1px solid #c3e8d4;}
+.cgen-chip.klaar:hover{background:#e0f5ea;}
+.cgen-chip.fout {background:#FDF2F2;color:#c0392b;cursor:pointer;}
+.cgen-spin{display:inline-block;animation:spin .9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── App-header ───────────────────────────────────── */
 .app-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:0;}
@@ -226,6 +364,12 @@ button.secundair:hover{background:#FFF1EA;}
   font-family:inherit;font-size:.83rem;background:var(--bg);outline:none;min-width:180px;}
 .versie-label-header:focus{border-color:var(--coral);}
 .opslagstatus{color:var(--ink-soft);font-size:.82rem;}
+.doc-tab{background:none;border:none;border-bottom:2px solid transparent;padding:6px 14px;
+  cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink-soft);
+  transition:color .15s,border-color .15s;white-space:nowrap;flex-shrink:0;}
+.doc-tab.actief{color:var(--ink);border-bottom-color:var(--coral);}
+.doc-tab:hover:not(.actief){color:var(--ink);}
+.split-meta.tabs-modus{align-items:flex-end;overflow-x:auto;gap:0;padding-bottom:0;}
 .split-body{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
 
 /* ── Document-panel ───────────────────────────────── */
@@ -269,11 +413,13 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 .samenvatting{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;padding:16px 18px;font-size:.97rem;}
 .card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
   border-radius:8px;padding:14px 16px;margin-bottom:9px;transition:border-color .15s,box-shadow .15s;}
-.card.sev-laag,.card.status-aanwezig{border-left-color:var(--sage);}
+/* aanwezig = geen issue → geen accentkleur (standaard lijnkleur volstaat) */
+.card.sev-laag{border-left-color:#27AE60;}
+.card.status-aanwezig{border-left-color:var(--line);}
 .card.sev-midden,.card.status-onvolledig{border-left-color:var(--amber);}
 .card.sev-hoog,.card.status-ontbreekt{border-left-color:var(--terra);}
 .card.heeft-passage{cursor:pointer;}
-.card.heeft-passage:hover{border-color:var(--coral);box-shadow:0 1px 6px rgba(232,113,74,.15);}
+.card.heeft-passage:hover{border-top-color:var(--coral);border-right-color:var(--coral);border-bottom-color:var(--coral);box-shadow:0 1px 6px rgba(232,113,74,.15);}
 .card.actief{border-color:var(--coral)!important;box-shadow:0 0 0 2px rgba(232,113,74,.25);}
 .item-row{display:flex;align-items:flex-start;gap:10px;}
 .item-row input[type=checkbox]{margin-top:3px;width:17px;height:17px;accent-color:var(--sage);cursor:pointer;flex:none;}
@@ -337,24 +483,276 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
   .split-body{grid-template-columns:1fr;grid-template-rows:45% 55%;}
   .panel-doc{border-right:none;border-bottom:1px solid var(--line);}
 }
+
+/* ═══ MASTER-DETAIL LAYOUT ═══════════════════════════ */
+.app{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Topbar */
+.topbar{height:52px;background:var(--nav-bg);border-bottom:1px solid var(--nav-border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+.topbar-brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{width:30px;height:30px;background:var(--coral);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Source Serif 4',serif;font-weight:700;font-size:.88rem;color:#fff;flex-shrink:0;}
+.brand-name{font-weight:700;font-size:.95rem;color:#fff;letter-spacing:-.01em;}
+.brand-sep{width:1px;height:18px;background:var(--nav-border);margin:0 2px;}
+.brand-sub{font-size:.72rem;color:rgba(255,255,255,.35);}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.topbar-icon-btn{width:32px;height:32px;background:none;border:none;border-radius:6px;
+  cursor:pointer;color:rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;line-height:1;transition:all .15s;font-family:inherit;}
+.topbar-icon-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);}
+.topbar-divider{width:1px;height:18px;background:var(--nav-border);margin:0 6px;}
+.topbar-email{font-size:.75rem;color:rgba(255,255,255,.4);}
+.topbar-logout{background:none;border:1px solid rgba(255,255,255,.15);border-radius:6px;
+  padding:4px 11px;font-family:inherit;font-size:.75rem;font-weight:500;
+  color:rgba(255,255,255,.45);cursor:pointer;transition:all .15s;}
+.topbar-logout:hover{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.75);}
+
+/* Master-detail frame */
+.master-detail{flex:1;display:flex;overflow:hidden;}
+
+/* Lijstpanel (links) */
+.list-panel{width:288px;flex-shrink:0;background:var(--paper);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;overflow:hidden;}
+.list-toolbar{padding:10px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.list-search-wrap{flex:1;position:relative;}
+.list-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--ink-soft);pointer-events:none;}
+.list-search{width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--line);border-radius:6px;
+  font-family:inherit;font-size:.82rem;background:var(--bg);color:var(--ink);
+  outline:none;transition:border-color .15s;}
+.list-search::placeholder{color:var(--ink-soft);opacity:.6;}
+.list-search:focus{border-color:var(--coral);}
+.list-nieuw-btn{width:32px;height:32px;background:var(--coral);color:#fff;border:none;
+  border-radius:6px;font-size:1.3rem;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}
+.list-nieuw-btn:hover{background:var(--coral-dark);}
+.list-scroll{flex:1;overflow-y:auto;padding:4px 0 12px;}
+.list-sect{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-soft);padding:12px 14px 4px;opacity:.7;}
+.list-row{display:block;width:100%;text-align:left;background:none;border:none;
+  border-left:3px solid transparent;padding:9px 14px 9px 11px;
+  cursor:pointer;transition:background .1s,border-color .1s;font-family:inherit;}
+.list-row:hover{background:var(--bg);}
+.list-row.act{background:#FFF1EA;border-left-color:var(--coral);}
+.list-row-naam{font-weight:600;font-size:.88rem;color:var(--ink);line-height:1.25;margin-bottom:4px;}
+.list-row-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:3px;}
+.list-row-datum{font-size:.71rem;color:var(--ink-soft);}
+
+/* Detailpanel (rechts) */
+.detail-panel{flex:1;min-width:0;overflow-y:auto;background:var(--bg);}
+.rp{display:none;min-height:100%;flex-direction:column;}
+.rp.act{display:flex;}
+
+/* rp-header (sticky bovenaan detailpanel) */
+.rp-header{background:var(--paper);border-bottom:1px solid var(--line);
+  padding:20px 28px;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.rp-header-analyse{display:flex;align-items:center;gap:14px;padding:14px 28px;}
+.rp-back{background:none;border:1px solid var(--line);border-radius:8px;
+  padding:6px 12px;font-family:inherit;font-size:.82rem;color:var(--ink-soft);
+  cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0;}
+.rp-back:hover{background:var(--bg);}
+.rp-header-detail{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.rp-title{font-family:'Source Serif 4',serif;font-size:1.4rem;font-weight:600;
+  letter-spacing:-.02em;color:var(--ink);margin:0 0 5px;line-height:1.2;}
+.rp-title-sm{font-family:'Source Serif 4',serif;font-size:1.05rem;font-weight:600;
+  color:var(--ink);margin:0;letter-spacing:-.01em;}
+.rp-meta{display:flex;align-items:center;gap:8px;font-size:.83rem;color:var(--ink-soft);}
+.rp-acties{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.rp-body{flex:1;padding:24px 28px 48px;}
+.rp-btn-primary{padding:9px 16px;background:var(--coral);color:#fff;border:none;
+  border-radius:10px;font-family:inherit;font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:background .15s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:7px;}
+.rp-btn-primary:hover{background:var(--coral-dark);}
+.rp-btn-danger{padding:8px 12px;background:none;color:var(--terra);
+  border:1px solid rgba(199,83,77,.3);border-radius:8px;
+  font-family:inherit;font-size:.85rem;cursor:pointer;transition:all .15s;}
+.rp-btn-danger:hover{background:#FCEFEC;}
+.status-select{padding:5px 9px;border:1.5px solid var(--line);border-radius:6px;
+  font-family:inherit;font-size:.82rem;background:var(--bg);cursor:pointer;outline:none;}
+.status-select:focus{border-color:var(--coral);}
+
+/* Laadspinner */
+.laad-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:14px;color:var(--ink-soft);font-size:.88rem;}
+.laad-spinner{width:30px;height:30px;border:3px solid var(--line);
+  border-top-color:var(--coral);border-radius:50%;animation:draaien .7s linear infinite;}
+@keyframes draaien{to{transform:rotate(360deg);}}
+
+/* Lege staat */
+.rp-leeg-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--ink-soft);text-align:center;padding:48px;}
+.rp-leeg-state h3{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.1rem;
+  color:var(--ink-soft);margin:0 0 8px;}
+.rp-leeg-state p{font-size:.88rem;margin:0;}
+
+/* Mini chips voor dossierlijst */
+.chip{display:inline-flex;align-items:center;font-size:.67rem;font-weight:700;
+  padding:2px 7px;border-radius:20px;letter-spacing:.02em;white-space:nowrap;}
+.chip-ok{background:#E8F5EA;color:#2E7D32;}
+.chip-warn{background:#FFF8E1;color:#8A5A00;}
+.chip-bad{background:#FCEFEC;color:var(--terra);}
+.chip-grijs{background:#F0EDE8;color:var(--ink-soft);}
+
+/* Upload in rp-analyse */
+.koppel-actief-naam{font-weight:600;font-size:.93rem;color:var(--coral-dark);}
+.koppel-actief-sub{font-size:.78rem;color:var(--coral);margin-top:1px;}
 </style>
 </head>
 <body style="display:none">
 
-<!-- ═══ Hoofdscherm ══════════════════════════════════ -->
-<div class="wrap" id="mainView">
-  <div class="app-top">
-    <div>
-      <h1>Documentscreening</h1>
-      <p class="sub">Analyseer <strong>concept-convenanten</strong> en <strong>ouderschapsplannen</strong> op grammatica, juridische juistheid, volledigheid en balans.</p>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-      <button class="uitloggen-btn" id="uitloggenBtn">Uitloggen</button>
-      <button class="inst-link" id="instellingenBtn">⚙ Praktijkinstellingen</button>
-    </div>
-  </div>
+<!-- Legacy IDs voor JS-compatibiliteit (niet zichtbaar) -->
+<button id="dossierBackBtn" style="display:none"></button>
+<button id="uitloggenBtn2" style="display:none"></button>
 
-<!-- ═══ Instellingen modal ════════════════════════════ -->
+<!-- ═══ App ══════════════════════════════════════════ -->
+<div class="app" id="app">
+
+  <!-- ── Topbar ─────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">Cl</div>
+      <span class="brand-name">Clausula</span>
+      <div class="brand-sep"></div>
+      <span class="brand-sub">Documentscreening</span>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-icon-btn" id="instellingenBtn" title="Praktijkinstellingen">⚙</button>
+      <div class="topbar-divider"></div>
+      <span class="topbar-email" id="topbarEmail"></span>
+      <button class="topbar-logout" id="uitloggenBtn">Uitloggen</button>
+    </div>
+  </header>
+
+  <!-- ── Master-detail ──────────────────────────────── -->
+  <div class="master-detail">
+
+    <!-- ░░ Lijstpanel (links) ░░░░░░░░░░░░░░░░░░░░░░░ -->
+    <nav class="list-panel">
+      <div class="list-toolbar">
+        <div class="list-search-wrap">
+          <svg class="list-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="8.5" cy="8.5" r="5.5"/>
+            <line x1="13" y1="13" x2="17" y2="17" stroke-linecap="round"/>
+          </svg>
+          <input class="list-search" id="dossierZoek" placeholder="Zoeken…" type="text">
+        </div>
+        <button class="list-nieuw-btn" id="nieuwDossierBtn" title="Nieuw dossier">+</button>
+      </div>
+      <div class="list-scroll" id="dossierLijst">
+        <p style="padding:10px 14px;font-size:.85rem;color:var(--ink-soft)">Bezig met laden...</p>
+      </div>
+    </nav>
+
+    <!-- ░░ Detailpanel (rechts) ░░░░░░░░░░░░░░░░░░░░░ -->
+    <main class="detail-panel">
+
+      <!-- Lege staat: nog geen dossier geselecteerd -->
+      <div class="rp act" id="rp-leeg">
+        <div class="rp-leeg-state">
+          <div style="font-size:2.5rem;opacity:.25;margin-bottom:14px">📁</div>
+          <h3>Selecteer een dossier</h3>
+          <p>Kies een dossier in de lijst links,<br>of maak een nieuw dossier aan via +</p>
+        </div>
+      </div>
+
+      <!-- Dossier detail -->
+      <div class="rp" id="rp-detail">
+        <div class="rp-header">
+          <div class="rp-header-detail">
+            <div>
+              <h1 class="rp-title" id="dossierNaamTitel"></h1>
+              <div class="rp-meta">
+                <span id="dossierPartijen"></span>
+                <span style="opacity:.35">·</span>
+                <select class="status-select" id="dossierStatusSel">
+                  <option value="actief">Actief</option>
+                  <option value="afgerond">Afgerond</option>
+                  <option value="gearchiveerd">Gearchiveerd</option>
+                </select>
+              </div>
+            </div>
+            <div class="rp-acties">
+              <button class="rp-btn-primary" id="nieuweVersieBtn">+ Nieuwe versie analyseren</button>
+              <button class="rp-btn-danger" id="dossierVerwijderBtn" title="Dossier verwijderen">🗑</button>
+            </div>
+          </div>
+        </div>
+        <div class="rp-body">
+          <div id="dossierContent"></div>
+        </div>
+      </div>
+
+      <!-- Analyse: nieuwe versie uploaden -->
+      <div class="rp" id="rp-analyse">
+        <div class="rp-header rp-header-analyse">
+          <button class="rp-back" id="vcWisBtn">← Terug</button>
+          <div>
+            <p class="rp-title-sm">Nieuwe versie analyseren</p>
+            <div class="rp-meta">voor: <strong id="versieContextNaam"></strong></div>
+          </div>
+        </div>
+        <div class="rp-body">
+
+          <!-- Dossier-context balk -->
+          <div class="versie-context" id="versieContextBalk" style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="font-size:1.1rem;margin-top:2px">📁</span>
+            <div style="flex:1">
+              <div class="koppel-actief-naam" id="koppelNaamText"></div>
+              <div class="koppel-actief-sub">Nieuwe versie toevoegen aan dit dossier</div>
+              <input type="text" class="versie-label-input" id="versieLabelInput"
+                placeholder="Versielabel (optioneel) — bijv. 'Na overleg 15 juni'">
+            </div>
+          </div>
+
+          <!-- Lege tray: dropzone -->
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="fileInput" accept=".docx,.pdf" multiple>
+            <div class="dropicon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 16V4M12 4l-4 4M12 4l4 4"/>
+                <path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/>
+              </svg>
+            </div>
+            <p>Sleep bestanden hierheen of klik om te kiezen</p>
+            <p class="drop-hint">PDF en DOCX · meerdere bestanden tegelijk</p>
+          </div>
+
+          <!-- Gevulde tray -->
+          <div class="tray-lijst" id="trayLijst" style="display:none"></div>
+          <div class="tray-voetbalk" id="trayVoetbalk" style="display:none">
+            <button class="tray-toevoegen-btn" id="trayToevoegenBtn">+ Document toevoegen</button>
+            <input type="file" id="fileInputExtra" accept=".docx,.pdf" multiple style="display:none">
+            <button class="tray-wis-btn" id="trayWisBtn">Alles wissen</button>
+          </div>
+
+          <button class="primary" id="analyseBtn" disabled>Analyseer document</button>
+
+          <div class="scanning" id="scanning">
+            <div class="scan-doc"><div class="scan-line"></div></div>
+            <p id="scanText">Document analyseren...</p>
+            <div class="scan-voortgang" id="scanVoortgang">
+              <div class="scan-doc-label" id="scanDocLabel"></div>
+              <div class="scan-balk-wrap">
+                <div class="scan-balk"><div class="scan-balk-vul" id="scanBalkVul"></div></div>
+                <span class="scan-pct" id="scanPct">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="error-box" id="errorBox" style="display:none;"></div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div><!-- /app -->
+
+<!-- ═══ Instellingen modal ═══════════════════════════ -->
 <div class="modal-overlay" id="instellingenModal">
   <div class="modal-card">
     <h2>Praktijkinstellingen</h2>
@@ -369,82 +767,6 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
       <button class="btn-ghost" id="instAnnuleerBtn">Annuleren</button>
       <button class="secundair" id="instOpslaanBtn">Opslaan</button>
     </div>
-  </div>
-</div>
-
-  <div class="tabs">
-    <button class="tab active" data-tab="dossiers">Dossiers</button>
-    <button class="tab" data-tab="analyse">Nieuwe analyse</button>
-    <button class="tab" data-tab="losse">Losse analyses</button>
-  </div>
-
-  <!-- Tab: Dossiers -->
-  <div class="view active" id="view-dossiers">
-    <div class="dossier-toolbar">
-      <button class="secundair" id="nieuwDossierBtn">+ Nieuw dossier</button>
-    </div>
-    <div id="dossierLijst" class="dossierlijst"><p class="empty">Bezig met laden...</p></div>
-  </div>
-
-  <!-- Tab: Nieuwe analyse -->
-  <div class="view" id="view-analyse">
-    <!-- Versie-context balk (zichtbaar als er een dossier-context is) -->
-    <div class="versie-context" id="versieContextBalk">
-      <div class="versie-context-top">
-        <span class="vc-naam">Nieuwe versie voor: <strong id="versieContextNaam"></strong></span>
-        <button class="vc-wis" id="vcWisBtn" title="Loskoppelen van dossier">×</button>
-      </div>
-      <input type="text" class="versie-label-input" id="versieLabelInput"
-        placeholder="Versielabel (optioneel) — bijv. 'Na overleg 15 juni'">
-    </div>
-
-    <!-- Lege tray: dropzone -->
-    <div class="dropzone" id="dropzone">
-      <input type="file" id="fileInput" accept=".docx,.pdf" multiple>
-      <div class="dropicon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></div>
-      <p>Sleep bestanden hierheen of klik om te kiezen</p>
-      <p class="drop-hint">PDF en DOCX · meerdere bestanden tegelijk</p>
-    </div>
-    <!-- Gevulde tray -->
-    <div class="tray-lijst" id="trayLijst" style="display:none"></div>
-    <div class="tray-voetbalk" id="trayVoetbalk" style="display:none">
-      <button class="tray-toevoegen-btn" id="trayToevoegenBtn">+ Document toevoegen</button>
-      <input type="file" id="fileInputExtra" accept=".docx,.pdf" multiple style="display:none">
-      <button class="tray-wis-btn" id="trayWisBtn">Alles wissen</button>
-    </div>
-    <button class="primary" id="analyseBtn" disabled>Analyseer document</button>
-    <div class="scanning" id="scanning">
-      <div class="scan-doc"><div class="scan-line"></div></div>
-      <p id="scanText">Document analyseren...</p>
-    </div>
-    <div class="error-box" id="errorBox" style="display:none;"></div>
-  </div>
-
-  <!-- Tab: Losse analyses -->
-  <div class="view" id="view-losse">
-    <div id="historyList" class="historylijst"><p class="empty">Bezig met laden...</p></div>
-  </div>
-</div>
-
-<!-- ═══ Dossier detail overlay ═══════════════════════ -->
-<div class="dossier-overlay" id="dossierOverlay">
-  <div class="dossier-header">
-    <button class="back-btn" id="dossierBackBtn">← Dossiers</button>
-    <div class="dossier-meta-header">
-      <span class="naam" id="dossierNaamTitel"></span>
-      <span class="partijen" id="dossierPartijen"></span>
-    </div>
-    <select class="dossier-status-sel" id="dossierStatusSel">
-      <option value="actief">Actief</option>
-      <option value="afgerond">Afgerond</option>
-      <option value="gearchiveerd">Gearchiveerd</option>
-    </select>
-    <button class="secundair" id="nieuweVersieBtn">+ Nieuwe versie</button>
-    <button class="secundair dossier-verwijder-btn" id="dossierVerwijderBtn" title="Dossier verwijderen">🗑 Verwijderen</button>
-    <button class="uitloggen-btn" id="uitloggenBtn2">Uitloggen</button>
-  </div>
-  <div class="dossier-body">
-    <div class="dossier-body-inner" id="dossierContent"></div>
   </div>
 </div>
 
@@ -491,7 +813,9 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
     <div class="split-acties">
       <input type="text" class="versie-label-header" id="versieLabelHeaderInput"
         placeholder="Versielabel (optioneel)" style="display:none">
-      <button class="secundair" id="opslaanBtn">Opslaan</button>
+      <button class="secundair" id="genereerConceptBtn" style="display:none">✦ Genereer concept <span id="conceptBadge" class="concept-badge">0</span></button>
+      <button class="secundair" id="bekijkConceptBtn"   style="display:none">✦ Bekijk concept</button>
+      <span id="conceptGenChips"></span>
       <button class="secundair" id="downloadPdfBtn">↓ PDF-rapport</button>
       <button class="secundair" id="downloadBtn">↓ Word</button>
       <span class="opslagstatus" id="opslagStatus"></span>
@@ -504,6 +828,20 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
   </div>
 </div>
 
+
+<!-- ═══ Concept-review (full-screen) ════════════════════ -->
+<div class="concept-review" id="conceptReview" style="display:none">
+  <div class="concept-review-header">
+    <button class="back-btn" id="conceptReviewBackBtn">← Terug</button>
+    <span class="concept-review-titel">Verbeterd concept — review</span>
+    <button class="primair" id="conceptDownloadBtn">↓ Download .docx</button>
+  </div>
+  <div class="concept-review-body">
+    <div class="concept-doc-panel" id="conceptDocPanel"></div>
+    <div class="concept-changes-panel" id="conceptChangesPanel"></div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script src="config.local.js" onerror="void 0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -512,6 +850,7 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js"></script>
+<!-- docx wordt lazy-geladen via esm.sh bij eerste gebruik (geen UMD-browser-build beschikbaar) -->
 <script>
 'use strict';
 
@@ -525,6 +864,9 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const { data: { session } } = await db.auth.getSession();
   if (!session) { window.location.replace('login.html'); return; }
   document.body.style.display = '';
+  await laadPraktijknaam();   // praktijknaam laden vanuit Supabase user-metadata
+  const emailEl = document.getElementById('topbarEmail');
+  if (emailEl) emailEl.textContent = session.user?.email || '';
 
   // Statusoverzicht-brug: ?naam=Familie+De+Vries&so=1 opent direct de analyse-tab
   const params = new URLSearchParams(window.location.search);
@@ -614,18 +956,48 @@ const rapportTool = {
   input_schema: {
     type: 'object',
     properties: {
+      // mfn_score staat EERSTE: Claude genereert in schema-volgorde, dus de MfN-check
+      // heeft volledige tokenruimte vóór de lange volledigheids- en juridisch-lijsten.
+      mfn_score: {
+        type: 'object',
+        description: 'MfN-compliantie-score. VERPLICHT voor convenant en ouderschapsplan — vul alle elementen in. Gebruik null voor andere documenttypen.',
+        properties: {
+          elementen: {
+            type: 'array',
+            description: 'Elk MfN-vereist element afzonderlijk beoordeeld. Toelichting max 1 zin.',
+            items: {
+              type: 'object',
+              properties: {
+                element:     { type: 'string', description: 'Naam exact zoals in de MfN-lijst.' },
+                status:      { type: 'string', enum: ['aanwezig','onvolledig','ontbreekt'] },
+                toelichting: { type: 'string', description: 'Max 1 zin; verplicht bij onvolledig of ontbreekt.' },
+              },
+              required: ['element','status'],
+            },
+          },
+          extra_elementen: {
+            type: 'array',
+            description: 'Aanwezige bedingen die niet op de MfN-lijst staan — positieve toevoeging.',
+            items: { type: 'string' },
+          },
+          score_aanwezig: { type: 'integer', description: 'Aantal elementen met status aanwezig.' },
+          score_totaal:   { type: 'integer', description: 'Totaal MfN-elementen (vaste waarde uit de lijst).' },
+        },
+        required: ['elementen','score_aanwezig','score_totaal'],
+      },
       samenvatting: { type: 'string' },
-      grammatica: {
+      volledigheid: {
         type: 'array',
         items: {
           type: 'object',
           properties: {
-            locatie:   { type: 'string' },
-            probleem:  { type: 'string' },
-            suggestie: { type: 'string', description: 'Concrete alternatieve formulering die de mediator direct kan overnemen.' },
-            passage:   { type: 'string', description: 'Letterlijke tekst (max 80 tekens) uit het document.' },
+            sectie:      { type: 'string' },
+            status:      { type: 'string', enum: ['aanwezig','onvolledig','ontbreekt'] },
+            toelichting: { type: 'string' },
+            suggestie:   { type: 'string', description: 'Bij onvolledig of ontbreekt: concrete tekst die kan worden toegevoegd.' },
+            passage:     { type: 'string', description: 'Beginregel of koptekst zoals in het document; leeg als ontbreekt.' },
           },
-          required: ['locatie','probleem','suggestie'],
+          required: ['sectie','status','toelichting'],
         },
       },
       juridisch: {
@@ -643,20 +1015,6 @@ const rapportTool = {
           required: ['onderwerp','bevinding','ernst'],
         },
       },
-      volledigheid: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            sectie:      { type: 'string' },
-            status:      { type: 'string', enum: ['aanwezig','onvolledig','ontbreekt'] },
-            toelichting: { type: 'string' },
-            suggestie:   { type: 'string', description: 'Bij onvolledig of ontbreekt: concrete tekst die kan worden toegevoegd.' },
-            passage:     { type: 'string', description: 'Beginregel of koptekst zoals in het document; leeg als ontbreekt.' },
-          },
-          required: ['sectie','status','toelichting'],
-        },
-      },
       balans: {
         type: 'array',
         items: {
@@ -670,35 +1028,21 @@ const rapportTool = {
           required: ['signalering','ernst'],
         },
       },
-      mfn_score: {
-        type: 'object',
-        description: 'Compliance-score op de MfN-standaard en wettelijke minimumvereisten voor dit documenttype.',
-        properties: {
-          elementen: {
-            type: 'array',
-            description: 'Alle MfN-vereiste elementen met hun status in dit document.',
-            items: {
-              type: 'object',
-              properties: {
-                element:     { type: 'string', description: 'Naam van het MfN-element, exact zoals in de lijst.' },
-                status:      { type: 'string', enum: ['aanwezig','onvolledig','ontbreekt'] },
-                toelichting: { type: 'string', description: 'Korte uitleg (1 zin); verplicht bij onvolledig of ontbreekt.' },
-              },
-              required: ['element','status'],
-            },
+      grammatica: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            locatie:   { type: 'string' },
+            probleem:  { type: 'string' },
+            suggestie: { type: 'string', description: 'Concrete alternatieve formulering die de mediator direct kan overnemen.' },
+            passage:   { type: 'string', description: 'Letterlijke tekst (max 80 tekens) uit het document.' },
           },
-          extra_elementen: {
-            type: 'array',
-            description: 'Bedingen of regelingen die aanwezig zijn in het document maar niet door MfN vereist worden — noem ze als positieve toevoeging.',
-            items: { type: 'string' },
-          },
-          score_aanwezig: { type: 'integer', description: 'Aantal MfN-elementen met status aanwezig.' },
-          score_totaal:   { type: 'integer', description: 'Totaal aantal MfN-vereiste elementen in de lijst.' },
+          required: ['locatie','probleem','suggestie'],
         },
-        required: ['elementen','score_aanwezig','score_totaal'],
       },
     },
-    required: ['samenvatting','grammatica','juridisch','volledigheid','balans','mfn_score'],
+    required: ['samenvatting','volledigheid','juridisch','balans','grammatica'],
   },
 };
 
@@ -723,6 +1067,48 @@ async function ocrPagina(pdfPagina) {
   await pdfPagina.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
   const { data: { text } } = await _ocrWorker.recognize(canvas);
   return text;
+}
+
+// ── LlamaParse: gestructureerde PDF-extractie ─────────
+// Converteert een File naar base64 (chunked om stack overflow bij grote files te voorkomen)
+async function bestandNaarBase64(file) {
+  const ab    = await file.arrayBuffer();
+  const bytes = new Uint8Array(ab);
+  let bin = '';
+  const CHUNK = 8192;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+
+// Upload PDF naar LlamaParse via Vercel-proxy en peil totdat de job klaar is.
+// Geeft gestructureerde markdown terug; gooit een Error als het mislukt.
+async function extractTextViaParse(file, onProgress = () => {}) {
+  onProgress('Uploaden naar parser…');
+  const base64     = await bestandNaarBase64(file);
+  const uploadRes  = await fetch('/api/extract-pdf', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ filename: file.name, base64 }),
+  });
+  const uploadJson = await uploadRes.json();
+  if (!uploadRes.ok || uploadJson.error) {
+    throw new Error(uploadJson.error || `Upload mislukt (${uploadRes.status})`);
+  }
+  const { jobId } = uploadJson;
+
+  // Poll elke 3 seconden, max 3 minuten
+  for (let poging = 0; poging < 60; poging++) {
+    await new Promise(r => setTimeout(r, 3000));
+    onProgress(`Structuur analyseren… (${(poging + 1) * 3}s)`);
+    const pollRes  = await fetch(`/api/extract-pdf?jobId=${encodeURIComponent(jobId)}`);
+    const pollJson = await pollRes.json();
+    if (pollJson.status === 'SUCCESS') return pollJson.tekst || '';
+    if (pollJson.status === 'ERROR')   throw new Error(pollJson.fout || 'Parsering mislukt');
+    // PENDING/STARTED → blijf pollen
+  }
+  throw new Error('Timeout: document parsering duurde langer dan 3 minuten');
 }
 
 // ── Tekst extraheren ──────────────────────────────────
@@ -772,16 +1158,39 @@ async function extractText(file, onProgress = () => {}) {
 }
 
 // ── Claude API ────────────────────────────────────────
-async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096) {
+// opts: { model, cache }
+//   model — standaard 'claude-sonnet-4-6'; gebruik 'claude-haiku-4-5-20251001' voor simpele taken
+//   cache — true: stuur prompt-caching beta-header + voeg cache_control toe aan system en
+//           gecachede user-blokken
+// userContent kan een string zijn of een array [{text, cache?}, ...]
+//   cache:true op een blok markeert alles t/m dat blok als cache-prefix (stabiel gedeelte)
+async function askClaudeForJson(systemPrompt, userContent, tool, maxTokens = 4096, opts = {}) {
+  const { model = 'claude-sonnet-4-6', cache = false } = opts;
+
+  // System: bij caching als array met cache_control, anders gewone string
+  const systemField = cache
+    ? [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }]
+    : systemPrompt;
+
+  // User content: string of array van blokken
+  const messageContent = Array.isArray(userContent)
+    ? userContent.map(b => b.cache
+        ? { type: 'text', text: b.text, cache_control: { type: 'ephemeral' } }
+        : { type: 'text', text: b.text })
+    : userContent;
+
   const body = {
-    model: 'claude-sonnet-4-6',
+    model,
     max_tokens: maxTokens,
-    temperature: 0,        // deterministisch: zelfde document → zelfde uitkomst
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userPrompt }],
+    temperature: 0,   // deterministisch: zelfde document → zelfde uitkomst
+    system: systemField,
+    messages: [{ role: 'user', content: messageContent }],
     tools: [tool],
     tool_choice: { type: 'tool', name: tool.name },
   };
+
+  const extraHeaders = cache ? { 'anthropic-beta': 'prompt-caching-2024-07-31' } : {};
+
   let res;
   if (typeof ANTHROPIC_API_KEY !== 'undefined') {
     res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -791,22 +1200,36 @@ async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
+        ...extraHeaders,
       },
       body: JSON.stringify(body),
     });
   } else {
     res = await fetch('/api/claude', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...extraHeaders },
       body: JSON.stringify(body),
     });
   }
   if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
   const json    = await res.json();
-  const toolUse = json.content.find(b => b.type === 'tool_use');
+  const toolUse = json.content?.find(b => b.type === 'tool_use');
+  if (json.stop_reason === 'max_tokens') {
+    // Tokenbudget bereikt — output is afgekapt; input is waarschijnlijk leeg of onvolledig
+    const heeftBruikbareOutput = toolUse && toolUse.input && Object.keys(toolUse.input).length > 0;
+    if (!heeftBruikbareOutput) {
+      throw new Error(`Tokenbudget (${maxTokens}) bereikt — het document of de selectie is te lang. Selecteer minder verbeterpunten of gebruik een kortere tekst.`);
+    }
+    console.warn(`[Claude] max_tokens bereikt voor tool "${tool.name}" — output mogelijk onvolledig.`);
+  }
   if (!toolUse) throw new Error('Claude gaf geen tool-aanroep terug.');
   return toolUse.input;
 }
+
+// ── Tekstcache per Storage-pad ────────────────────────
+// Slaat getekste inhoud op zodat OCR bij een nieuwe versie niet opnieuw hoeft.
+// Wordt ook gevuld vanuit eerder opgeslagen rapporten (_teksten_per_pad).
+const tekstPerPad = new Map(); // storageInfo.pad → tekst
 
 // ── Document analyseren ───────────────────────────────
 async function analyseDocument(trayItems, onProgress = () => {}) {
@@ -844,8 +1267,33 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
     const item      = resolvedItems[idx];
     const typeLabel = DOC_TYPE_LABELS[item.type] || item.type;
     const prefix    = resolvedItems.length > 1 ? `[${typeLabel} ${idx + 1}/${resolvedItems.length}] ` : '';
-    onProgress(`${prefix}Tekst uitlezen…`);
-    const tekst = await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
+    const pad       = item.storageInfo?.pad;
+
+    let tekst;
+    if (pad && tekstPerPad.has(pad)) {
+      // Gecachede tekst: skip download + OCR
+      onProgress(`${prefix}Tekst uit cache…`);
+      tekst = tekstPerPad.get(pad);
+    } else {
+      const isPdf = item.bestand.name.toLowerCase().endsWith('.pdf');
+      if (isPdf) {
+        // Probeer LlamaParse (gestructureerde markdown); fallback naar PDF.js bij fout
+        try {
+          tekst = await extractTextViaParse(item.bestand, msg => onProgress(`${prefix}${msg}`));
+          onProgress(`${prefix}Structuur herkend ✓`);
+        } catch (parseErr) {
+          console.warn('[LlamaParse] mislukt, fallback naar PDF.js:', parseErr.message);
+          onProgress(`${prefix}Tekst uitlezen (fallback)…`);
+          tekst = await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
+        }
+      } else {
+        onProgress(`${prefix}Tekst uitlezen…`);
+        tekst = await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
+      }
+      // Sla op in sessie-cache zodat een volgende versie dit bestand overslaat
+      if (pad) tekstPerPad.set(pad, tekst);
+    }
+
     documentDelen.push({
       header: `=== ${typeLabel.toUpperCase()}: ${item.bestandsnaam} ===`,
       tekst,
@@ -858,22 +1306,63 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
   if (documentTekst.trim().length < 200)
     throw new Error('Kon weinig tot geen tekst uit de documenten halen. Zijn ze leesbaar of gescand? Controleer of OCR is doorgelopen.');
 
-  // Stap 1: classificatie + situatie_kenmerken + templates voor beide types parallel ophalen
-  onProgress('Stap 1 van 3 — Document herkennen…');
+  // ── Stap 1: Splits in hoofddocumenten en contextstukken; classificatie ophalen ──
+  onProgress('Stap 1 van 3 — Documenten herkennen…');
+
+  // Hoofddocumenten: convenant en ouderschapsplan → eigen Claude-aanroep + tab
+  // Contextstukken: alles andere (waardebepaling, HV, pensioen, ID, overig) →
+  //   meegestuurd als bijlage in de analyse van élk hoofddocument,
+  //   én meegetoond in de viewer naast het hoofddocument
+  const hoofdItems   = resolvedItems.filter(i =>  HOOFD_TYPES.has(i.type));
+  const contextItems = resolvedItems.filter(i => !HOOFD_TYPES.has(i.type));
+  // Fallback: geen hoofddocumenten → analyseer alles als hoofddocument, context leeg
+  const effectieveHoofdItems    = hoofdItems.length ? hoofdItems    : resolvedItems;
+  const effectieveContextItems  = hoofdItems.length ? contextItems  : [];
+  const heeftHV = resolvedItems.some(i => i.type === 'huwelijkse_voorwaarden');
+
+  // Mapping item.id → documentDeel
+  const deelPerIdx = new Map(resolvedItems.map((item, i) => [item.id, documentDelen[i]]));
+
+  // Context-tekst: alle contextstukken samengevoegd, voor bijlage-sectie in de Claude-prompt
+  const bijlagenTekst = effectieveContextItems
+    .map(i => deelPerIdx.get(i.id))
+    .filter(Boolean)
+    .map(d => `${d.header}\n${d.tekst}`)
+    .join('\n\n');
+
   const { data: kenmerken } = await db.from('situatie_kenmerken').select('key, label, categorie');
   const kenmerkenLijst = (kenmerken ?? []).map(k => `${k.key} (${k.label})`).join(', ');
 
-  // Voor classificatie: eerste 3000 tekens per document (met type-header, volgorde-onafhankelijk)
   const classificatieTekst = documentDelen.length > 1
     ? documentDelen.map(d => `${d.header}\n${d.tekst.slice(0, 3000)}`).join('\n\n')
     : documentTekst.slice(0, 6000);
 
-  const [classificatie, { data: convTemplates }, { data: opTemplates }] = await Promise.all([
-    askClaudeForJson(
-      `Je classificeert een Nederlands echtscheidingsdocument en haalt de namen van beide partijen eruit.
+  // Haiku: classificatie is een simpele herkenningstaak, geen diepe analyse nodig
+  const classificatie = await askClaudeForJson(
+    `Je classificeert een Nederlands echtscheidingsdocument en haalt de namen van beide partijen eruit.
 Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijst}`,
-      classificatieTekst, classificatieTool, 1024
-    ),
+    classificatieTekst, classificatieTool, 1024,
+    { model: 'claude-haiku-4-5-20251001' }
+  );
+
+  // Bouw pseudonimiseringsmap op basis van zojuist verkregen namen
+  const { naarAnon, naarEcht } = bouwAnonMap(classificatie);
+  // Bijlagen-tekst alvast anonimiseren (buiten de per-doc-loop)
+  const bijlagenTekstAnon = anonimiseerTekst(bijlagenTekst, naarAnon);
+
+  // ── Stap 2: Wetsartikelen + templates voor alle primaire types parallel ──
+  onProgress('Stap 2 van 3 — Kennisbank raadplegen…');
+  const wetsQueryTags = [...new Set([
+    ...(classificatie.situatie_kenmerken || []),
+    ...effectieveHoofdItems.map(i => i.type),
+    ...(heeftHV ? ['huwelijkse_voorwaarden','verrekenbeding','koude_uitsluiting','uitsluitingsclausule'] : []),
+  ])];
+  const [{ data: wetteksten }, ...templateResultaten] = await Promise.all([
+    db.from('legal_chunks')
+      .select('citation, content, topic_tags')
+      .overlaps('topic_tags', wetsQueryTags)
+      .limit(25),
+    // Templates voor convenant én ouderschapsplan in één ronde
     db.from('document_templates')
       .select('section_name, required, applies_when, instructions')
       .eq('doc_type', 'convenant').order('section_order'),
@@ -881,37 +1370,41 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
       .select('section_name, required, applies_when, instructions')
       .eq('doc_type', 'ouderschapsplan').order('section_order'),
   ]);
+  const wetTekst = (wetteksten ?? []).map(w => `[${w.citation}] ${w.content}`).join('\n\n');
+  const templatesPer = {
+    convenant:      templateResultaten[0].data ?? [],
+    ouderschapsplan: templateResultaten[1].data ?? [],
+  };
 
-  const docType   = classificatie.doc_type === 'onbekend' ? 'convenant' : classificatie.doc_type;
-  const templates = docType === 'ouderschapsplan' ? opTemplates : convTemplates;
-  const checklist = (templates ?? []).filter(
-    t => !t.applies_when || t.applies_when.every(tag => classificatie.situatie_kenmerken.includes(tag))
-  );
+  // ── Stap 3: Per hoofddocument analyseren ─────────────────────────────
+  const totaalDocs = effectieveHoofdItems.length;
+  const documenten = [];
 
-  // Stap 2: wetsartikelen ophalen op basis van classificatie
-  onProgress('Stap 2 van 3 — Kennisbank raadplegen…');
-  const wetsQueryTags = [...new Set([
-    ...(classificatie.situatie_kenmerken || []),
-    docType,
-    // Voeg HV-tags toe als huwelijkse voorwaarden zijn meegegeven
-    ...(heeftHV ? ['huwelijkse_voorwaarden','verrekenbeding','koude_uitsluiting','uitsluitingsclausule'] : []),
-  ])];
-  const { data: wetteksten } = await db
-    .from('legal_chunks')
-    .select('citation, content, topic_tags')
-    .overlaps('topic_tags', wetsQueryTags)
-    .limit(25);
+  for (let di = 0; di < totaalDocs; di++) {
+    const item     = effectieveHoofdItems[di];
+    const deel     = deelPerIdx.get(item.id);
+    const docType  = item.type;
+    const heeftMfn = docType === 'convenant' || docType === 'ouderschapsplan';
+    const tmplType = docType === 'ouderschapsplan' ? 'ouderschapsplan' : 'convenant';
+    const docTypeLabel = {
+      convenant:       'Echtscheidingsconvenant',
+      ouderschapsplan: 'Ouderschapsplan',
+      waarde_verdeling:'Waardebepaling / Bijlage',
+      overig:          'Overig echtscheidingsdocument',
+    }[docType] || DOC_TYPE_LABELS[docType] || docType;
 
-  const checklistTekst = checklist.map(c => `- ${c.section_name}: ${c.instructions ?? ''}`).join('\n');
-  const wetTekst       = (wetteksten ?? []).map(w => `[${w.citation}] ${w.content}`).join('\n\n');
+    const bijlageToelichting = effectieveContextItems.length
+      ? ` (+${effectieveContextItems.length} bijlage${effectieveContextItems.length > 1 ? 'n' : ''} als context)` : '';
+    const docLabel = `Document ${di + 1}/${totaalDocs}${di === 0 ? bijlageToelichting : ''}: ${DOC_TYPE_LABELS[docType] || docType}`;
+    onProgress(`Stap 3 van 3 — Analyseren…`, 0, docLabel);
 
-  onProgress('Stap 3 van 3 — Analyseren… (dit duurt ca. 20–30 seconden)');
-  const docTypeLabel = docType === 'ouderschapsplan' ? 'Ouderschapsplan' : 'Echtscheidingsconvenant';
-  // Detecteer aanwezige bijlage-types in de tray
-  const trayTypes = new Set(resolvedItems.map(i => i.type));
-  const heeftHV   = trayTypes.has('huwelijkse_voorwaarden');
+    const checklist = (templatesPer[tmplType] || []).filter(
+      t => !t.applies_when || t.applies_when.every(tag => classificatie.situatie_kenmerken.includes(tag))
+    );
+    const checklistTekst = checklist.map(c => `- ${c.section_name}: ${c.instructions ?? ''}`).join('\n');
 
-  const juridischeChecks = docType === 'ouderschapsplan' ? `
+    const juridischeChecks =
+      docType === 'ouderschapsplan' ? `
 Controleer specifiek op de volgende juridische punten:
 1. HOOFDVERBLIJFPLAATS — Wettelijk verplicht (art. 826 Rv). Is er één hoofdverblijfplaats aangewezen?
 2. ZORGREGELING — Zijn de omgangstijden specifiek (welke dagen, weekenden, vakanties, feestdagen)?
@@ -919,7 +1412,8 @@ Controleer specifiek op de volgende juridische punten:
 4. KINDERALIMENTATIE — Wordt verwezen naar de Tremanormen of is een afwijking gemotiveerd (art. 1:404 BW)?
 5. GEZAG — Wordt gezamenlijk ouderlijk gezag bevestigd of wordt afwijking gevraagd (art. 1:247 BW)?
 6. GESCHILLENREGELING — Is er een escalatiebepaling of mediationclausule opgenomen (art. 1:253a BW)?
-7. INDEXERING — Wordt kinderalimentatie jaarlijks geïndexeerd?` : `
+7. INDEXERING — Wordt kinderalimentatie jaarlijks geïndexeerd?`
+    : docType === 'convenant' ? `
 Controleer specifiek op de volgende juridische punten:
 1. PARTNERALIMENTATIE — Is er een bedrag of nihilbeding? Bij nihilbeding: bewust en geïnformeerd (art. 1:159 BW)? Termijn vermeld en maximaal 12 jaar (art. 1:157 BW)? Indexering?
 2. KINDERALIMENTATIE — Verwijzing naar Tremanormen of gemotiveerde afwijking (art. 1:404 BW)?
@@ -927,10 +1421,11 @@ Controleer specifiek op de volgende juridische punten:
 4. WONING — Is er een leverings-/passeerdatum? Wie neemt hypotheek over of wordt de woning verkocht? Ontslag uit aansprakelijkheid geregeld (art. 3:170 BW)?
 5. BELASTING — Wie is fiscaal partner tot welke datum? Hoe worden aanslagen/teruggaven verdeeld?
 6. VERMOGEN — Is huwelijksgemeenschap of verrekenbeding volledig afgewikkeld (art. 1:94 en 1:121 BW)?
-7. SCHULDEN — Is duidelijk wie welke schulden overneemt? Zijn crediteuren op de hoogte gebracht waar relevant?`;
+7. SCHULDEN — Is duidelijk wie welke schulden overneemt? Zijn crediteuren op de hoogte gebracht waar relevant?`
+    : `
+Controleer specifiek op juridische juistheid, volledigheid en consistentie van dit document in de context van de echtscheiding. Signaleer ontbrekende elementen, tegenstrijdigheden of risico's voor partijen.`;
 
-  // Extra checks als huwelijkse voorwaarden zijn meegegeven
-  const hvChecks = heeftHV ? `
+    const hvChecks = heeftHV ? `
 
 HUWELIJKSE VOORWAARDEN AANWEZIG — voer aanvullende kruiscontroles uit:
 HV-A. STELSEL — Benoem het vermogensrechtelijk stelsel uit de HV (koude uitsluiting / beperkte gemeenschap / verrekenbeding). Controles zijn stelselhankelijk:
@@ -952,17 +1447,90 @@ HV-C. REFERENTIE — Verwijst het convenant expliciet naar de huwelijkse voorwaa
 
 HV-D. CONSISTENTIE — Controleer of de formulering in het convenant over vermogen, schulden en eigendom niet strijdig is met wat de HV bepaalt.` : '';
 
-  const mfnElementen = MFN_ELEMENTEN[docType] || MFN_ELEMENTEN.convenant;
-  const mfnLijst = mfnElementen.map((e, i) => `${i + 1}. ${e}`).join('\n');
+    const mfnElementen  = heeftMfn ? (MFN_ELEMENTEN[docType] || MFN_ELEMENTEN.convenant) : [];
+    const mfnInstructie = heeftMfn ? `
 
-  const rapport = await askClaudeForJson(
-    `Je bent een ervaren familierechtjurist en mediator die een Nederlands ${docTypeLabel} controleert op juridische volledigheid, correctheid en evenwichtigheid.
+**mfn_score** — Beoordeel het document op de MfN-standaardvereisten hieronder. Geef voor elk element precies de status (aanwezig/onvolledig/ontbreekt) en een korte toelichting bij onvolledig of ontbreekt. Gebruik het element-veld exact zoals in de lijst. Voeg in extra_elementen elementen toe die wél aanwezig zijn maar niet op de lijst staan (bijv. specifieke uitsluitingsclausules, mediationbeding, overgangsrecht). Bereken score_aanwezig als het aantal elementen met status "aanwezig". score_totaal is altijd ${mfnElementen.length}.
+
+MfN-VEREISTE ELEMENTEN (${docTypeLabel}):
+${mfnElementen.map((e, i) => `${i + 1}. ${e}`).join('\n')}` : '';
+
+    // Andere hoofddocumenten als aanvullende context (volledig — nodig voor kruiscontroles)
+    const anderePrimaireTekst = effectieveHoofdItems
+      .filter((_, j) => j !== di)
+      .map(andereItem => deelPerIdx.get(andereItem.id))
+      .filter(Boolean)
+      .map(d => `${d.header}\n${d.tekst}`)
+      .join('\n\n');
+
+    // Gepseudonimiseerde versies voor Claude (namen + PII → placeholders)
+    const anderePrimaireTekstAnon = anonimiseerTekst(anderePrimaireTekst, naarAnon);
+    const contextTekstAnon = [
+      bijlagenTekstAnon      ? `\n\nBIJLAGEN (alleen ter context — niet apart analyseren):\n${bijlagenTekstAnon}` : '',
+      anderePrimaireTekstAnon ? `\n\nOVERIGE DOCUMENTEN IN DEZE ZAAK (ter context — niet apart analyseren):\n${anderePrimaireTekstAnon}` : '',
+    ].join('');
+
+    // ── Twee parallelle Claude-calls: structuur (samenvatting + volledigheid + MfN)
+    //    en kwaliteit (juridisch + balans + grammatica).
+    //    Beide starten tegelijk; de langste bepaalt de wachttijd (~40-50% sneller).
+    const p = rapportTool.input_schema.properties;
+
+    const structuurTool = {
+      name: 'registreer_structuur',
+      description: 'Registreert samenvatting, volledigheid en MfN-score van het document.',
+      input_schema: {
+        type: 'object',
+        properties: heeftMfn
+          ? { mfn_score: p.mfn_score, samenvatting: p.samenvatting, volledigheid: p.volledigheid }
+          : { samenvatting: p.samenvatting, volledigheid: p.volledigheid },
+        required: heeftMfn
+          ? ['mfn_score', 'samenvatting', 'volledigheid']
+          : ['samenvatting', 'volledigheid'],
+      },
+    };
+
+    const juridischTool = {
+      name: 'registreer_juridisch',
+      description: 'Registreert juridische bevindingen van het document.',
+      input_schema: {
+        type: 'object',
+        properties: { juridisch: p.juridisch },
+        required: ['juridisch'],
+      },
+    };
+
+    const balansGrammaticaTool = {
+      name: 'registreer_balans_grammatica',
+      description: 'Registreert balanscheck en taalkundige opmerkingen van het document.',
+      input_schema: {
+        type: 'object',
+        properties: { balans: p.balans, grammatica: p.grammatica },
+        required: ['balans', 'grammatica'],
+      },
+    };
+
+    // System prompt A: samenvatting + volledigheid + MfN
+    const sysStructuur =
+`Je bent een ervaren familierechtjurist en mediator die een Nederlands ${docTypeLabel} controleert.
 
 DOCUMENTTYPE: ${docTypeLabel}
+${mfnInstructie}
 
-AANWIJZINGEN PER CATEGORIE:
+AANWIJZINGEN:
 
-**volledigheid** — Doorloop ALLE secties uit de checklist hieronder. Geef ook "aanwezig" terug voor secties die er wél in staan. Controleer of de inhoud concreet en afdoende is, niet slechts een vage verwijzing. Laat "passage" leeg als een sectie ontbreekt.
+**samenvatting** — Schrijf een beknopte samenvatting (3-5 zinnen) van het document en de voornaamste bevindingen. Als er OVERIGE DOCUMENTEN IN DEZE ZAAK aanwezig zijn in de prompt, vermeld dat ze ter context zijn meegeleverd. Schrijf nooit dat een document "ontbreekt" als het als context is meegestuurd.
+
+**volledigheid** — Doorloop ALLE secties uit de checklist hieronder en geef voor ELKE sectie een item terug — ook als de sectie aanwezig en correct is (status "aanwezig"). De lijst moet net zoveel items bevatten als de checklist regels. Controleer of de inhoud concreet en afdoende is, niet slechts een vage verwijzing. Laat "passage" leeg als een sectie ontbreekt.
+
+STRIKTE REGELS:
+- Geef alleen bevindingen die daadwerkelijk uit het document blijken. Speculeer niet.
+- volledigheid MOET voor elke sectie uit VERWACHTE SECTIES een item bevatten. Sla geen sectie over.${heeftMfn ? `\n- mfn_score.elementen MOET EXACT ${mfnElementen.length} items bevatten — één per element uit de MfN-lijst hierboven. Geen enkel element mag ontbreken.` : ''}`;
+
+    // System prompt B: juridisch (eigen call met eigen tokenruimte)
+    const sysJuridisch =
+`Je bent een ervaren familierechtjurist en mediator die een Nederlands ${docTypeLabel} controleert op juridische correctheid.
+
+DOCUMENTTYPE: ${docTypeLabel}
 
 **juridisch** —${juridischeChecks}${hvChecks}
 
@@ -972,27 +1540,141 @@ Ernst:
 - laag: Best practice die ontbreekt, maar geen direct risico.
 Vul "wetsartikel" in met het specifieke artikel (bijv. "art. 1:157 BW") als dat van toepassing is.
 
-**balans** — Kijk naar de verdeling van lusten en lasten: zijn termijnen evenwichtig t.o.v. huwelijksduur? Zijn er eenzijdige boetebedingen, onduidelijke indexering of eenzijdige informatieplichten?
-
-**grammatica** — Alleen taalfouten of intern tegenstrijdige zinnen die de juridische betekenis raken. Geen stilistische opmerkingen.
-
-**mfn_score** — Beoordeel het document op de MfN-standaardvereisten hieronder. Geef voor elk element precies de status (aanwezig/onvolledig/ontbreekt) en een korte toelichting bij onvolledig of ontbreekt. Gebruik het element-veld exact zoals in de lijst. Voeg in extra_elementen elementen toe die wél aanwezig zijn maar niet op de lijst staan (bijv. specifieke uitsluitingsclausules, mediationbeding, overgangsrecht). Bereken score_aanwezig als het aantal elementen met status "aanwezig". score_totaal is altijd ${mfnElementen.length}.
-
-MfN-VEREISTE ELEMENTEN (${docTypeLabel}):
-${mfnLijst}
-
 STRIKTE REGELS:
 - Gebruik uitsluitend wetsartikelen uit de WETSARTIKELEN-sectie, of die je met absolute zekerheid kent.
+- Vul "citaat" altijd in met een letterlijke quote (max 80 tekens) als het punt op een specifieke plek slaat.
+- Geef bij "suggestie" de exacte tekst die de mediator direct kan overnemen, niet een beschrijving.
+- Geef alleen bevindingen die daadwerkelijk uit het document blijken. Speculeer niet.`;
+
+    // System prompt C: balans + grammatica (eigen call met eigen tokenruimte)
+    const sysBalansGrammatica =
+`Je bent een ervaren familierechtjurist en mediator die een Nederlands ${docTypeLabel} controleert op evenwichtigheid en taalkundige juistheid.
+
+DOCUMENTTYPE: ${docTypeLabel}
+
+**balans** — Kijk kritisch naar onevenwichtigheden tussen partijen. Let in elk geval op:
+- Alimentatiebedragen die niet in verhouding staan tot draagkracht/behoefte of huwelijksduur.
+- Clausules die uitsluitend of onevenredig zwaar op één partij drukken (risicodragende hypotheekclausules, eenzijdige boetes, informatieplichten die slechts voor één partij gelden).
+- Indexeringsclausules die asymmetrisch of onduidelijk zijn geformuleerd.
+- Ontbreken van een indexeringsbepaling terwijl bedragen langdurig vaststaan.
+- Uitsluiting van de ene partij van rechten die de andere partij wél behoudt.
+- Zorgregeling of verblijfsregeling die structureel in het voordeel van één ouder uitvalt zonder onderbouwing.
+Geef voor ELKE gevonden onevenwichtigheid een item, ook als die klein is. Als het document genuanceerd en evenwichtig is, mag de lijst leeg zijn — maar controleer altijd alle bovenstaande punten eerst.
+
+**grammatica** — Controleer op taalfouten en formuleringen die de juridische betekenis raken of onduidelijkheid creëren:
+- Intern tegenstrijdige zinnen (bijv. twee conflicterende termijnen voor dezelfde verplichting).
+- Vage of dubbele verwijzingen (bijv. "hij/zij" zonder duidelijke antecedent in een cruciale clausule).
+- Ontbrekende elementen in een zin die een verplichting onvolledig maakt.
+- Foutief gebruikte juridische termen (bijv. "eigendom" waar "gebruik" bedoeld is).
+- Tegenstrijdigheid tussen het lichaam van de overeenkomst en een bijlage of aanhef.
+- Datums, bedragen of percentages die intern niet overeenkomen.
+Geef ook lichtere bevindingen mee als die bij een notaris of rechter tot onduidelijkheid kunnen leiden.
+
+STRIKTE REGELS:
 - Vul "passage" altijd in met een letterlijke quote (max 80 tekens) als het punt op een specifieke plek slaat.
 - Geef bij "suggestie" de exacte tekst die de mediator direct kan overnemen, niet een beschrijving.
 - Geef alleen bevindingen die daadwerkelijk uit het document blijken. Speculeer niet.
-${resolvedItems.length > 1 ? `- Er zijn ${resolvedItems.length} documenten aangeleverd (elk begint met === DOCUMENTTYPE: bestandsnaam ===). Analyseer ze als een samenhangend geheel.` : ''}`,
-    `DOCUMENTEN:\n${documentTekst}\n\nVERWACHTE SECTIES:\n${checklistTekst}\n\nWETSARTIKELEN:\n${wetTekst || '(geen)'}`,
-    rapportTool, 8192
-  );
+- balans en grammatica mogen NOOIT zonder grondige controle leeg blijven. Doorloop altijd alle aandachtspunten hierboven voordat je deze secties invult.`;
 
-  rapport._document_tekst = documentTekst;
-  return { classificatie, rapport, resolvedFiles: resolvedItems.map(i => i.bestand) };
+    // User-content: gecacht stabiel gedeelte (wetsartikelen / secties) + ongecacht document
+    // Documenttekst wordt gepseudonimiseerd verstuurd — namen/PII worden na ontvangst hersteld
+    const docTekstBlok = { text: `TE ANALYSEREN DOCUMENT:\n${deel.header}\n${anonimiseerTekst(deel.tekst, naarAnon)}${contextTekstAnon}` };
+    const userVoorStructuur = [
+      { text: `VERWACHTE SECTIES:\n${checklistTekst}\n\nWETSARTIKELEN:\n${wetTekst || '(geen)'}`, cache: true },
+      docTekstBlok,
+    ];
+    const userVoorJuridisch = [
+      { text: `WETSARTIKELEN:\n${wetTekst || '(geen)'}`, cache: true },
+      docTekstBlok,
+    ];
+    const userVoorBalansGrammatica = [
+      { text: `WETSARTIKELEN:\n${wetTekst || '(geen)'}`, cache: true },
+      docTekstBlok,
+    ];
+
+    // Timer-animatie: asymptotisch t/(t+K)*max — beweegt altijd, wordt nooit stil
+    // K=40s want drie parallelle calls lopen gelijktijdig
+    let _stopTimer = null;
+    const startTimer = () => {
+      const t0  = Date.now();
+      const K   = 40000;
+      const MAX = 92;
+      const id  = setInterval(() => {
+        const elapsed = Date.now() - t0;
+        onProgress(null, (elapsed / (elapsed + K)) * MAX, docLabel);
+      }, 300);
+      return () => clearInterval(id);
+    };
+    _stopTimer = startTimer();
+
+    // Drie calls tegelijk: structuur | juridisch | balans+grammatica (elk eigen tokenbudget)
+    const [structuur, juridischResult, balansGrammaticaResult] = await Promise.all([
+      askClaudeForJson(sysStructuur, userVoorStructuur, structuurTool,
+        heeftMfn ? 10000 : 3000, { cache: true }),
+      askClaudeForJson(sysJuridisch, userVoorJuridisch, juridischTool,
+        10000, { cache: true }),
+      askClaudeForJson(sysBalansGrammatica, userVoorBalansGrammatica, balansGrammaticaTool,
+        8000, { cache: true }),
+    ]);
+    // Herstel namen/PII in Claude's output (placeholders → echte waarden)
+    const docRapport = {
+      ...herstelAnonObj(structuur,             naarEcht),
+      ...herstelAnonObj(juridischResult,       naarEcht),
+      ...herstelAnonObj(balansGrammaticaResult,naarEcht),
+    };
+
+    _stopTimer();
+    onProgress(null, 100, docLabel); // even 100% tonen voordat volgende doc begint
+
+    docRapport.doc_type    = docType;
+    docRapport.bestandsnaam = item.bestandsnaam;
+    documenten.push(docRapport);
+  }
+  onProgress('Analyse klaar — verwerken…', undefined, undefined);
+
+  // Sla teksten per Storage-pad op voor hergebruik bij een volgende versie
+  // (voorkomt opnieuw OCR-ren na paginaverversing)
+  const _teksten_per_pad = {};
+  resolvedItems.forEach((item, i) => {
+    if (item.storageInfo?.pad) _teksten_per_pad[item.storageInfo.pad] = documentDelen[i].tekst;
+  });
+
+  // Per hoofddocument: welke contextbestanden horen erbij (op naam — voor reload)
+  const _context_per_hoofd = effectieveHoofdItems.map(hoofd => ({
+    bestandsnaam: hoofd.bestandsnaam,
+    context: effectieveContextItems
+      .filter(ctx => contextVoorHoofd(ctx.type, hoofd.type))
+      .map(i => i.bestandsnaam)
+      .filter(Boolean),
+  }));
+
+  // Backwards-compatibel: root = eerste primaire document; multi-doc: ook .documenten[]
+  const rapport = {
+    ...documenten[0],
+    ...(documenten.length > 1 ? { documenten } : {}),
+    _document_tekst: documentTekst,
+    ...(_context_per_hoofd.some(c => c.context.length > 0) ? { _context_per_hoofd } : {}),
+    ...(Object.keys(_teksten_per_pad).length ? { _teksten_per_pad } : {}),
+  };
+
+  return {
+    classificatie,
+    rapport,
+    resolvedFiles:    resolvedItems.map(i => i.bestand),
+    // Per hoofddocument: het eigen bestand + alleen relevante contextstukken
+    primaireBestanden: effectieveHoofdItems.map(hoofd => {
+      const relevantCtx = effectieveContextItems
+        .filter(ctx => contextVoorHoofd(ctx.type, hoofd.type))
+        .map(i => i.bestand)
+        .filter(Boolean);
+      return [hoofd.bestand, ...relevantCtx].filter(Boolean);
+    }),
+    // Geëxtraheerde tekst per bestand — nodig voor cache-backfill nadat opslaan() paden toewijst
+    extractedTexts: resolvedItems.map((item, i) => ({
+      bestandsnaam: item.bestandsnaam,
+      tekst: documentDelen[i]?.tekst ?? '',
+    })),
+  };
 }
 
 // ── RTF-export ────────────────────────────────────────
@@ -1053,6 +1735,7 @@ function buildRtf(naam,cls,rp) {
 let huidigeBestandenLijst = [];
 let huidigePdfDocCache    = {};
 let docPanelGereed        = false;
+let renderGeneratie       = 0; // verhoogd bij elke nieuwe render; oude renders aborteren zodra ze dit merken
 
 function escH(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1063,9 +1746,13 @@ async function renderDocPanel(searchText) {
   if (!huidigeBestandenLijst.length) { toonTekstFallback(panel, searchText); return; }
 
   if (!docPanelGereed) {
+    // Verhoog generatie zodat eventueel nog lopende renders direct aborteren
+    const gen = ++renderGeneratie;
+
     panel.classList.remove('tekst-modus');
     panel.innerHTML = '';
     for (let i = 0; i < huidigeBestandenLijst.length; i++) {
+      if (gen !== renderGeneratie) return; // nieuwere render gestart → stoppen
       const bestand = huidigeBestandenLijst[i];
       if (i > 0) {
         const sch = document.createElement('div');
@@ -1076,32 +1763,40 @@ async function renderDocPanel(searchText) {
       const naam = bestand.name.toLowerCase();
       if (naam.endsWith('.pdf')) {
         const buf    = await bestand.arrayBuffer();
+        if (gen !== renderGeneratie) return;
         const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+        if (gen !== renderGeneratie) return;
         huidigePdfDocCache[bestand.name] = pdfDoc;
-        await renderPdfPaginas(panel, pdfDoc);
+        await renderPdfPaginas(panel, pdfDoc, gen);
       } else if (naam.endsWith('.docx')) {
         const buf    = await bestand.arrayBuffer();
+        if (gen !== renderGeneratie) return;
         const result = await mammoth.convertToHtml({ arrayBuffer: buf });
+        if (gen !== renderGeneratie) return;
         const div    = document.createElement('div');
         div.className = 'docx-inhoud';
         div.innerHTML = result.value;
         panel.appendChild(div);
       }
     }
+    if (gen !== renderGeneratie) return;
     docPanelGereed = true;
   }
   highlightInPdf(searchText  || '');
   highlightInDocx(searchText || '');
 }
 
-async function renderPdfPaginas(panel, pdf) {
+async function renderPdfPaginas(panel, pdf, gen) {
   const panelBreedte = panel.clientWidth - 40;
   const proefPagina  = await pdf.getPage(1);
+  if (gen !== renderGeneratie) return; // tab gewisseld tijdens laden
   const proefVp      = proefPagina.getViewport({ scale: 1 });
   const schaal       = Math.min(1.8, Math.max(0.8, panelBreedte / proefVp.width));
 
   for (let nr = 1; nr <= pdf.numPages; nr++) {
+    if (gen !== renderGeneratie) return; // tab gewisseld — stop met renderen
     const page     = await pdf.getPage(nr);
+    if (gen !== renderGeneratie) return;
     const viewport = page.getViewport({ scale: schaal });
     const wrap     = document.createElement('div');
     wrap.className = 'pdf-pagina';
@@ -1116,7 +1811,9 @@ async function renderPdfPaginas(panel, pdf) {
     wrap.appendChild(tekstlaag);
     panel.appendChild(wrap);
     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    if (gen !== renderGeneratie) return;
     const tekstInhoud = await page.getTextContent();
+    if (gen !== renderGeneratie) return;
     const taak = pdfjsLib.renderTextLayer({ textContent: tekstInhoud, container: tekstlaag, viewport, textDivs: [] });
     if (taak && taak.promise) await taak.promise;
     else if (taak && taak.then) await taak;
@@ -1126,19 +1823,36 @@ async function renderPdfPaginas(panel, pdf) {
 function highlightInPdf(searchText) {
   document.querySelectorAll('.textLayer span.hl-match').forEach(el => el.classList.remove('hl-match'));
   if (!searchText.trim()) return;
-  const spans      = Array.from(document.querySelectorAll('.textLayer span'));
-  const volleTekst = spans.map(s => s.textContent).join('');
-  const idx        = volleTekst.toLowerCase().indexOf(searchText.toLowerCase());
-  if (idx === -1) return;
-  const einde = idx + searchText.length;
-  let pos = 0, eersteSpan = null;
+
+  const spans = Array.from(document.querySelectorAll('.textLayer span'));
+  if (!spans.length) return;
+
+  // Normaliseer zoektekst: meerdere spaties/enters → één spatie
+  const zoek = searchText.replace(/\s+/g, ' ').trim().toLowerCase();
+
+  // Bouw genormaliseerde tekst op; houd per span de startpositie bij
+  let normTekst = '';
+  const spanStart = []; // startpositie van elke span in normTekst
   for (const span of spans) {
-    const start = pos, stop = pos + span.textContent.length;
+    spanStart.push(normTekst.length);
+    // Voeg spatie toe als de vorige span niet al eindigde op een spatie
+    const bijdrage = span.textContent.replace(/\s+/g, ' ');
+    normTekst += bijdrage;
+    if (!bijdrage.endsWith(' ')) normTekst += ' ';
+  }
+
+  const idx = normTekst.toLowerCase().indexOf(zoek);
+  if (idx === -1) return;
+  const einde = idx + zoek.length;
+
+  let eersteSpan = null;
+  for (let i = 0; i < spans.length; i++) {
+    const start = spanStart[i];
+    const stop  = i + 1 < spans.length ? spanStart[i + 1] : normTekst.length;
     if (stop > idx && start < einde) {
-      span.classList.add('hl-match');
-      if (!eersteSpan) eersteSpan = span;
+      spans[i].classList.add('hl-match');
+      if (!eersteSpan) eersteSpan = spans[i];
     }
-    pos = stop;
   }
   if (eersteSpan) eersteSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -1151,7 +1865,10 @@ function highlightInDocx(searchText) {
     c.normalize();
   });
   if (!searchText.trim()) return;
-  const re = new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  // Normaliseer zoektekst: meerdere spaties/enters → één spatie, dan escapen voor regex
+  const zoekNorm = searchText.replace(/\s+/g, ' ').trim();
+  // Sta in de regex ook willekeurige whitespace toe op de plek van spaties (regeleinden in docx)
+  const re = new RegExp(zoekNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+'), 'gi');
   let eersteEl = null;
   for (const content of contents) {
     const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
@@ -1209,16 +1926,26 @@ let huidigeId            = null;
 let huidigeBestandsnaam  = null;
 let huidigeClassificatie = null;
 let huidigRapport        = null;
+let huidigeExtractedTexts = []; // [{bestandsnaam, tekst}] — gevuld na analyse, voor cache-backfill in opslaan()
 let actieveKaart         = null;
 let splitOrigin          = 'main'; // 'main' | 'dossier'
+let huidigeDocumenten    = []; // per-doc rapporten bij multi-doc analyse
+let huidigeDocIdx        = 0;  // index van actief tabblad
+let huidigePrimaireBest  = []; // [[File], ...] per primair document
 
 function voegStandaardveldenToe(rapport) {
-  for (const cat of ['grammatica','juridisch','volledigheid','balans']) {
-    (rapport[cat]||[]).forEach(item => {
-      if (item.afgehandeld===undefined) item.afgehandeld = false;
-      if (item.opmerking  ===undefined) item.opmerking   = '';
-    });
-  }
+  const vulaan = r => {
+    for (const cat of ['grammatica','juridisch','volledigheid','balans']) {
+      // Defensief: Claude kan soms {} teruggeven i.p.v. [] bij onbekend documenttype
+      if (!Array.isArray(r[cat])) { r[cat] = []; continue; }
+      r[cat].forEach(item => {
+        if (item.afgehandeld===undefined) item.afgehandeld = false;
+        if (item.opmerking  ===undefined) item.opmerking   = '';
+      });
+    }
+  };
+  vulaan(rapport);
+  if (Array.isArray(rapport.documenten)) rapport.documenten.forEach(d => vulaan(d));
 }
 
 function samenstellenBestandsnaam(cls, bestanden) {
@@ -1242,7 +1969,7 @@ function kaart(cat, idx, extraClass, kopHtml, metaHtml, citaatHtml) {
   <div class="card ${extraClass}${klikbaar?' heeft-passage':''}" data-cat="${cat}" data-idx="${idx}">
     <div class="item-row">
       <input type="checkbox" ${item.afgehandeld?'checked':''}
-        onchange="huidigRapport['${cat}'][${idx}].afgehandeld=this.checked">
+        onchange="huidigRapport['${cat}'][${idx}].afgehandeld=this.checked;updateConceptKnop();autoSlaOp()">
       <div class="item-body">
         <div class="card-kop">
           <div class="label">${kopHtml}</div>
@@ -1252,7 +1979,7 @@ function kaart(cat, idx, extraClass, kopHtml, metaHtml, citaatHtml) {
         ${citaatHtml||''}
         ${suggestie?`<div class="suggestie-wrap"><div class="suggestie-label">💡 Suggestie</div>${escH(suggestie)}</div>`:''}
         <textarea class="opmerking" placeholder="Opmerking toevoegen..."
-          oninput="huidigRapport['${cat}'][${idx}].opmerking=this.value">${item.opmerking||''}</textarea>
+          oninput="huidigRapport['${cat}'][${idx}].opmerking=this.value;autoSlaOp()">${item.opmerking||''}</textarea>
       </div>
     </div>
   </div>`;
@@ -1266,27 +1993,28 @@ function lijstKaarten(cat, items, renderFn, leegTekst) {
 async function toonRapport(cls, rp) {
   huidigeClassificatie = cls;
   huidigRapport        = rp;
-  document.getElementById('splitDoctype').textContent = cls.doc_type;
-  document.getElementById('splitTitel').textContent   = huidigeBestandsnaam;
 
+  // Multi-doc: rapport.documenten[] aanwezig?
+  const docs = Array.isArray(rp.documenten) && rp.documenten.length > 1 ? rp.documenten : null;
+  huidigeDocumenten = docs || [];
+  huidigeDocIdx     = 0;
+
+  // ── Helpers ──
   const sectie = (titel, inhoud, open = false) => `
     <div class="a-sectie${open ? '' : ' dicht'}">
       <h2>${titel}<span class="a-chevron">▾</span></h2>
       <div class="a-inhoud">${inhoud}</div>
     </div>`;
 
-  // ── MfN-scorepaneel ──
   function renderMfnScore(mfn) {
     if (!mfn?.elementen?.length) return '';
-    const totaal   = mfn.score_totaal   || mfn.elementen.length;
-    const aanwezig = mfn.score_aanwezig ?? mfn.elementen.filter(e => e.status === 'aanwezig').length;
+    const totaal     = mfn.score_totaal   || mfn.elementen.length;
+    const aanwezig   = mfn.score_aanwezig ?? mfn.elementen.filter(e => e.status === 'aanwezig').length;
     const onvolledig = mfn.elementen.filter(e => e.status === 'onvolledig').length;
     const ontbreekt  = mfn.elementen.filter(e => e.status === 'ontbreekt').length;
-    const pct = Math.round((aanwezig / totaal) * 100);
+    const pct   = Math.round((aanwezig / totaal) * 100);
     const kleur = pct >= 90 ? '#2a7a4e' : pct >= 70 ? '#b86800' : '#c0392b';
     const statusIcoon = { aanwezig: '✓', onvolledig: '△', ontbreekt: '✗' };
-    const statusKleur = { aanwezig: '#2a7a4e', onvolledig: '#b86800', ontbreekt: '#c0392b' };
-
     const elementenHtml = mfn.elementen.map(e => `
       <div class="mfn-el mfn-el-${e.status}">
         <span class="mfn-el-icon">${statusIcoon[e.status] || '·'}</span>
@@ -1295,20 +2023,16 @@ async function toonRapport(cls, rp) {
           ${e.toelichting ? `<span class="mfn-el-toe">${escH(e.toelichting)}</span>` : ''}
         </span>
       </div>`).join('');
-
     const extraHtml = mfn.extra_elementen?.length
       ? `<div class="mfn-extra-blok">
           <div class="mfn-extra-kop">✦ Extra elementen (niet vereist maar aanwezig)</div>
           ${mfn.extra_elementen.map(e => `<div class="mfn-extra-item">${escH(e)}</div>`).join('')}
-        </div>`
-      : '';
-
+        </div>` : '';
     const samenvattingTekst = [
-      aanwezig > 0  ? `<span style="color:#2a7a4e;font-weight:700">${aanwezig} aanwezig</span>` : '',
+      aanwezig   > 0 ? `<span style="color:#2a7a4e;font-weight:700">${aanwezig} aanwezig</span>`   : '',
       onvolledig > 0 ? `<span style="color:#b86800;font-weight:700">${onvolledig} onvolledig</span>` : '',
-      ontbreekt > 0 ? `<span style="color:#c0392b;font-weight:700">${ontbreekt} ontbreekt</span>` : '',
+      ontbreekt  > 0 ? `<span style="color:#c0392b;font-weight:700">${ontbreekt} ontbreekt</span>`  : '',
     ].filter(Boolean).join(' · ');
-
     return `
     <div class="mfn-score-blok">
       <div class="mfn-score-kop">
@@ -1324,27 +2048,109 @@ async function toonRapport(cls, rp) {
     </div>`;
   }
 
-  document.getElementById('analysePanel').innerHTML =
-    sectie('MfN-compliantie', renderMfnScore(rp.mfn_score) || '<p class="empty">Geen MfN-score beschikbaar.</p>', true) +
-    sectie('Samenvatting', `<div class="samenvatting">${escH(rp.samenvatting)}</div>`) +
-    sectie('Volledigheid',
-      lijstKaarten('volledigheid',rp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.')) +
-    sectie('Juridische juistheid',
-      lijstKaarten('juridisch',rp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,
-        escH(j.onderwerp) + (j.wetsartikel ? `<span class="wet-badge">${escH(j.wetsartikel)}</span>` : ''),
-        escH(j.bevinding),
-        j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')) +
-    sectie('Balans tussen partijen',
-      lijstKaarten('balans',rp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.')) +
-    sectie('Grammatica &amp; taal',
-      lijstKaarten('grammatica',rp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'));
+  // ── Analyse-HTML voor één document-rapport ──
+  function bouwAnalyseHtml(drp) {
+    return sectie('MfN-compliantie', renderMfnScore(drp.mfn_score) || '<p class="empty">Geen MfN-score beschikbaar.</p>', true) +
+      sectie('Samenvatting', `<div class="samenvatting">${escH(drp.samenvatting)}</div>`) +
+      sectie('Volledigheid',
+        lijstKaarten('volledigheid',drp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.')) +
+      sectie('Juridische juistheid',
+        lijstKaarten('juridisch',drp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,
+          escH(j.onderwerp) + (j.wetsartikel ? `<span class="wet-badge">${escH(j.wetsartikel)}</span>` : ''),
+          escH(j.bevinding),
+          j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')) +
+      sectie('Balans tussen partijen',
+        lijstKaarten('balans',drp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.')) +
+      sectie('Grammatica &amp; taal',
+        lijstKaarten('grammatica',drp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'));
+  }
 
-  document.querySelectorAll('#analysePanel .a-sectie h2').forEach(h2 => {
-    h2.addEventListener('click', () => h2.closest('.a-sectie').classList.toggle('dicht'));
-  });
+  function activeerAnalysePanel(drp) {
+    document.getElementById('analysePanel').innerHTML = bouwAnalyseHtml(drp);
+    document.querySelectorAll('#analysePanel .a-sectie h2').forEach(h2 =>
+      h2.addEventListener('click', () => h2.closest('.a-sectie').classList.toggle('dicht'))
+    );
+    updateConceptKnop();
+  }
 
+  // ── Split-meta: tabs (multi-doc) of klassiek doctype+titel (single) ──
+  const metaEl = document.querySelector('.split-meta');
+  if (docs) {
+    metaEl.classList.add('tabs-modus');
+    metaEl.innerHTML = docs.map((d, i) =>
+      `<button class="doc-tab${i === 0 ? ' actief' : ''}" data-idx="${i}">${
+        escH((DOC_TYPE_ICONS[d.doc_type] || '') + ' ' + (DOC_TYPE_LABELS[d.doc_type] || d.doc_type))
+      }</button>`
+    ).join('');
+
+    metaEl.querySelectorAll('.doc-tab').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (idx === huidigeDocIdx) return;
+        huidigeDocIdx = idx;
+        metaEl.querySelectorAll('.doc-tab').forEach(b => b.classList.toggle('actief', b === btn));
+        // Update huidigRapport zodat kaart-klik/checkboxen het juiste doc raken
+        huidigRapport = { ...rp, ...huidigeDocumenten[idx] };
+        activeerAnalysePanel(huidigRapport);
+        // Toon "Bekijk concept" alleen als er een concept is voor dit document-type
+        const tabDocType   = huidigeDocumenten[idx]?.doc_type || '';
+        const tabConcept   = rp._concepts?.[tabDocType] || (tabDocType === (huidigeClassificatie?.doc_type) ? rp._concept : null);
+        const bekijkBtn    = document.getElementById('bekijkConceptBtn');
+        if (bekijkBtn) bekijkBtn.style.display = tabConcept ? 'inline-flex' : 'none';
+        // Wissel het document-viewer naar het bestand van dit tabblad
+        const bestVoorTab = huidigePrimaireBest[idx];
+        if (bestVoorTab?.length) {
+          huidigeBestandenLijst = bestVoorTab;
+          docPanelGereed  = false;
+          huidigePdfDocCache = {};
+        }
+        await renderDocPanel('');
+      });
+    });
+  } else {
+    metaEl.classList.remove('tabs-modus');
+    metaEl.innerHTML =
+      `<span class="doctype" id="splitDoctype">${escH(cls.doc_type)}</span>
+       <span class="titel" id="splitTitel">${escH(huidigeBestandsnaam)}</span>`;
+  }
+
+  activeerAnalysePanel(rp);
   openSplitView();
   await renderDocPanel('');
+  // Auto-save: nieuwe analyse direct bewaren zodra het split scherm zichtbaar is
+  if (!huidigeId) opslaan();
+}
+
+// ── Helpers voor passage-matching ────────────────────
+function isGehighlightd() {
+  return !!(document.querySelector('.textLayer span.hl-match') ||
+            document.querySelector('mark.hl-match'));
+}
+
+// Probeer de passage te vinden; als het niet lukt, probeer progressief kortere substrings.
+// Stopswoorden overslaan voor een betekenisvolle eerste treffer.
+async function zoekEnScrollNaarPassage(passage) {
+  await renderDocPanel(passage);
+  if (isGehighlightd()) return;
+
+  // Fallback 1: woorden zonder stopwoorden, eerste 6 woorden
+  const stopwoorden = new Set(['de','het','een','en','of','in','van','op','te','dat','die','is',
+    'zijn','voor','aan','met','bij','uit','als','ook','maar','niet','naar','om','over']);
+  const woorden = passage.replace(/["""„«»]/g, '').trim().split(/\s+/);
+  const betekenis = woorden.filter(w => w.length > 2 && !stopwoorden.has(w.toLowerCase()));
+  if (betekenis.length >= 3) {
+    await renderDocPanel(betekenis.slice(0, 6).join(' '));
+    if (isGehighlightd()) return;
+  }
+
+  // Fallback 2: glijdend venster van 4 woorden langs de volledige passage
+  for (let i = 0; i + 3 < woorden.length; i++) {
+    const fragment = woorden.slice(i, i + 4).join(' ');
+    await renderDocPanel(fragment);
+    if (isGehighlightd()) return;
+  }
+
+  // Niets gevonden — toch de zoekterm doorgeven zodat de UI niet 'actief' toont zonder resultaat
 }
 
 // ── Klik op kaart → passage markeren ─────────────────
@@ -1359,7 +2165,7 @@ document.getElementById('analysePanel').addEventListener('click', async e => {
   if (actieveKaart) actieveKaart.classList.remove('actief');
   card.classList.add('actief');
   actieveKaart = card;
-  await renderDocPanel(passage);
+  await zoekEnScrollNaarPassage(passage);
 });
 
 // ── Split-overlay ─────────────────────────────────────
@@ -1369,15 +2175,28 @@ function openSplitView() {
   const isNieuw = !huidigeId;
   document.getElementById('versieLabelHeaderInput').style.display =
     (heeftDossier && isNieuw) ? 'block' : 'none';
+  // Verberg "Bekijk concept" tot laadScreening bevestigt dat er een concept is
+  if (isNieuw) document.getElementById('bekijkConceptBtn').style.display = 'none';
   document.getElementById('splitOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 function closeSplitView() {
   document.getElementById('splitOverlay').classList.remove('active');
   document.body.style.overflow = '';
-  actieveKaart   = null;
-  docPanelGereed = false;
+  actieveKaart      = null;
+  docPanelGereed    = false;
   huidigePdfDocCache = {};
+  huidigeDocumenten = [];
+  huidigeDocIdx     = 0;
+  huidigePrimaireBest = [];
+  // Reset split-meta naar klassieke modus
+  const metaEl = document.querySelector('.split-meta');
+  if (metaEl) {
+    metaEl.classList.remove('tabs-modus');
+    metaEl.innerHTML =
+      '<span class="doctype" id="splitDoctype"></span><span class="titel" id="splitTitel"></span>';
+  }
+  document.getElementById('opslagStatus').textContent = '';
 }
 
 document.getElementById('backBtn').addEventListener('click', () => {
@@ -1413,7 +2232,31 @@ async function opslaan() {
           else geupload.push({ pad, naam: item.bestand.name, type: item.type });
         }
       }
-      if (geupload.length) huidigRapport._document_bestanden = geupload;
+      if (geupload.length) {
+        huidigRapport._document_bestanden = geupload;
+
+        // Backfill tekstcache: koppel de zojuist toegewezen Storage-paden aan de
+        // geëxtraheerde teksten die tijdens de analyse zijn uitgelezen.
+        // Zo slaan we _teksten_per_pad correct op in het rapport, en hoeft OCR
+        // bij een volgende analyse van dezelfde bestanden niet opnieuw te draaien.
+        if (!huidigRapport._teksten_per_pad) huidigRapport._teksten_per_pad = {};
+        for (const g of geupload) {
+          if (tekstPerPad.has(g.pad)) continue; // al in cache (fromStorage-item)
+          const gevonden = huidigeExtractedTexts.find(t => t.bestandsnaam === g.naam);
+          if (gevonden?.tekst) {
+            tekstPerPad.set(g.pad, gevonden.tekst);
+            huidigRapport._teksten_per_pad[g.pad] = gevonden.tekst;
+          }
+        }
+        // Tray-items bijwerken zodat volgende analyse direct uit cache leest
+        for (const g of geupload) {
+          const item = tray.find(i => i.bestandsnaam === g.naam && !i.fromStorage);
+          if (item) {
+            item.storageInfo = { pad: g.pad, naam: g.naam };
+            item.fromStorage = true;
+          }
+        }
+      }
     } else if (tray.length > 0 && huidigRapport._document_bestanden) {
       // Types bijwerken als gebruiker ze heeft aangepast in de tray
       huidigRapport._document_bestanden = huidigRapport._document_bestanden.map(d => {
@@ -1471,14 +2314,46 @@ async function opslaan() {
     huidigRapport._versie_label = versieLabel;
 
     status.textContent = 'Opgeslagen ✓';
+    setTimeout(() => { if (status.textContent === 'Opgeslagen ✓') status.textContent = ''; }, 3000);
   } catch (err) {
     status.textContent = 'Opslaan mislukt: ' + err.message;
   }
 }
-document.getElementById('opslaanBtn').addEventListener('click', opslaan);
+
+// Debounced auto-save — wordt getriggerd als de gebruiker een notitie wijzigt
+let _autoSaveTimer = null;
+function autoSlaOp() {
+  if (!huidigeId) return; // nog niet opgeslagen, wacht op eerste save
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(opslaan, 1500);
+}
 
 // ── Praktijkinstellingen ──────────────────────────────
-function getPraktijknaam() { return localStorage.getItem('praktijknaam') || ''; }
+// Opgeslagen in Supabase user-metadata (cross-device); localStorage als fallback bij migratie.
+let _praktijknaam = '';
+
+function getPraktijknaam() { return _praktijknaam; }
+
+async function laadPraktijknaam() {
+  try {
+    const { data: { user } } = await db.auth.getUser();
+    const uit_meta = user?.user_metadata?.praktijknaam;
+    if (uit_meta !== undefined) {
+      _praktijknaam = uit_meta;
+    } else {
+      // Eenmalige migratie vanuit localStorage
+      const lokaal = localStorage.getItem('praktijknaam');
+      if (lokaal) {
+        _praktijknaam = lokaal;
+        await db.auth.updateUser({ data: { praktijknaam: lokaal } });
+        localStorage.removeItem('praktijknaam');
+      }
+    }
+  } catch (e) {
+    // Fallback naar localStorage als Supabase niet bereikbaar is
+    _praktijknaam = localStorage.getItem('praktijknaam') || '';
+  }
+}
 
 document.getElementById('instellingenBtn').addEventListener('click', () => {
   document.getElementById('instPraktijknaam').value = getPraktijknaam();
@@ -1488,9 +2363,15 @@ document.getElementById('instellingenBtn').addEventListener('click', () => {
 document.getElementById('instAnnuleerBtn').addEventListener('click', () => {
   document.getElementById('instellingenModal').classList.remove('active');
 });
-document.getElementById('instOpslaanBtn').addEventListener('click', () => {
-  localStorage.setItem('praktijknaam', document.getElementById('instPraktijknaam').value.trim());
+document.getElementById('instOpslaanBtn').addEventListener('click', async () => {
+  const waarde = document.getElementById('instPraktijknaam').value.trim();
+  _praktijknaam = waarde;
   document.getElementById('instellingenModal').classList.remove('active');
+  try {
+    await db.auth.updateUser({ data: { praktijknaam: waarde } });
+  } catch (e) {
+    console.warn('Praktijknaam opslaan mislukt:', e.message);
+  }
 });
 document.getElementById('instellingenModal').addEventListener('click', e => {
   if (e.target === document.getElementById('instellingenModal'))
@@ -1717,6 +2598,744 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
   }
 });
 
+// ── Concept genereren ────────────────────────────────
+
+// Houd bij welke aangevinkte items er zijn voor de conceptknop
+function updateConceptKnop() {
+  const btn   = document.getElementById('genereerConceptBtn');
+  const badge = document.getElementById('conceptBadge');
+  if (!huidigRapport || !btn) return;
+  const items = verzamelAangevinkt();
+  const n = items.length;
+  badge.textContent = n;
+  btn.style.display = n > 0 ? 'inline-flex' : 'none';
+}
+
+function verzamelAangevinkt() {
+  if (!huidigRapport) return [];
+  const resultaat = [];
+  const cats = [
+    { cat: 'volledigheid', label: 'Volledigheid' },
+    { cat: 'juridisch',    label: 'Juridische juistheid' },
+    { cat: 'balans',       label: 'Balans' },
+    { cat: 'grammatica',   label: 'Grammatica & taal' },
+  ];
+  for (const { cat, label } of cats) {
+    const lijst = huidigRapport[cat];
+    if (!Array.isArray(lijst)) continue;
+    lijst.forEach(item => {
+      if (item.afgehandeld) resultaat.push({ ...item, categorie: label });
+    });
+  }
+  return resultaat;
+}
+
+// Laad de docx-library eenmalig via esm.sh (cached na eerste aanroep)
+let _docxLib = null;
+async function laadDocxLib() {
+  if (_docxLib) return _docxLib;
+  _docxLib = await import('https://esm.sh/docx@8.5.0');
+  return _docxLib;
+}
+
+// DOCX genereren uit gewijzigde documenttekst met echte Word-stijlen
+async function documentTekstNaarDocx(tekst) {
+  const { Document, Paragraph, TextRun, AlignmentType, Packer } = await laadDocxLib();
+
+  const FONT  = 'Calibri';
+  const MARGE = 1134; // ~2 cm in twips
+
+  // Helper: maak een paragraaf met flexibele opmaak
+  function maakPar(t, opts = {}) {
+    const {
+      bold = false, size = 22, spaceBefore = 0, spaceAfter = 80,
+      indent = 0, align = AlignmentType.LEFT, kleur = undefined,
+      italic = false,
+    } = opts;
+    return new Paragraph({
+      alignment: align,
+      spacing:   { before: spaceBefore, after: spaceAfter, line: 276 },
+      indent:    indent ? { left: indent } : undefined,
+      children:  [new TextRun({ text: t, bold, italics: italic,
+        size, font: FONT, color: kleur })],
+    });
+  }
+
+  // Zelfde pre-processing als HTML-preview: paraaf-headers strippen + structuur herstellen
+  const regels  = preprocessConceptTekst(tekst).split('\n');
+  const kinderen = [];
+
+  // Documenttitel: doctype + dossier (zelfde als HTML-preview)
+  const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || '';
+  const titelTekst   = [docTypeLabel, huidigDossierNaam].filter(Boolean).join(' — ') || 'Verbeterd concept';
+  kinderen.push(maakPar(titelTekst,
+    { bold: true, size: 32, spaceAfter: 80, align: AlignmentType.CENTER }));
+  kinderen.push(maakPar(
+    `Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} · Concept`,
+    { size: 18, spaceAfter: 400, align: AlignmentType.CENTER, kleur: '888888', italic: true }));
+
+  for (const regel of regels) {
+    const r  = regel.trimEnd();
+    const tr = r.trim();
+    if (!tr) { kinderen.push(maakPar('', { spaceAfter: 120 })); continue; }
+
+    // === SCHEIDING === → cursieve sectieaanduiding
+    if (/^={2,}\s*.+\s*={2,}$/.test(tr)) {
+      const label = tr.replace(/^={2,}\s*|\s*={2,}$/g, '').trim()
+        .replace(/^(CONVENANT|OUDERSCHAPSPLAN|CONTEXT):\s*/i, '');
+      if (label) kinderen.push(maakPar(label,
+        { size: 18, italic: true, kleur: '888888', spaceBefore: 300, spaceAfter: 160 }));
+      continue;
+    }
+
+    const mdKop1d = /^#{1,2}\s+/.test(tr);
+    const mdKop2d = /^#{3,}\s+/.test(tr);
+    const trZH    = tr.replace(/^#+\s+/, '');
+
+    const isArtikel    = /^(Artikel|ARTIKEL)\s+\d+/i.test(trZH);
+    const isAllCaps    = trZH === trZH.toUpperCase() && trZH.length >= 4 && trZH.length <= 80
+                         && /^[A-Z\s]/.test(trZH) && !/^\d/.test(trZH)
+                         && !/^(CONVENANT|CONTEXT|BIJLAGE):/i.test(trZH);
+    const isSubArtikel = /^\d+\.\d+\.?\s/.test(trZH);
+    const isNumPunt    = /^\d+\.\s+[A-Z\S]/.test(trZH) && !isSubArtikel && tr.length < 200;
+    const isLetterPunt = /^[a-z]\)\s/i.test(tr);
+    const isBullet     = /^[-–•*]\s/.test(tr);
+
+    if (mdKop1d || isArtikel || isAllCaps) {
+      kinderen.push(maakPar(trZH,
+        { bold: true, size: 24, spaceBefore: 300, spaceAfter: 80 }));
+    } else if (mdKop2d || isSubArtikel) {
+      kinderen.push(maakPar(trZH,
+        { bold: true, size: 22, spaceBefore: 160, spaceAfter: 60 }));
+    } else if (isNumPunt) {
+      kinderen.push(maakPar(trZH,
+        { size: 22, spaceBefore: 80, spaceAfter: 60 }));
+    } else if (isLetterPunt || isBullet) {
+      kinderen.push(maakPar(trZH, { size: 22, indent: 480, spaceAfter: 60 }));
+    } else {
+      kinderen.push(maakPar(tr,
+        { size: 22, spaceAfter: 100, align: AlignmentType.JUSTIFIED }));
+    }
+  }
+
+  const doc = new Document({
+    creator:     'Documentscreening',
+    description: 'Verbeterd concept',
+    sections: [{
+      properties: {
+        page: { margin: { top: MARGE, right: MARGE, bottom: MARGE, left: MARGE } },
+      },
+      children: kinderen,
+    }],
+  });
+
+  return await Packer.toBlob(doc);
+}
+
+// ── Concept-review: staat ────────────────────────────────
+let _conceptDocumentTekst = '';
+let _conceptWijzigingen   = [];
+
+// ── Pseudonimisering (AVG) ────────────────────────────
+// Bouwt twee maps: naarAnon (echt→placeholder) en naarEcht (placeholder→echt)
+function bouwAnonMap(classificatie) {
+  const naarAnon = new Map();
+  const naarEcht = new Map();
+
+  function registreer(echt, placeholder) {
+    if (!echt || echt.trim().length < 2) return;
+    const e = echt.trim();
+    naarAnon.set(e, placeholder);
+    naarEcht.set(placeholder, e);
+    // Ook voornaam apart (alleen als > 3 tekens, om commons als "de"/"van" te vermijden)
+    const voornaam = e.split(/\s+/)[0];
+    if (voornaam.length > 3 && !naarAnon.has(voornaam)) {
+      naarAnon.set(voornaam, placeholder);
+      // naarEcht: voornaam-placeholder overlapt met volledige naam, niet apart opslaan
+    }
+  }
+
+  registreer(classificatie?.partij_a_naam, '[PERSOON_A]');
+  registreer(classificatie?.partij_b_naam, '[PERSOON_B]');
+
+  // Eventuele kinderen in situatie_kenmerken zitten er niet in — kinderen horen in
+  // de analyse zelf. Voornamen worden via naarAnon al deels gedekt.
+
+  return { naarAnon, naarEcht };
+}
+
+// Vervang namen en PII in platte tekst door placeholders
+function anonimiseerTekst(tekst, naarAnon) {
+  if (!tekst || !naarAnon?.size) return tekst;
+  let t = tekst;
+
+  // Namen: langste eerst (voorkomt dat voornaam ná volledige naam matcht)
+  for (const [echt, ph] of [...naarAnon].sort((a, b) => b[0].length - a[0].length)) {
+    t = t.replaceAll(echt, ph);
+  }
+
+  // Regex-patronen
+  t = t.replace(/\bNL\d{2}[A-Z]{4}\d{10}\b/g,              '[IBAN]');
+  t = t.replace(/\b\d{9}\b/g,                                '[BSN]');
+  t = t.replace(/\b0\d[-\s]?\d{8}\b|\b\+31[-\s]?\d{9}\b/g,  '[TEL]');
+  t = t.replace(/\b\d{4}\s?[A-Z]{2}\b/g,                    '[POSTCODE]');
+  t = t.replace(/\b\d{1,2}[-–\/]\d{1,2}[-–\/]\d{2,4}\b/g,  '[DATUM]');
+
+  return t;
+}
+
+// Herstel placeholders recursief in elk object/array/string uit Claude's response
+function herstelAnonObj(obj, naarEcht) {
+  if (!naarEcht?.size) return obj;
+  if (typeof obj === 'string') {
+    let t = obj;
+    for (const [ph, echt] of naarEcht) t = t.replaceAll(ph, echt);
+    return t;
+  }
+  if (Array.isArray(obj)) return obj.map(el => herstelAnonObj(el, naarEcht));
+  if (obj && typeof obj === 'object') {
+    const result = {};
+    for (const [k, v] of Object.entries(obj)) result[k] = herstelAnonObj(v, naarEcht);
+    return result;
+  }
+  return obj;
+}
+
+// ── Track-changes helpers ─────────────────────────────
+// Unieke controlemarkers die nooit in PDF-tekst voorkomen
+const TC_D0 = '\x02D\x02', TC_D1 = '\x02/D\x02'; // oud tekst (doorgestreept)
+const TC_I0 = '\x02I\x02', TC_I1 = '\x02/I\x02'; // nieuwe tekst (groen)
+
+function escRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// Markeer gewijzigde passages in de tekst met track-changes-markers
+function bouwTrackChangesTekst(tekst, wijzigingen) {
+  if (!wijzigingen?.length) return tekst;
+  let t = tekst;
+  const norm = s => s.replace(/\s+/g, ' ').trim();
+
+  for (const w of wijzigingen) {
+    const nieuw = w.aangepaste_tekst?.trim();
+    const oud   = w.originele_tekst?.trim();
+    if (!nieuw || !oud || nieuw === oud) continue;
+
+    const marker = `${TC_D0}${oud}${TC_D1}${TC_I0}${nieuw}${TC_I1}`;
+
+    if (t.includes(nieuw)) {
+      t = t.replace(nieuw, marker);                           // directe match
+    } else {
+      const normNieuw = norm(nieuw);
+      const normT     = norm(t);
+      if (normT.includes(normNieuw)) {
+        t = normT.replace(normNieuw, marker);                 // genormaliseerde match
+      }
+      // Geen match gevonden: wijziging overgeslagen (wordt wel getoond in rechter paneel)
+    }
+  }
+  return t;
+}
+
+// Render één tekstregel met eventuele track-changes-markers als HTML
+function renderRegelMetTC(tekst) {
+  const rx = new RegExp(
+    `${escRx(TC_D0)}([\\s\\S]*?)${escRx(TC_D1)}|${escRx(TC_I0)}([\\s\\S]*?)${escRx(TC_I1)}`, 'g');
+  let html = '', lastIdx = 0, m;
+  while ((m = rx.exec(tekst)) !== null) {
+    html += escH(tekst.slice(lastIdx, m.index));
+    if (m[1] !== undefined) html += `<del class="cdoc-del">${escH(m[1])}</del>`;
+    else                    html += `<ins class="cdoc-ins">${escH(m[2])}</ins>`;
+    lastIdx = rx.lastIndex;
+  }
+  html += escH(tekst.slice(lastIdx));
+  return html;
+}
+
+// Verwijder PDF-artefacten en herstel tekststructuur voor weergave
+function preprocessConceptTekst(tekst) {
+  let t = tekst;
+
+  // 0. Markdown van LlamaParse normaliseren:
+  //    - Horizontale regels (---) → lege regel
+  //    - Bold/italic markers verwijderen (bewaar tekst)
+  //    - Markdown koppen (## Artikel 3) → gewone tekst (worden daarna herkend via isArtikel)
+  t = t.replace(/^---+$/gm, '');
+  t = t.replace(/\*\*(.*?)\*\*/g, '$1');
+  t = t.replace(/__(.*?)__/g, '$1');
+  // ## en ### prefixen bewaren we NIET — worden hieronder via isMarkdownKop apart behandeld
+  // (We laten ze staan zodat documentTekstNaarHtml de hiërarchie kan zien)
+
+  // 1. PDF paginakoppen verwijderen: "paraaf man: paraaf vrouw: X/Y " (worden door PDF.js meegenomen)
+  t = t.replace(/paraaf\s+man:\s*paraaf\s*vrouw:\s*\d+\/\d+\s*/gi, '');
+
+  // 2. "=== CONTEXT: bestand.pdf ===" scheidingstekens een eigen regel geven
+  t = t.replace(/([^\n])(={2,}\s)/g, '$1\n$2');
+
+  // 3. Artikelen op een eigen regel: "...zin.Artikel 3" → "...zin.\n\nArtikel 3"
+  t = t.replace(/([.!?;])\s*(Artikel\s+\d+)/gi, '$1\n\n$2');
+  t = t.replace(/([^\n])\n?(Artikel\s+\d+)/gi, '$1\n\n$2');
+
+  // 4. Genummerde sub-artikelen (1.1 / 2.3) op een eigen regel
+  t = t.replace(/([^\n])(\n?)(\d+\.\d+\.?\s+[A-Z])/g, '$1\n\n$3');
+
+  // 5. Genummerde punten (1. tekst) op een eigen regel
+  t = t.replace(/([.!?])\s+(\d+\.\s+[A-Z])/g, '$1\n$2');
+
+  // 6. Meerdere opeenvolgende spaties normaliseren
+  t = t.replace(/[ \t]{2,}/g, ' ');
+
+  return t;
+}
+
+// Render documenttekst als gestyled HTML voor het review-paneel
+// wijzigingen: optioneel array — voegt track-changes markering toe
+function documentTekstNaarHtml(tekst, wijzigingen = []) {
+  const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || '';
+  const titelTekst   = [docTypeLabel, huidigDossierNaam].filter(Boolean).join(' — ') || 'Verbeterd concept';
+
+  // Preprocessing: PDF-artefacten verwijderen + structuur herstellen
+  const schoneTekst = preprocessConceptTekst(tekst);
+  // Track-changes: gewijzigde passages markeren met inline del/ins
+  const tcTekst     = bouwTrackChangesTekst(schoneTekst, wijzigingen);
+  const regels      = tcTekst.split('\n');
+
+  let body = '';
+  for (const regel of regels) {
+    const r  = regel.trimEnd();
+    const tr = r.trim();
+
+    if (!tr) { body += '<div class="cdoc-leeglijn"></div>'; continue; }
+
+    // === SCHEIDING: bestand.pdf === → document-scheidingsteken (meerdere docs gecombineerd)
+    if (/^={2,}\s*.+\s*={2,}$/.test(tr)) {
+      const label = tr.replace(/^={2,}\s*|\s*={2,}$/g, '').trim()
+        .replace(/^(CONVENANT|OUDERSCHAPSPLAN|CONTEXT):\s*/i, '');   // prefix weghalen
+      if (label) body += `<div class="cdoc-scheiding">${escH(label)}</div>`;
+      continue;
+    }
+
+    // Markdown koppen van LlamaParse (# / ## / ###)
+    const mdKop1 = /^#{1,2}\s+/.test(tr);  // # of ## → artikel-niveau
+    const mdKop2 = /^#{3,}\s+/.test(tr);   // ### etc → sub-artikel-niveau
+    const trZonderHashes = tr.replace(/^#+\s+/, '');
+
+    const isArtikel    = /^(Artikel|ARTIKEL)\s+\d+/i.test(trZonderHashes);
+    const isAllCaps    = trZonderHashes === trZonderHashes.toUpperCase()
+                         && trZonderHashes.length >= 4 && trZonderHashes.length <= 80
+                         && /^[A-Z\s]/.test(trZonderHashes) && !/^\d/.test(trZonderHashes)
+                         && !/^(CONVENANT|CONTEXT|BIJLAGE):/i.test(trZonderHashes);
+    const isSubArtikel = /^\d+\.\d+\.?\s/.test(trZonderHashes);
+    const isNumPunt    = /^\d+\.\s+[A-Z\S]/.test(trZonderHashes) && !isSubArtikel && tr.length < 200;
+    const isLetterPunt = /^[a-z]\)\s/i.test(tr);
+    const isBullet     = /^[-–•*]\s/.test(tr);  // ook markdown * bullets
+
+    if (mdKop1 || isArtikel || isAllCaps) {
+      body += `<div class="cdoc-kop">${renderRegelMetTC(trZonderHashes)}</div>`;
+    } else if (mdKop2 || isSubArtikel || isNumPunt) {
+      body += `<div class="cdoc-sub">${renderRegelMetTC(trZonderHashes)}</div>`;
+    } else if (isLetterPunt || isBullet) {
+      body += `<div class="cdoc-lijst">${renderRegelMetTC(trZonderHashes)}</div>`;
+    } else {
+      body += `<div class="cdoc-par">${renderRegelMetTC(tr)}</div>`;
+    }
+  }
+
+  return `<div class="cdoc-pagina">
+    <div class="cdoc-titel">${escH(titelTekst)}</div>
+    <div class="cdoc-datum">Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} · Concept</div>
+    ${body}
+  </div>`;
+}
+
+// Scroll naar de passage die in het document al inline gemarkeerd is (del/ins)
+// en voeg tijdelijk een outline toe voor extra aandacht
+function highlightConceptPassage(passage) {
+  document.querySelectorAll('.concept-doc-panel .cdoc-hl-actief')
+    .forEach(el => el.classList.remove('cdoc-hl-actief'));
+  if (!passage?.trim()) return;
+  const eersteRegel = passage.split('\n').map(l => l.trim()).find(l => l.length > 0);
+  if (!eersteRegel) return;
+  const zoek = eersteRegel.slice(0, 60).toLowerCase();
+  const els  = document.querySelectorAll(
+    '.concept-doc-panel .cdoc-par,.concept-doc-panel .cdoc-kop,.concept-doc-panel .cdoc-sub,.concept-doc-panel .cdoc-lijst');
+  for (const el of els) {
+    if (el.textContent.trim().toLowerCase().includes(zoek)) {
+      el.classList.add('cdoc-hl-actief');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => el.classList.remove('cdoc-hl-actief'), 2000);
+      break;
+    }
+  }
+}
+
+// Bouw en toon de full-screen concept-review
+function toonConceptReview(documentTekst, wijzigingen) {
+  _conceptDocumentTekst = documentTekst;
+  _conceptWijzigingen   = wijzigingen || [];
+
+  // Links: documentpreview met track-changes markering
+  document.getElementById('conceptDocPanel').innerHTML =
+    documentTekstNaarHtml(documentTekst, _conceptWijzigingen);
+
+  // Rechts: wijzigingskaarten
+  const changesPanel = document.getElementById('conceptChangesPanel');
+  if (!_conceptWijzigingen.length) {
+    changesPanel.innerHTML = '<h3>Wijzigingen</h3><p style="font-size:.85rem;color:var(--ink-soft)">Geen wijzigingsdetails beschikbaar.</p>';
+  } else {
+    let html = '<h3>Wijzigingen</h3>';
+    _conceptWijzigingen.forEach((w, idx) => {
+      const heeftNieuw = !!w.aangepaste_tekst;
+      const heeftOud  = !!w.originele_tekst;
+      html += `<div class="change-card" data-idx="${idx}">
+        <div class="change-card-kop">
+          <span class="change-artikel">${escH(w.artikel || '–')}</span>
+        </div>
+        <div class="change-beschrijving">${escH(w.wat_gewijzigd || '')}</div>
+        ${(heeftNieuw || heeftOud) ? `
+        <div class="change-toggle">
+          <button class="toggle-btn act" data-modus="nieuw">Aangepast</button>
+          ${heeftOud ? '<button class="toggle-btn" data-modus="oud">Origineel</button>' : ''}
+        </div>
+        ${heeftNieuw ? `<div class="change-tekst nieuw">${escH(w.aangepaste_tekst)}</div>` : ''}
+        ${heeftOud   ? `<div class="change-tekst oud" style="display:none">${escH(w.originele_tekst)}</div>` : ''}
+        ` : ''}
+        ${w.ook_aangepast?.length
+          ? `<div class="change-ook">Vanwege samenhang ook aangepast: ${escH(w.ook_aangepast.join(', '))}</div>`
+          : ''}
+      </div>`;
+    });
+    changesPanel.innerHTML = html;
+
+    changesPanel.querySelectorAll('.change-card').forEach(card => {
+      const idx = parseInt(card.dataset.idx, 10);
+      const w   = _conceptWijzigingen[idx];
+
+      const activeerKaart = () => {
+        changesPanel.querySelectorAll('.change-card').forEach(c => c.classList.remove('act'));
+        card.classList.add('act');
+        const actiefModus = card.querySelector('.toggle-btn.act')?.dataset.modus || 'nieuw';
+        const passage = actiefModus === 'oud' ? w.originele_tekst : (w.aangepaste_tekst || w.artikel);
+        highlightConceptPassage(passage || '', actiefModus);
+      };
+
+      card.addEventListener('click', activeerKaart);
+
+      card.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const modus = btn.dataset.modus;
+          card.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('act', b === btn));
+          const nieuwEl = card.querySelector('.change-tekst.nieuw');
+          const oudEl   = card.querySelector('.change-tekst.oud');
+          if (nieuwEl) nieuwEl.style.display = modus === 'nieuw' ? '' : 'none';
+          if (oudEl)   oudEl.style.display   = modus === 'oud'  ? '' : 'none';
+          activeerKaart();
+        });
+      });
+    });
+  }
+
+  document.getElementById('conceptReview').style.display = 'flex';
+}
+
+// Sla concept op in het huidige rapport (in-memory + Supabase als er een id is)
+async function slaConceptOp(documentTekst, wijzigingen) {
+  const conceptData = {
+    document_tekst: documentTekst,
+    wijzigingen:    wijzigingen || [],
+    gegenereerd_op: new Date().toISOString(),
+  };
+  if (huidigRapport) huidigRapport._concept = conceptData;
+  const bekijkBtn = document.getElementById('bekijkConceptBtn');
+  if (bekijkBtn) bekijkBtn.style.display = 'inline-flex';
+  if (huidigeId && huidigRapport) {
+    try {
+      await db.from('screeningen').update({ rapport: huidigRapport }).eq('id', huidigeId);
+    } catch (e) {
+      console.warn('Concept opslaan mislukt (niet-fataal):', e.message);
+    }
+  }
+}
+
+// ── Concept-generatie tracking ───────────────────────────
+// Meerdere generaties kunnen tegelijk lopen (bijv. convenant + ouderschapsplan).
+// Elke generatie krijgt een uniek id en een chip in de toolbar.
+let _genTeller = 0;
+const _generaties = new Map(); // id → { naam, screeningId, status, documentTekst, wijzigingen }
+
+function renderConceptChips() {
+  const wrap = document.getElementById('conceptGenChips');
+  if (!wrap) return;
+  if (!_generaties.size) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = [..._generaties.entries()].map(([id, g]) => {
+    if (g.status === 'bezig') {
+      return `<span class="cgen-chip bezig"><span class="cgen-spin">⟳</span> ${escH(g.naam)} genereren…</span>`;
+    }
+    if (g.status === 'klaar') {
+      return `<span class="cgen-chip klaar" data-genid="${id}" title="Klik om te bekijken">✓ ${escH(g.naam)} klaar — bekijk</span>`;
+    }
+    if (g.status === 'fout') {
+      return `<span class="cgen-chip fout" data-genid="${id}" title="${escH(g.fout)}">✗ ${escH(g.naam)} mislukt</span>`;
+    }
+    return '';
+  }).join('');
+
+  // Klik op "klaar" chip → open review (laad document als nodig)
+  wrap.querySelectorAll('.cgen-chip.klaar').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const g = _generaties.get(Number(chip.dataset.genid));
+      if (!g) return;
+      _generaties.delete(Number(chip.dataset.genid));
+      renderConceptChips();
+      if (g.screeningId && huidigeId !== g.screeningId) {
+        // Navigeer naar het juiste document en open dan de review
+        laadScreening(g.screeningId, splitOrigin).then(() =>
+          toonConceptReview(g.documentTekst, g.wijzigingen));
+      } else {
+        toonConceptReview(g.documentTekst, g.wijzigingen);
+      }
+    });
+  });
+  // Klik op "fout" chip → verwijder
+  wrap.querySelectorAll('.cgen-chip.fout').forEach(chip => {
+    chip.addEventListener('click', () => {
+      _generaties.delete(Number(chip.dataset.genid));
+      renderConceptChips();
+    });
+  });
+}
+
+// Pas search-replace wijzigingen toe op de originele documenttekst.
+// Probeert eerst exacte match, dan genormaliseerde whitespace-match als fallback.
+function pasWijzigingenToe(origineel, wijzigingen) {
+  let tekst = origineel;
+  for (const w of wijzigingen) {
+    const zoek = w.originele_tekst?.trim();
+    const vervang = w.aangepaste_tekst?.trim();
+    if (!zoek || vervang == null) continue;
+    if (tekst.includes(zoek)) {
+      tekst = tekst.replace(zoek, vervang);
+    } else {
+      // Fallback: normaliseer witruimte en probeer opnieuw
+      const normZoek = zoek.replace(/\s+/g, ' ');
+      const normTekst = tekst.replace(/\s+/g, ' ');
+      if (normTekst.includes(normZoek)) {
+        // Herbouw de originele tekst met genormaliseerde versie
+        tekst = tekst.replace(/\s+/g, ' ').replace(normZoek, vervang);
+      } else {
+        console.warn(`[concept] Vervanging niet gevonden voor item ${w.item_nr}: "${zoek.slice(0, 60)}…"`);
+      }
+    }
+  }
+  return tekst;
+}
+
+// ── Concept genereren ────────────────────────────────────
+document.getElementById('genereerConceptBtn').addEventListener('click', async () => {
+  const aangevinkt = verzamelAangevinkt();
+  if (!aangevinkt.length) return;
+
+  const origineleTekst = huidigRapport._document_tekst || '';
+  if (!origineleTekst) {
+    alert('Geen documenttekst beschikbaar. Analyseer het document opnieuw om conceptgeneratie te gebruiken.');
+    return;
+  }
+
+  // Controleer of er al een concept is voor dit documenttype — vraag bevestiging
+  const huidigDocType = (huidigeDocumenten[huidigeDocIdx]?.doc_type) || huidigeClassificatie?.doc_type || '';
+  const bestaandConcept = huidigRapport._concepts?.[huidigDocType] || huidigRapport._concept;
+  if (bestaandConcept) {
+    const datum = bestaandConcept.gegenereerd_op
+      ? new Date(bestaandConcept.gegenereerd_op).toLocaleString('nl-NL', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
+      : 'eerder';
+    const ok = confirm(`Er is al een concept gegenereerd op ${datum}.\n\nNieuw genereren overschrijft dit concept. Doorgaan?`);
+    if (!ok) return;
+  }
+
+  // Snapshot van de huidige context (gebruiker kan ondertussen wisselen)
+  const snapId      = huidigeId;
+  const snapRapport = huidigRapport;
+  const snapDocType = huidigeClassificatie?.doc_type || 'document';
+  const snapAangevinkt = aangevinkt;
+  const snapOrigineel  = origineleTekst;
+  // Pseudonimiseringsmap op basis van de bekende namen
+  const { naarAnon: snapNaarAnon, naarEcht: snapNaarEcht } = bouwAnonMap(huidigeClassificatie || {});
+  // Chip-label: "Convenant · Familie De Vries"
+  const snapDocLabel  = DOC_TYPES.find(d => d.value === snapDocType)?.label || snapDocType;
+  const snapDossier   = huidigDossierNaam || '';
+  const snapNaam      = snapDossier ? `${snapDocLabel} · ${snapDossier}` : snapDocLabel;
+
+  // Registreer generatie en toon chip — niet-blokkerend
+  const genId = ++_genTeller;
+  _generaties.set(genId, { naam: snapNaam, screeningId: snapId, status: 'bezig' });
+  renderConceptChips();
+
+  // Start op de achtergrond — geen await, geen modal
+  (async () => {
+    try {
+      const itemsTekst = snapAangevinkt.map((item, i) => {
+        const nr  = i + 1;
+        const cat = item.categorie || '?';
+        const loc = item.locatie || item.sectie || item.onderwerp || item.signalering || '';
+        const bev = item.bevinding || item.toelichting || item.probleem || item.signalering || '';
+        const sug = item.suggestie || '';
+        const opm = item.opmerking || '';
+        const pas = item.passage   || item.citaat || '';
+        let t = `[${nr}] (${cat})`;
+        if (loc) t += `\n   Locatie: ${loc}`;
+        if (bev) t += `\n   Bevinding: ${bev}`;
+        if (sug) t += `\n   Suggestie: ${sug}`;
+        if (opm) t += `\n   Opmerking mediator: ${opm}`;
+        if (pas) t += `\n   Passage in document: "${pas}"`;
+        return t;
+      }).join('\n\n');
+
+      const systeemPrompt =
+`Je bent een ervaren Nederlandse juridische documentschrijver gespecialiseerd in echtscheidingsdocumenten.
+
+WERKWIJZE — je geeft ALLEEN de gewijzigde passages terug, niet het volledige document:
+- Neem per verbeterpunt de EXACTE originele zin(nen) of alinea op in originele_tekst (woordelijk uit het document).
+- Schrijf de verbeterde versie in aangepaste_tekst.
+- Het systeem past de vervangingen automatisch toe op het originele document.
+
+KERNREGELS:
+1. Behoud de formele toon, stijl en nummering van het origineel.
+2. Pas ALLEEN aan wat nodig is voor het genoemde verbeterpunt.
+3. Als een aanpassing gevolgen heeft voor een ander artikel, neem dat ook op als aparte vervanging.
+4. Gebruik een "Suggestie" of "Opmerking mediator" als leidende instructie.
+5. Behoud concrete namen van partijen zoals ze in het origineel staan.`;
+
+      const conceptTool = {
+        name: 'registreer_wijzigingen',
+        description: 'Geeft per verbeterpunt de originele en nieuwe tekst terug als vervangingsparen',
+        input_schema: {
+          type: 'object',
+          properties: {
+            wijzigingen: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  item_nr:         { type: 'integer' },
+                  artikel:         { type: 'string' },
+                  wat_gewijzigd:   { type: 'string' },
+                  originele_tekst: { type: 'string', description: 'Exacte tekst uit het originele document (minstens één volledige zin, woordelijk)' },
+                  aangepaste_tekst:{ type: 'string', description: 'Verbeterde versie ter vervanging' },
+                  ook_aangepast:   { type: 'array', items: { type: 'string' } },
+                },
+                required: ['item_nr','artikel','wat_gewijzigd','originele_tekst','aangepaste_tekst','ook_aangepast'],
+              },
+            },
+          },
+          required: ['wijzigingen'],
+        },
+      };
+
+      const userTekst =
+`DOCUMENTTYPE: ${snapDocType}
+
+TE VERWERKEN VERBETERPUNTEN (${snapAangevinkt.length} stuks):
+${itemsTekst}
+
+ORIGINEEL DOCUMENT:
+${anonimiseerTekst(snapOrigineel, snapNaarAnon)}`;
+
+      const data = await askClaudeForJson(systeemPrompt, userTekst, conceptTool, 16000);
+      if (!data?.wijzigingen?.length) {
+        console.warn('[concept] Lege wijzigingen — Claude-response:', data);
+        throw new Error('Claude gaf geen wijzigingen terug. Controleer of de aangevinkte punten concrete tekstsuggesties bevatten.');
+      }
+
+      // Herstel namen in wijzigingen (Claude zag [PERSOON_A], rapport toont echte naam)
+      const wijzigingenEcht = herstelAnonObj(data.wijzigingen, snapNaarEcht);
+      const documentTekst = pasWijzigingenToe(snapOrigineel, wijzigingenEcht);
+
+      // Opslaan per documenttype — zodat convenant en ouderschapsplan elk hun eigen concept hebben
+      const conceptData = {
+        document_tekst: documentTekst,
+        wijzigingen:    wijzigingenEcht,   // echte namen, niet placeholders
+        gegenereerd_op: new Date().toISOString(),
+      };
+      if (!snapRapport._concepts) snapRapport._concepts = {};
+      snapRapport._concepts[snapDocType] = conceptData;
+      if (snapId) {
+        try {
+          await db.from('screeningen').update({ rapport: snapRapport }).eq('id', snapId);
+        } catch (e) { console.warn('Concept opslaan mislukt:', e.message); }
+      }
+
+      // Chip bijwerken
+      _generaties.set(genId, { naam: snapNaam, screeningId: snapId, status: 'klaar', documentTekst, wijzigingen: wijzigingenEcht });
+      renderConceptChips();
+
+      // Als gebruiker nog op hetzelfde document zit → direct openen
+      if (huidigeId === snapId) {
+        if (!huidigRapport._concepts) huidigRapport._concepts = {};
+        huidigRapport._concepts[snapDocType] = conceptData;
+        const bekijkBtn = document.getElementById('bekijkConceptBtn');
+        if (bekijkBtn) bekijkBtn.style.display = 'inline-flex';
+        toonConceptReview(documentTekst, data.wijzigingen);
+        // Chip verdwijnt na autoopen
+        setTimeout(() => { _generaties.delete(genId); renderConceptChips(); }, 100);
+      }
+    } catch (err) {
+      _generaties.set(genId, { naam: snapNaam, screeningId: snapId, status: 'fout', fout: err.message });
+      renderConceptChips();
+    }
+  })();
+});
+
+
+// "Bekijk concept" knop — heropent de review met het opgeslagen concept voor de actieve tab
+document.getElementById('bekijkConceptBtn').addEventListener('click', () => {
+  // Actieve tab-doctype (multi-doc) of hoofdclassificatie (enkelvoudig)
+  const docType  = (huidigeDocumenten[huidigeDocIdx]?.doc_type) || huidigeClassificatie?.doc_type || '';
+  const concept  = huidigRapport?._concepts?.[docType]   // nieuw: per doctype
+                || huidigRapport?._concept;               // oud: terugvaloptie
+  if (!concept) return;
+  toonConceptReview(concept.document_tekst, concept.wijzigingen || []);
+});
+
+// Terug-knop in review
+document.getElementById('conceptReviewBackBtn').addEventListener('click', () => {
+  document.getElementById('conceptReview').style.display = 'none';
+});
+
+// Download-knop in review-header
+document.getElementById('conceptDownloadBtn').addEventListener('click', async () => {
+  if (!_conceptDocumentTekst) return;
+  const btn = document.getElementById('conceptDownloadBtn');
+  btn.disabled = true;
+  btn.textContent = 'Bezig…';
+  try {
+    const blob = await documentTekstNaarDocx(_conceptDocumentTekst);
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || 'concept';
+    const dossierDeel  = huidigDossierNaam ? `-${huidigDossierNaam}` : '';
+    const veiligNaam   = `${docTypeLabel}${dossierDeel}`.replace(/[^a-z0-9_\-\s]+/gi, '').replace(/\s+/g, '_');
+    a.download = `concept-verbeterd-${veiligNaam}.docx`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('[docx download]', err);
+    alert('Download mislukt: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↓ Download .docx';
+  }
+});
+
+// ── Master-detail navigatie ───────────────────────────
+function schakelRechts(rpId) {
+  document.querySelectorAll('.rp').forEach(el => el.classList.remove('act'));
+  document.getElementById(rpId).classList.add('act');
+}
+function markeerRijAct(id) {
+  document.querySelectorAll('#dossierLijst .list-row').forEach(r =>
+    r.classList.toggle('act', r.dataset.id === String(id)));
+}
+
 // ── Dossier-context in upload-scherm ──────────────────
 let huidigeDossierId  = null;
 let huidigDossierNaam = null;
@@ -1725,42 +3344,65 @@ function zetDossierContext(id, naam) {
   huidigeDossierId  = id;
   huidigDossierNaam = naam;
   document.getElementById('versieContextNaam').textContent = naam;
-  document.getElementById('versieContextBalk').classList.add('zichtbaar');
+  document.getElementById('koppelNaamText').textContent = naam;
   document.getElementById('versieLabelInput').value = '';
   splitOrigin = 'dossier';
+  schakelRechts('rp-analyse');
+  tray.length = 0;
+  trayRender();
 }
 
-function wisDossierContext() {
-  huidigeDossierId  = null;
-  huidigDossierNaam = null;
-  document.getElementById('versieContextBalk').classList.remove('zichtbaar');
-  document.getElementById('versieLabelInput').value = '';
-  splitOrigin = 'main';
-}
-document.getElementById('vcWisBtn').addEventListener('click', wisDossierContext);
+// "← Terug": terug naar het dossier-detail (of leeg als geen dossier)
+document.getElementById('vcWisBtn').addEventListener('click', () => {
+  schakelRechts(huidigeDossierId ? 'rp-detail' : 'rp-leeg');
+  tray.length = 0;
+  trayRender();
+});
 
 // ── Document-tray ─────────────────────────────────────
 const DOC_TYPES = [
   { value: 'convenant',              label: 'Convenant' },
   { value: 'ouderschapsplan',        label: 'Ouderschapsplan' },
+  { value: 'zorgverdeling',          label: 'Zorgverdeling (bijlage OP)' },
   { value: 'huwelijkse_voorwaarden', label: 'Huwelijkse voorwaarden' },
-  { value: 'waarde_verdeling',       label: 'Waarde_verdeling / Bijlage' },
+  { value: 'waarde_verdeling',       label: 'Waardebepaling / Bijlage' },
   { value: 'pensioenopgave',         label: 'Pensioenopgave' },
   { value: 'id_bewijs',              label: 'ID-bewijs' },
   { value: 'overig',                 label: 'Overig document' },
 ];
 const DOC_TYPE_LABELS = Object.fromEntries(DOC_TYPES.map(d => [d.value, d.label]));
 const DOC_TYPE_ICONS  = {
-  convenant: '📋', ouderschapsplan: '👨‍👩‍👦', huwelijkse_voorwaarden: '💍',
+  convenant: '📋', ouderschapsplan: '👨‍👩‍👦', zorgverdeling: '📅',
+  huwelijkse_voorwaarden: '💍',
   waarde_verdeling: '📊', pensioenopgave: '🏦', id_bewijs: '🪪', overig: '📄',
 };
+// Hoofddocumenten → eigen Claude-analyse + eigen tab in de split-view
+// Contextstukken  → bijlage (meegestuurd als context naar ALLE hoofddocumenten,
+//                   én meegetoond in de viewer naast het bijbehorende hoofddocument)
+// Fallback: als er geen hoofddocumenten aanwezig zijn, worden alle docs als hoofddocument behandeld.
+const HOOFD_TYPES = new Set(['convenant', 'ouderschapsplan']);
+
+// Welk contextdocument-type hoort bij welk hoofddocument-type?
+// Types die NIET in deze map staan worden bij alle hoofddocumenten getoond.
+const CONTEXT_HOOFD_MAP = {
+  zorgverdeling:          'ouderschapsplan',  // bijlage bij ouderschapsplan
+  waarde_verdeling:       'convenant',        // bijlage bij convenant
+  huwelijkse_voorwaarden: 'convenant',        // bijlage bij convenant
+  pensioenopgave:         'convenant',        // bijlage bij convenant
+};
+
+function contextVoorHoofd(contextType, hoofdType) {
+  const eigenaar = CONTEXT_HOOFD_MAP[contextType];
+  return !eigenaar || eigenaar === hoofdType; // geen eigenaar → voor iedereen
+}
 
 function raadDocType(bestandsnaam) {
   const n = bestandsnaam.toLowerCase();
   if (n.includes('convenant'))                           return 'convenant';
   if (n.includes('ouderschap'))                          return 'ouderschapsplan';
+  if (n.includes('zorgverdeling') || n.includes('zorgregeling') || n.includes('zorg-')) return 'zorgverdeling';
   if (n.includes('huwelijkse') || n.includes('hvw') || /\bhv\b/.test(n)) return 'huwelijkse_voorwaarden';
-  if (n.includes('waarde') || n.includes('verdeling') || n.includes('bijlage')) return 'waarde_verdeling';
+  if (n.includes('waarde') || n.includes('waardebepaling') || n.includes('bijlage')) return 'waarde_verdeling';
   if (n.includes('pensioen'))                            return 'pensioenopgave';
   if (n.includes('paspoort') || n.includes('rijbewijs') || /\bid\b/.test(n)) return 'id_bewijs';
   return 'overig';
@@ -1793,8 +3435,11 @@ function trayRender() {
   dropzone.style.display  = 'none';
   lijst.style.display     = '';
   voetbalk.style.display  = '';
-  analyseBtn.disabled     = false;
-  analyseBtn.textContent  = tray.length === 1 ? 'Analyseer document' : `Analyseer ${tray.length} documenten`;
+  // Knop alleen actief als er ook een dossier geselecteerd is
+  analyseBtn.disabled     = !huidigeDossierId;
+  analyseBtn.textContent  = !huidigeDossierId
+    ? 'Kies eerst een dossier'
+    : tray.length === 1 ? 'Analyseer document' : `Analyseer ${tray.length} documenten`;
 
   lijst.innerHTML = tray.map(item => `
     <div class="tray-item${item.fromStorage ? ' from-storage' : ''}" data-tray-id="${item.id}">
@@ -1909,81 +3554,141 @@ analyseBtn.addEventListener('click', async () => {
   errorBox.style.display = 'none';
   analyseBtn.disabled    = true;
   scanning.classList.add('active');
-  const scanText = document.getElementById('scanText');
+  const scanText     = document.getElementById('scanText');
+  const scanVoortgang = document.getElementById('scanVoortgang');
+  const scanDocLabel  = document.getElementById('scanDocLabel');
+  const scanBalkVul   = document.getElementById('scanBalkVul');
+  const scanPct       = document.getElementById('scanPct');
   scanText.textContent = 'Documenten voorbereiden…';
+  scanVoortgang.classList.remove('actief');
+
+  // Voortgangsbalk bijwerken (pct = 0-100, of undefined om te verbergen)
+  function zetVoortgang(label, pct) {
+    if (pct === undefined) {
+      scanVoortgang.classList.remove('actief');
+      return;
+    }
+    scanVoortgang.classList.add('actief');
+    scanDocLabel.textContent = label || '';
+    const p = Math.min(100, Math.max(0, Math.round(pct)));
+    scanBalkVul.style.width = p + '%';
+    scanPct.textContent     = p + '%';
+  }
+
+  let geslaagd = false;
 
   try {
-    const { classificatie, rapport, resolvedFiles } = await analyseDocument(
+    const { classificatie, rapport, resolvedFiles, primaireBestanden, extractedTexts } = await analyseDocument(
       tray,
-      tekst => { scanText.textContent = tekst; }
+      (tekst, pct, label) => {
+        if (tekst !== null) scanText.textContent = tekst;
+        zetVoortgang(label, pct);
+      }
     );
     huidigeId             = null;
-    huidigeBestandenLijst = resolvedFiles;
+    huidigeExtractedTexts = extractedTexts || [];   // bewaard voor cache-backfill in opslaan()
+    // Toon in het doc-panel het eerste primaire document; bij single-doc = resolvedFiles
+    huidigeBestandenLijst = (primaireBestanden?.[0]) || resolvedFiles;
+    huidigePrimaireBest   = primaireBestanden || [resolvedFiles];
     huidigePdfDocCache    = {};
     docPanelGereed        = false;
     huidigeBestandsnaam   = samenstellenBestandsnaam(classificatie, tray.map(i => ({ name: i.bestandsnaam })));
     voegStandaardveldenToe(rapport);
     await toonRapport(classificatie, rapport);
+    geslaagd = true;
   } catch (err) {
     errorBox.textContent   = 'Kon de documenten niet analyseren: ' + err.message;
     errorBox.style.display = 'block';
   } finally {
     scanning.classList.remove('active');
-    analyseBtn.disabled = !tray.length;
+    scanVoortgang.classList.remove('actief');
+    analyseBtn.disabled = !tray.length || !huidigeDossierId;
   }
+
+  // Direct automatisch opslaan na succesvolle analyse (buiten try/finally)
+  if (geslaagd) await opslaan();
 });
 
-// ── Tabs ──────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('view-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'dossiers') laadDossiers();
-    if (tab.dataset.tab === 'losse')    laadHistory();
+// ── Zoekfilter in lijst ───────────────────────────────
+document.getElementById('dossierZoek').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  document.querySelectorAll('#dossierLijst .list-row').forEach(row => {
+    const naam = row.querySelector('.list-row-naam')?.textContent.toLowerCase() || '';
+    row.style.display = naam.includes(q) ? '' : 'none';
+  });
+  // Sectie-headers verbergen als alle rijen eronder verborgen zijn
+  document.querySelectorAll('#dossierLijst .list-sect').forEach(sect => {
+    let volgende = sect.nextElementSibling;
+    let zichtbaar = false;
+    while (volgende && !volgende.classList.contains('list-sect')) {
+      if (volgende.style.display !== 'none') zichtbaar = true;
+      volgende = volgende.nextElementSibling;
+    }
+    sect.style.display = zichtbaar ? '' : 'none';
   });
 });
 
 // ── Dossier-lijst laden ───────────────────────────────
+function mfnChipHtml(versies) {
+  if (!versies?.length) return '';
+  const recentste = versies.reduce((a, b) => (b.versie_nr > a.versie_nr ? b : a), versies[0]);
+  const score = recentste.rapport?.mfn_score ?? recentste.rapport?.balans_score ?? null;
+  if (score == null) return '';
+  const pct = Math.round(score * 100);
+  let cls = pct >= 70 ? 'chip-ok' : pct >= 45 ? 'chip-warn' : 'chip-bad';
+  return `<span class="chip ${cls}">MfN ${pct}%</span>`;
+}
+
 async function laadDossiers() {
   const el = document.getElementById('dossierLijst');
-  el.innerHTML = '<p class="empty">Bezig met laden...</p>';
+  el.innerHTML = '<p style="padding:10px 14px;font-size:.85rem;color:var(--ink-soft)">Bezig met laden...</p>';
   try {
     const { data, error } = await db
       .from('dossiers')
-      .select('id, naam, partij_a, partij_b, doc_type, status, updated_at, screeningen!dossier_id(id, versie_nr)')
+      .select('id, naam, partij_a, partij_b, doc_type, status, updated_at, screeningen!dossier_id(id, versie_nr, rapport)')
       .order('updated_at', { ascending: false });
     if (error) throw error;
     if (!data.length) {
-      el.innerHTML = '<p class="empty">Nog geen dossiers. Klik "+ Nieuw dossier" om te beginnen.</p>';
+      el.innerHTML = '<p style="padding:14px;font-size:.85rem;color:var(--ink-soft)">Nog geen dossiers. Klik + om te beginnen.</p>';
       return;
     }
-    el.innerHTML = data.map(d => {
-      const versies   = d.screeningen || [];
-      const aantalV   = versies.length;
-      const typeTag   = d.doc_type ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--coral-dark)">${escH(d.doc_type)}</span> · ` : '';
-      const partijen  = [d.partij_a, d.partij_b].filter(Boolean).join(' & ');
-      const datumStr  = new Date(d.updated_at).toLocaleDateString('nl-NL', { day:'2-digit', month:'short', year:'numeric' });
-      return `
-      <div class="dossier-item" data-id="${d.id}">
-        <div class="dossier-item-top">
-          <div>
-            <div class="dossier-naam">${escH(d.naam)}</div>
-            ${partijen ? `<div class="dossier-partijen">${escH(partijen)}</div>` : ''}
+
+    const actief    = data.filter(d => d.status !== 'afgerond' && d.status !== 'gearchiveerd');
+    const afgerond  = data.filter(d => d.status === 'afgerond' || d.status === 'gearchiveerd');
+
+    function renderRijen(lijst) {
+      return lijst.map(d => {
+        const datumStr = new Date(d.updated_at).toLocaleDateString('nl-NL', { day:'2-digit', month:'short' });
+        const chips    = mfnChipHtml(d.screeningen);
+        return `
+        <button class="list-row" data-id="${d.id}">
+          <div class="list-row-naam">${escH(d.naam)}</div>
+          <div class="list-row-chips">
+            ${chips}
           </div>
-          <span class="status-tag status-${escH(d.status)}">${escH(d.status)}</span>
-        </div>
-        <div class="dossier-meta">
-          ${typeTag}${aantalV} ${aantalV === 1 ? 'versie' : 'versies'} · Gewijzigd ${datumStr}
-        </div>
-      </div>`;
-    }).join('');
-    el.querySelectorAll('.dossier-item').forEach(item => {
-      item.addEventListener('click', () => toonDossierDetail(item.dataset.id));
+          <div class="list-row-datum">${datumStr}</div>
+        </button>`;
+      }).join('');
+    }
+
+    let html = '';
+    if (actief.length) {
+      html += `<div class="list-sect">Actief</div>${renderRijen(actief)}`;
+    }
+    if (afgerond.length) {
+      html += `<div class="list-sect">Afgerond</div>${renderRijen(afgerond)}`;
+    }
+    el.innerHTML = html;
+
+    el.querySelectorAll('.list-row').forEach(row => {
+      row.addEventListener('click', () => toonDossierDetail(row.dataset.id));
     });
+
+    // Herstel actieve markering als er al een dossier open is
+    if (huidigeDossierId) markeerRijAct(huidigeDossierId);
+
   } catch (err) {
-    el.innerHTML = `<p class="empty">Kon dossiers niet laden: ${escH(err.message)}</p>`;
+    el.innerHTML = `<p style="padding:14px;font-size:.85rem;color:var(--terra)">Kon dossiers niet laden: ${escH(err.message)}</p>`;
   }
 }
 
@@ -1992,11 +3697,10 @@ let huidigDossierData   = null;
 let huidigDossierVersies = []; // Meest recente versies van het geopende dossier
 
 async function toonDossierDetail(id) {
-  const overlay = document.getElementById('dossierOverlay');
   const content = document.getElementById('dossierContent');
   content.innerHTML = '<p class="empty">Bezig met laden...</p>';
-  overlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
+  schakelRechts('rp-detail');
+  markeerRijAct(id);
 
   try {
     // Dossier ophalen
@@ -2017,7 +3721,7 @@ async function toonDossierDetail(id) {
       .from('screeningen')
       .select('id, bestandsnaam, versie_nr, versie_label, classificatie, rapport, created_at')
       .eq('dossier_id', id)
-      .order('versie_nr', { ascending: false });
+      .order('created_at', { ascending: false });
     if (vErr) throw vErr;
     huidigDossierVersies = versies;
 
@@ -2045,17 +3749,29 @@ async function toonDossierDetail(id) {
       const vol      = rp.volledigheid || [];
       const aanwezig = vol.filter(x => x.status === 'aanwezig').length;
       const label    = v.versie_label || `Versie ${v.versie_nr}`;
-      const datum    = new Date(v.created_at).toLocaleDateString('nl-NL', { day:'2-digit', month:'short', year:'numeric' });
+      const datum    = new Date(v.created_at).toLocaleString('nl-NL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
       const doctype  = v.classificatie?.doc_type || '';
 
-      const mfn      = rp.mfn_score;
-      const mfnAanw  = mfn?.score_aanwezig ?? null;
-      const mfnTot   = mfn?.score_totaal   ?? null;
-      const mfnPct   = (mfnAanw !== null && mfnTot) ? Math.round((mfnAanw / mfnTot) * 100) : null;
-      const mfnKleur = mfnPct === null ? 'score-grijs' : mfnPct >= 90 ? 'score-ok' : mfnPct >= 70 ? 'score-midden' : 'score-hoog';
+      // MfN-chips: voor multi-doc per document, voor single-doc één chip
+      const mfnChips = (() => {
+        const docsArr = rp.documenten?.length > 1 ? rp.documenten : [rp];
+        return docsArr.map(d => {
+          const mfn = d.mfn_score;
+          if (!mfn) return '';
+          const aanw = mfn.score_aanwezig ?? null;
+          const tot  = mfn.score_totaal   ?? null;
+          if (aanw === null || !tot) return '';
+          const pct   = Math.round((aanw / tot) * 100);
+          const kleur = pct >= 90 ? 'score-ok' : pct >= 70 ? 'score-midden' : 'score-hoog';
+          const label = rp.documenten?.length > 1
+            ? `${DOC_TYPE_LABELS[d.doc_type] || d.doc_type}: ${aanw}/${tot}`
+            : `MfN ${aanw}/${tot}`;
+          return `<span class="score-chip ${kleur}">${escH(label)}</span>`;
+        }).filter(Boolean).join('');
+      })();
 
       const scores = [
-        mfnAanw !== null ? `<span class="score-chip ${mfnKleur}">MfN ${mfnAanw}/${mfnTot}</span>` : '',
+        mfnChips,
         vol.length  ? `<span class="score-chip score-grijs">${aanwezig}/${vol.length} secties</span>` : '',
         hoog        ? `<span class="score-chip score-hoog">${hoog} hoog</span>` : '',
         midden      ? `<span class="score-chip score-midden">${midden} midden</span>` : '',
@@ -2077,14 +3793,16 @@ async function toonDossierDetail(id) {
 
       return `
       <div class="versie-card" data-id="${v.id}" style="cursor:pointer">
-        <span class="versie-badge">V${v.versie_nr}</span>
         <div class="versie-info">
           <div class="versie-label-tekst">${escH(label)}</div>
           <div class="versie-submeta">${datum}${doctype ? ' · ' + escH(doctype) : ''}</div>
           ${scores ? `<div class="versie-scores">${scores}</div>` : ''}
           ${bestandenHtml}
         </div>
-        <button class="btn-ghost" onclick="event.stopPropagation()">Bekijken</button>
+        <div class="versie-acties" onclick="event.stopPropagation()">
+          <button class="btn-ghost versie-bekijk-btn">Bekijken</button>
+          <button class="versie-verwijder-btn" title="Versie verwijderen">🗑</button>
+        </div>
       </div>`;
     }).join('');
 
@@ -2116,11 +3834,37 @@ async function toonDossierDetail(id) {
       });
     });
 
-    // Bekijken-knoppen (ook stopPropagation al zit in HTML, voor zekerheid)
-    content.querySelectorAll('.btn-ghost').forEach(btn => {
+    // Bekijken-knoppen
+    content.querySelectorAll('.versie-bekijk-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
         laadScreening(btn.closest('.versie-card').dataset.id, 'dossier');
+      });
+    });
+
+    // Verwijder-knoppen per versie
+    content.querySelectorAll('.versie-verwijder-btn').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const card    = btn.closest('.versie-card');
+        const versieId = card.dataset.id;
+        const labelEl  = card.querySelector('.versie-label-tekst');
+        const naamTxt  = labelEl?.textContent || 'deze versie';
+        if (!confirm(`Versie "${naamTxt}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
+
+        btn.textContent = '…';
+        btn.disabled = true;
+        try {
+          const { error } = await db.from('screeningen').delete().eq('id', versieId);
+          if (error) throw error;
+          card.remove();
+          // Als het de actief geladen versie was, sluit de split-overlay
+          if (huidigeId === versieId) closeSplitView();
+        } catch (err) {
+          alert('Verwijderen mislukt: ' + err.message);
+          btn.textContent = '🗑';
+          btn.disabled = false;
+        }
       });
     });
   } catch (err) {
@@ -2129,8 +3873,7 @@ async function toonDossierDetail(id) {
 }
 
 document.getElementById('dossierBackBtn').addEventListener('click', () => {
-  document.getElementById('dossierOverlay').classList.remove('active');
-  document.body.style.overflow = '';
+  schakelRechts('rp-leeg');
   huidigDossierData    = null;
   huidigDossierVersies = [];
   laadDossiers();
@@ -2143,8 +3886,7 @@ document.getElementById('dossierVerwijderBtn').addEventListener('click', async (
   try {
     const { error } = await db.from('dossiers').delete().eq('id', huidigeDossierId);
     if (error) throw error;
-    document.getElementById('dossierOverlay').classList.remove('active');
-    document.body.style.overflow = '';
+    schakelRechts('rp-leeg');
     huidigeDossierId  = null;
     huidigDossierNaam = null;
     huidigDossierData = null;
@@ -2160,18 +3902,11 @@ document.getElementById('dossierStatusSel').addEventListener('change', async fun
 });
 
 document.getElementById('nieuweVersieBtn').addEventListener('click', () => {
-  // Sluit dossier overlay, zet context, ga naar analyse-tab
-  document.getElementById('dossierOverlay').classList.remove('active');
-  document.body.style.overflow = '';
+  errorBox.style.display = 'none';
+  // zetDossierContext schakelt naar rp-analyse en leegt de tray
   zetDossierContext(huidigeDossierId, huidigDossierNaam);
-  // Switch naar analyse-tab
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelector('[data-tab="analyse"]').classList.add('active');
-  document.getElementById('view-analyse').classList.add('active');
   // Pre-populeer tray vanuit de meest recente versie van dit dossier
   tray = [];
-  errorBox.style.display = 'none';
   const recenteBestanden =
     huidigDossierVersies[0]?.rapport?._document_bestanden ||
     (huidigDossierVersies[0]?.rapport?._document_pad
@@ -2180,6 +3915,14 @@ document.getElementById('nieuweVersieBtn').addEventListener('click', () => {
       : null);
   if (recenteBestanden?.length) {
     trayVoegOpslaanToe(recenteBestanden);
+    // Tekstcache laden uit het meest recente rapport zodat OCR niet opnieuw hoeft
+    // (dit pad wordt ook bewandeld als laadScreening() niet eerder werd aangeroepen)
+    const recenteTeksten = huidigDossierVersies[0]?.rapport?._teksten_per_pad;
+    if (recenteTeksten) {
+      for (const [pad, tekst] of Object.entries(recenteTeksten)) {
+        if (!tekstPerPad.has(pad)) tekstPerPad.set(pad, tekst);
+      }
+    }
   } else {
     trayRender(); // Toon lege dropzone
   }
@@ -2219,6 +3962,7 @@ async function maakDossier() {
       .select('id').single();
     if (error) throw error;
     document.getElementById('nieuwDossierModal').classList.remove('active');
+    await laadDossiers();
     toonDossierDetail(data.id);
   } catch (err) {
     alert('Aanmaken mislukt: ' + err.message);
@@ -2233,47 +3977,20 @@ document.getElementById('nieuwDossierModal').addEventListener('keydown', e => {
 });
 
 // ── Losse analyses (zonder dossier) ──────────────────
-async function laadHistory() {
-  const lijstEl = document.getElementById('historyList');
-  lijstEl.innerHTML = '<p class="empty">Bezig met laden...</p>';
-  try {
-    const { data, error } = await db.from('screeningen')
-      .select('id, bestandsnaam, classificatie, created_at, updated_at')
-      .is('dossier_id', null)
-      .order('updated_at', { ascending: false }).limit(200);
-    if (error) throw error;
-    if (!data.length) { lijstEl.innerHTML = '<p class="empty">Geen losse analyses.</p>'; return; }
-    lijstEl.innerHTML = data.map(s => `
-      <div class="history-item" data-id="${s.id}">
-        <div class="history-item-top">
-          <div class="naam">${escH(s.bestandsnaam)}</div>
-          <button class="verwijderBtn" data-id="${s.id}" title="Verwijderen">✕</button>
-        </div>
-        <div class="meta">${escH(s.classificatie?.doc_type??'')} — ${new Date(s.updated_at).toLocaleString('nl-NL')}</div>
-        <div class="samen">${escH(s.classificatie?.samenvatting??'')}</div>
-      </div>`).join('');
-    lijstEl.querySelectorAll('.history-item').forEach(el =>
-      el.addEventListener('click', () => laadScreening(el.dataset.id, 'main')));
-    lijstEl.querySelectorAll('.verwijderBtn').forEach(btn =>
-      btn.addEventListener('click', e => { e.stopPropagation(); verwijderScreening(btn.dataset.id); }));
-  } catch (err) {
-    lijstEl.innerHTML = `<p class="empty">Kon de lijst niet laden: ${escH(err.message)}</p>`;
-  }
-}
-
-async function verwijderScreening(id) {
-  if (!confirm('Deze analyse definitief verwijderen?')) return;
-  try {
-    const { error } = await db.from('screeningen').delete().eq('id', id);
-    if (error) throw error;
-    if (huidigeId === id) { huidigeId = null; closeSplitView(); }
-    laadHistory();
-  } catch (err) { alert('Verwijderen mislukt: ' + err.message); }
-}
 
 // ── Screening laden ───────────────────────────────────
 async function laadScreening(id, origin = 'main') {
   splitOrigin = origin;
+
+  // Toon meteen de overlay met een laadspinner — bestanden downloaden duurt even
+  // huidigeId alvast zetten zodat openSplitView weet dat het geen nieuwe versie is
+  huidigeId = id;
+  const spinnerHtml = '<div class="laad-wrap"><div class="laad-spinner"></div></div>';
+  document.getElementById('documentPanel').innerHTML = spinnerHtml;
+  document.getElementById('analysePanel').innerHTML  =
+    '<div class="laad-wrap"><div class="laad-spinner"></div><span>Versie laden…</span></div>';
+  openSplitView();
+
   try {
     const { data, error } = await db.from('screeningen').select('*').eq('id', id).single();
     if (error) throw error;
@@ -2304,14 +4021,61 @@ async function laadScreening(id, origin = 'main') {
     // Tray invullen met opgeslagen documenten (zodat "Nieuwe versie" ze kan overnemen)
     if (bestandenMeta.length) trayVoegOpslaanToe(bestandenMeta);
 
+    // Splits de geladen bestanden per hoofddocument zodat tab-navigatie werkt.
+    // rapport.documenten[] bestaat alleen bij multi-doc analyses (meerdere hoofddocs).
+    const rDocs = Array.isArray(data.rapport.documenten) && data.rapport.documenten.length > 1
+      ? data.rapport.documenten : null;
+    if (rDocs) {
+      const contextMap = data.rapport._context_per_hoofd; // opgeslagen tijdens analyse
+      huidigePrimaireBest = rDocs.map(doc => {
+        const eigen = huidigeBestandenLijst.filter(f => f.name === doc.bestandsnaam);
+        if (contextMap) {
+          // Gebruik de opgeslagen toewijzing: alleen relevante contextbestanden per tab
+          const mapping   = contextMap.find(m => m.bestandsnaam === doc.bestandsnaam);
+          const ctxNamen  = new Set(mapping?.context || []);
+          const ctxBest   = huidigeBestandenLijst.filter(f => ctxNamen.has(f.name));
+          return [...eigen, ...ctxBest];
+        } else {
+          // Oudere rapporten zonder _context_per_hoofd: gebruik type-mapping als fallback
+          const hoofdNamen = new Set(rDocs.map(d => d.bestandsnaam).filter(Boolean));
+          const alleCtx    = huidigeBestandenLijst.filter(f => !hoofdNamen.has(f.name));
+          const docType    = doc.doc_type || '';
+          const relevanteCtx = alleCtx.filter(f => {
+            const ctxType = raadDocType(f.name);
+            return contextVoorHoofd(ctxType, docType);
+          });
+          return [...eigen, ...relevanteCtx];
+        }
+      });
+      // Initieel het eerste hoofddocument + context tonen
+      if (huidigePrimaireBest[0]?.length) huidigeBestandenLijst = huidigePrimaireBest[0];
+    } else {
+      // Enkelvoudige analyse: alle bestanden samen (hoofd + context) in één viewer
+      huidigePrimaireBest = [huidigeBestandenLijst];
+    }
+
     // Dossier-context instellen als de screening bij een dossier hoort
     if (data.dossier_id) {
       huidigeDossierId  = data.dossier_id;
       huidigDossierNaam = document.getElementById('dossierNaamTitel').textContent || '';
     }
 
+    // Vul tekstcache zodat nieuwe versie OCR kan overslaan
+    if (data.rapport._teksten_per_pad) {
+      for (const [pad, tekst] of Object.entries(data.rapport._teksten_per_pad)) {
+        tekstPerPad.set(pad, tekst);
+      }
+    }
+
     voegStandaardveldenToe(data.rapport);
     await toonRapport(data.classificatie, data.rapport);
+    // Toon "Bekijk concept" als er een concept is voor het eerste (actieve) document-type
+    const eersteDocType = (Array.isArray(data.rapport.documenten) && data.rapport.documenten.length > 1)
+      ? data.rapport.documenten[0]?.doc_type
+      : data.classificatie?.doc_type || '';
+    const heeftConcept = !!(data.rapport._concepts?.[eersteDocType] || data.rapport._concept);
+    const bekijkBtn = document.getElementById('bekijkConceptBtn');
+    if (bekijkBtn) bekijkBtn.style.display = heeftConcept ? 'inline-flex' : 'none';
   } catch (err) { alert('Kon de analyse niet laden: ' + err.message); }
 }
 </script>

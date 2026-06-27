@@ -9,13 +9,18 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY niet geconfigureerd op de server' });
   }
   try {
+    const headers = {
+      'Content-Type':      'application/json',
+      'x-api-key':         apiKey,
+      'anthropic-version': '2023-06-01',
+    };
+    // Stuur prompt-caching beta-header door als de client die meestuurt
+    const betaHeader = req.headers['anthropic-beta'];
+    if (betaHeader) headers['anthropic-beta'] = betaHeader;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type':    'application/json',
-        'x-api-key':       apiKey,
-        'anthropic-version': '2023-06-01',
-      },
+      headers,
       body: JSON.stringify(req.body),
     });
     const data = await response.json();

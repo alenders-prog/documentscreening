@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clausula — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════════════
+   MOCKUP CHROME
+   ══════════════════════════════════════════════════════════ */
+.mockup-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: #0E1A2D; color: #A8BDD4;
+  display: flex; align-items: center; gap: 0;
+  font-family: 'Inter', sans-serif; font-size: .78rem;
+  border-bottom: 1px solid #1E3050;
+  padding: 0 12px;
+}
+.mockup-bar-label {
+  color: #4A7FA8; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; font-size: .68rem; margin-right: 16px;
+  padding: 10px 0; border-right: 1px solid #1E3050; padding-right: 16px;
+}
+.mockup-btn {
+  padding: 7px 16px; border: none; background: none; color: #8AA8C4;
+  cursor: pointer; font-family: inherit; font-size: .78rem; font-weight: 500;
+  border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap;
+}
+.mockup-btn:hover { color: #C8DCF0; }
+.mockup-btn.act { color: #4AAFFF; border-bottom-color: #4AAFFF; background: rgba(74,175,255,.06); }
+.mockup-note {
+  margin-left: auto; font-size: .72rem; color: #3A5A7A; padding: 10px 0; padding-left: 16px;
+  border-left: 1px solid #1E3050;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --nav-bg:          #1B3050;
+  --nav-border:      #243F68;
+  --nav-text:        rgba(255,255,255,.6);
+
+  --bg:              #F3EFE9;
+  --paper:           #FFFFFF;
+  --paper-warm:      #FDFCFA;
+  --border:          #E3DCD5;
+  --border-mid:      #C8BEB4;
+
+  --ink:             #1A1816;
+  --ink-mid:         #443E38;
+  --ink-soft:        #7A7068;
+  --ink-faint:       #A89E96;
+
+  --action:          #C86A3C;
+  --action-hover:    #A85530;
+  --action-light:    #FDF1EB;
+  --action-border:   #E8C4AE;
+
+  --ok:              #2A7260;
+  --ok-light:        #EBF6F4;
+  --ok-border:       #A8D8D0;
+  --warn:            #B27820;
+  --warn-light:      #FFF7E6;
+  --warn-border:     #E8D090;
+  --bad:             #A83838;
+  --bad-light:       #FDF0F0;
+  --bad-border:      #E8B8B8;
+
+  --gold:            #8A6A10;
+  --gold-light:      #FFF8E0;
+  --gold-border:     #D8B848;
+
+  --score-ok-bg:     #EBF6F4; --score-ok-text:   #1E5A50;
+  --score-warn-bg:   #FFF7E6; --score-warn-text:  #7A5010;
+  --score-bad-bg:    #FDF0F0; --score-bad-text:   #7A2828;
+
+  --font-sans:       'Inter', sans-serif;
+  --font-serif:      'Source Serif 4', serif;
+  --font-mono:       'IBM Plex Mono', monospace;
+
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.1), 0 4px 8px rgba(0,0,0,.05);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESET & BASE
+   ══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  padding-top: 36px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   APP SHELL
+   ══════════════════════════════════════════════════════════ */
+.app {
+  height: calc(100vh - 36px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Topbar ──────────────────────────────────────────── */
+.topbar {
+  height: 52px;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+.topbar-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.brand-mark {
+  width: 30px; height: 30px;
+  background: var(--action);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700; font-size: .88rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.brand-name {
+  font-weight: 700; font-size: .95rem;
+  color: #fff; letter-spacing: -.01em;
+}
+.brand-sep {
+  width: 1px; height: 18px;
+  background: var(--nav-border);
+  margin: 0 2px;
+}
+.brand-sub {
+  font-size: .72rem;
+  color: rgba(255,255,255,.35);
+  letter-spacing: .01em;
+}
+.topbar-right {
+  display: flex; align-items: center; gap: 6px;
+}
+.topbar-icon-btn {
+  width: 32px; height: 32px;
+  background: none; border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: rgba(255,255,255,.45);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.topbar-icon-btn:hover {
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.8);
+}
+.topbar-divider {
+  width: 1px; height: 18px;
+  background: var(--nav-border);
+  margin: 0 6px;
+}
+.topbar-email {
+  font-size: .76rem;
+  color: rgba(255,255,255,.4);
+}
+.topbar-logout {
+  background: none;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: var(--r-sm);
+  padding: 4px 11px;
+  font-family: inherit; font-size: .75rem; font-weight: 500;
+  color: rgba(255,255,255,.45);
+  cursor: pointer;
+  transition: all .15s;
+  margin-left: 4px;
+}
+.topbar-logout:hover {
+  border-color: rgba(255,255,255,.3);
+  color: rgba(255,255,255,.75);
+}
+
+/* ── Master-detail ───────────────────────────────────── */
+.master-detail {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Lijstpanel (links) ──────────────────────────────── */
+.list-panel {
+  width: 288px;
+  flex-shrink: 0;
+  background: var(--paper);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.list-toolbar {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.list-search-wrap {
+  flex: 1;
+  position: relative;
+}
+.list-search-icon {
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px;
+  color: var(--ink-faint); pointer-events: none;
+}
+.list-search {
+  width: 100%;
+  padding: 7px 10px 7px 30px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: inherit; font-size: .82rem;
+  background: var(--bg); color: var(--ink);
+  outline: none; transition: border-color .15s;
+}
+.list-search::placeholder { color: var(--ink-faint); }
+.list-search:focus { border-color: var(--action); }
+.list-nieuw-btn {
+  width: 32px; height: 32px;
+  background: var(--action); color: #fff;
+  border: none; border-radius: var(--r-sm);
+  font-size: 1.3rem; font-weight: 400; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s;
+}
+.list-nieuw-btn:hover { background: var(--action-hover); }
+.list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0 12px;
+}
+.list-section {
+  font-size: .62rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-faint);
+  padding: 12px 14px 4px;
+}
+.list-row {
+  display: block; width: 100%; text-align: left;
+  background: none; border: none; border-left: 3px solid transparent;
+  padding: 9px 14px 9px 11px;
+  cursor: pointer;
+  transition: background .1s, border-color .1s;
+  font-family: inherit;
+}
+.list-row:hover { background: var(--bg); }
+.list-row.act {
+  background: var(--action-light);
+  border-left-color: var(--action);
+}
+.list-row-naam {
+  font-weight: 600; font-size: .88rem;
+  color: var(--ink); line-height: 1.25;
+  margin-bottom: 4px;
+}
+.list-row-chips {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+.list-row-datum {
+  font-size: .71rem; color: var(--ink-faint);
+}
+
+/* ── Detailpanel (rechts) ────────────────────────────── */
+.detail-panel {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  position: relative;
+  background: var(--bg);
+}
+
+/* Right-panel states */
+.rp { display: none; min-height: 100%; }
+.rp.act { display: flex; flex-direction: column; }
+
+/* Gedeelde rp-header */
+.rp-header {
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 28px;
+  flex-shrink: 0;
+  position: sticky; top: 0; z-index: 10;
+}
+.rp-header-analyse {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 28px;
+}
+.rp-back {
+  background: none; border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px 12px; font-family: inherit;
+  font-size: .82rem; color: var(--ink-soft);
+  cursor: pointer; transition: background .15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.rp-back:hover { background: var(--bg); }
+.rp-header-detail {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+}
+.rp-title {
+  font-family: var(--font-serif);
+  font-size: 1.4rem; font-weight: 600;
+  letter-spacing: -.02em; color: var(--ink);
+  margin: 0 0 5px; line-height: 1.2;
+}
+.rp-title-sm {
+  font-family: var(--font-serif);
+  font-size: 1.05rem; font-weight: 600;
+  color: var(--ink); margin: 0; letter-spacing: -.01em;
+}
+.rp-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .83rem; color: var(--ink-soft);
+}
+.rp-acties {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.rp-body {
+  flex: 1;
+  padding: 24px 28px 48px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   KNOPPEN
+   ══════════════════════════════════════════════════════════ */
+.btn-primary {
+  padding: 9px 18px;
+  background: var(--action); color: #fff;
+  border: none; border-radius: var(--r-md);
+  font-family: inherit; font-size: .88rem; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+  white-space: nowrap; display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-primary:hover { background: var(--action-hover); }
+.btn-secondary {
+  padding: 9px 16px;
+  background: var(--paper); color: var(--action);
+  border: 1.5px solid var(--action-border); border-radius: var(--r-md);
+  font-family: inherit; font-size: .88rem; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+  white-space: nowrap; display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-secondary:hover { background: var(--action-light); }
+.btn-ghost {
+  padding: 9px 14px;
+  background: none; color: var(--ink-soft);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  font-family: inherit; font-size: .85rem; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.btn-ghost:hover { background: var(--bg); color: var(--ink-mid); }
+.btn-danger {
+  padding: 8px 14px;
+  background: none; color: var(--bad);
+  border: 1px solid var(--bad-border); border-radius: var(--r-md);
+  font-family: inherit; font-size: .85rem; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.btn-danger:hover { background: var(--bad-light); }
+.icon-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-soft); padding: 5px; border-radius: var(--r-sm);
+  transition: all .15s; display: flex; align-items: center;
+}
+.icon-btn:hover { background: var(--bg); color: var(--ink); }
+.icon-btn.danger:hover { color: var(--bad); background: var(--bad-light); }
+
+/* ══════════════════════════════════════════════════════════
+   CHIPS
+   ══════════════════════════════════════════════════════════ */
+.chip {
+  display: inline-flex; align-items: center;
+  font-size: .68rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
+  letter-spacing: .02em; white-space: nowrap;
+}
+.chip-actief   { background: #E8F5EA; color: #1A6B25; }
+.chip-afgerond { background: #E8EEF8; color: #1E3F8A; }
+.chip-grijs    { background: #F0EDE8; color: var(--ink-soft); }
+.chip-ok       { background: var(--score-ok-bg);  color: var(--score-ok-text); }
+.chip-warn     { background: var(--score-warn-bg); color: var(--score-warn-text); }
+.chip-bad      { background: var(--score-bad-bg);  color: var(--score-bad-text); }
+.chip-gold     { background: var(--gold-light); color: var(--gold); border: 1px solid var(--gold-border); }
+.chip-mono     {
+  font-family: var(--font-mono); font-size: .66rem; font-weight: 500;
+  background: #F0EDE8; color: var(--ink-soft);
+  padding: 2px 7px; border-radius: 5px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DOSSIER DETAIL — VERSIES
+   ══════════════════════════════════════════════════════════ */
+.detail-sectie-kop {
+  font-size: .72rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-faint);
+  margin: 0 0 12px;
+}
+.versie-list { display: flex; flex-direction: column; gap: 10px; }
+.versie-kaart {
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  display: flex; align-items: flex-start; gap: 16px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  box-shadow: var(--shadow-sm);
+}
+.versie-kaart:hover {
+  border-color: var(--action);
+  box-shadow: 0 4px 16px rgba(200,106,60,.1), var(--shadow-sm);
+}
+.versie-nr {
+  font-family: var(--font-mono); font-size: .72rem; font-weight: 600;
+  color: var(--action-hover); background: var(--action-light);
+  padding: 3px 9px; border-radius: 5px;
+  flex-shrink: 0; margin-top: 2px;
+}
+.versie-body { flex: 1; min-width: 0; }
+.versie-label { font-weight: 600; font-size: .95rem; color: var(--ink); margin: 0 0 3px; }
+.versie-datum { font-size: .78rem; color: var(--ink-soft); margin-bottom: 10px; }
+.versie-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.versie-docs  { display: flex; gap: 6px; flex-wrap: wrap; }
+.doc-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 2px 8px 2px 7px;
+  font-size: .74rem; color: var(--ink-soft);
+  max-width: 200px;
+}
+.doc-pill-icon { flex-shrink: 0; font-size: .78rem; }
+.doc-pill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-pill-dl {
+  background: none; border: none; cursor: pointer;
+  font-size: .75rem; color: var(--action); padding: 0 2px;
+  border-radius: 3px; flex-shrink: 0; line-height: 1;
+}
+.doc-pill-dl:hover { background: var(--action); color: #fff; }
+.versie-acties { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+/* Status dropdown */
+.status-select {
+  padding: 5px 9px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: inherit; font-size: .82rem;
+  background: var(--bg); cursor: pointer; outline: none;
+}
+.status-select:focus { border-color: var(--action); }
+
+/* ══════════════════════════════════════════════════════════
+   ANALYSEREN — UPLOAD
+   ══════════════════════════════════════════════════════════ */
+.analyse-content {
+  max-width: 600px;
+}
+
+/* Dossier context balk */
+.koppel-actief {
+  background: var(--action-light);
+  border: 1.5px solid var(--action-border);
+  border-radius: var(--r-lg);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.koppel-actief-icon { font-size: 1.1rem; }
+.koppel-actief-info { flex: 1; }
+.koppel-actief-naam { font-weight: 600; font-size: .93rem; color: var(--action-hover); }
+.koppel-actief-sub  { font-size: .78rem; color: var(--action); margin-top: 1px; }
+.versie-label-input {
+  width: 100%; padding: 8px 11px;
+  border: 1.5px solid var(--action-border); border-radius: var(--r-sm);
+  font-family: inherit; font-size: .85rem;
+  background: rgba(255,255,255,.7); outline: none;
+  margin-top: 9px; display: block;
+}
+.versie-label-input:focus { border-color: var(--action); background: #fff; }
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed var(--border-mid);
+  border-radius: var(--r-xl);
+  background: var(--paper);
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  margin-bottom: 0;
+}
+.dropzone:hover {
+  border-color: var(--action);
+  background: var(--action-light);
+}
+.drop-icon-ring {
+  width: 48px; height: 48px;
+  background: var(--action);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+}
+.drop-icon-ring svg { width: 20px; height: 20px; stroke: #fff; }
+.dropzone h3 {
+  font-family: var(--font-serif); font-weight: 600;
+  font-size: 1rem; margin: 0 0 5px; color: var(--ink);
+}
+.dropzone p { font-size: .83rem; color: var(--ink-soft); margin: 0; }
+
+/* Tray */
+.tray {
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.tray-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.tray-item:last-child { border-bottom: none; }
+.tray-item:hover { background: #FAFAF8; }
+.tray-item-icon { font-size: 1rem; flex: none; width: 24px; text-align: center; }
+.tray-item-info { flex: 1; min-width: 0; }
+.tray-item-naam {
+  display: block; font-size: .85rem; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink);
+}
+.tray-item-sub { font-size: .72rem; color: var(--ink-soft); }
+.tray-type-sel {
+  font-family: inherit; font-size: .76rem; font-weight: 600;
+  padding: 4px 8px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--bg); cursor: pointer;
+  color: var(--ink-soft); flex: none; max-width: 170px;
+}
+.tray-type-sel:focus { border-color: var(--action); outline: none; }
+.tray-type-sel.primair { border-color: var(--action-border); color: var(--action-hover); background: var(--action-light); }
+.tray-type-sel.bijlage { border-color: var(--border); color: var(--ink-soft); }
+.tray-del {
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-faint); font-size: .88rem;
+  padding: 3px 6px; border-radius: 5px; line-height: 1;
+}
+.tray-del:hover { color: var(--bad); background: var(--bad-light); }
+.tray-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1.5px solid var(--border);
+  background: #FAFAF8;
+}
+.tray-add {
+  background: none; border: 1.5px dashed var(--border-mid);
+  border-radius: var(--r-sm);
+  font-family: inherit; font-size: .8rem; font-weight: 700;
+  color: var(--ink-soft); cursor: pointer; padding: 5px 14px;
+  transition: all .15s;
+}
+.tray-add:hover { border-color: var(--action); color: var(--action-hover); background: var(--action-light); }
+.tray-wis {
+  background: none; border: none; font-size: .75rem;
+  color: var(--ink-faint); cursor: pointer; padding: 4px 8px; border-radius: 5px;
+}
+.tray-wis:hover { color: var(--bad); background: var(--bad-light); }
+.analyse-btn {
+  display: block; width: 100%; margin-top: 16px;
+  padding: 14px 20px;
+  background: var(--action); color: #fff;
+  border: none; border-radius: var(--r-lg);
+  font-family: inherit; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.analyse-btn:hover { background: var(--action-hover); }
+.analyse-btn:disabled { background: var(--border-mid); cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════════════
+   SPLIT VIEW — ANALYSE RESULTAAT (fullscreen overlay)
+   ══════════════════════════════════════════════════════════ */
+#screen-split {
+  display: none;
+  position: fixed;
+  inset: 36px 0 0 0;
+  z-index: 100;
+  flex-direction: column;
+  background: var(--bg);
+}
+#screen-split.act { display: flex; }
+
+.split-hdr {
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+.split-hdr-top {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+}
+.split-hdr-back {
+  padding: 7px 13px;
+  background: none; border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: inherit; font-size: .83rem; color: var(--ink-soft);
+  cursor: pointer; transition: background .15s; white-space: nowrap; flex-shrink: 0;
+}
+.split-hdr-back:hover { background: var(--bg); }
+.split-hdr-docs {
+  flex: 1; display: flex; align-items: flex-end; gap: 0;
+  overflow-x: auto; min-width: 0;
+}
+.split-doc-tab {
+  background: none; border: none;
+  border-bottom: 2.5px solid transparent;
+  padding: 8px 16px; margin-bottom: -1px;
+  cursor: pointer; font-family: inherit; font-size: .83rem; font-weight: 600;
+  color: var(--ink-soft); transition: color .15s, border-color .15s;
+  white-space: nowrap; flex-shrink: 0;
+  display: flex; align-items: center; gap: 7px;
+}
+.split-doc-tab:hover:not(.act) { color: var(--ink-mid); }
+.split-doc-tab.act { color: var(--ink); border-bottom-color: var(--action); }
+.split-doc-tab-type {
+  font-size: .65rem; font-family: var(--font-mono); font-weight: 600;
+  background: var(--action-light); color: var(--action-hover);
+  padding: 1px 6px; border-radius: 4px;
+}
+.split-doc-tab.act .split-doc-tab-type { background: var(--action); color: #fff; }
+.split-hdr-acties {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding-left: 10px; border-left: 1px solid var(--border);
+}
+.split-versielabel {
+  padding: 7px 10px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: inherit; font-size: .8rem;
+  background: var(--bg); outline: none; width: 200px;
+}
+.split-versielabel:focus { border-color: var(--action); }
+
+.split-body {
+  flex: 1; display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+/* Doc panel */
+.panel-doc {
+  overflow: auto; background: #6A7A8A;
+  padding: 20px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.mock-pdf-page {
+  width: 100%; max-width: 520px;
+  background: var(--paper);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  padding: 40px 48px;
+  margin-bottom: 12px;
+  min-height: 400px;
+}
+.mock-pdf-titel { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; text-align: center; margin-bottom: 7px; }
+.mock-pdf-sub   { text-align: center; font-size: .78rem; color: var(--ink-soft); margin-bottom: 22px; }
+.mock-pdf-sectie { font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; margin: 16px 0 5px; color: var(--ink-mid); }
+.mock-pdf-line  { height: 7px; background: #E8E2DA; border-radius: 3px; margin-bottom: 5px; }
+.mock-pdf-line.kort   { width: 70%; }
+.mock-pdf-line.midden { width: 85%; }
+.mock-pdf-hl    { height: 7px; background: rgba(255,200,80,.55); border-radius: 3px; margin-bottom: 5px; box-shadow: 0 0 0 2px rgba(255,180,40,.25); }
+
+/* Analyse panel */
+.panel-analyse {
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 24px 28px;
+}
+
+/* Score banner */
+.score-banner {
+  background: var(--paper); border: 1.5px solid var(--border);
+  border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 20px; box-shadow: var(--shadow-sm);
+}
+.mfn-getal {
+  font-family: var(--font-serif); font-size: 2.8rem; font-weight: 700;
+  line-height: 1; color: var(--ok); flex-shrink: 0;
+}
+.mfn-van { font-size: 1.4rem; font-weight: 400; opacity: .4; }
+.mfn-rechts { flex: 1; min-width: 0; }
+.mfn-lbl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 6px; }
+.mfn-balk { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.mfn-balk-vul { height: 100%; border-radius: 4px; background: var(--ok); }
+.mfn-samen { font-size: .78rem; color: var(--ink-soft); margin-top: 5px; }
+.mfn-issues {
+  display: flex; flex-direction: column; gap: 4px;
+  border-left: 1px solid var(--border); padding-left: 20px; flex-shrink: 0;
+}
+.mfn-issue-item { font-size: .78rem; color: var(--ink-mid); display: flex; align-items: center; gap: 6px; }
+.mfn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.mfn-dot.ok   { background: var(--ok); }
+.mfn-dot.warn { background: var(--warn); }
+.mfn-dot.bad  { background: var(--bad); }
+
+/* Analyse secties */
+.a-sectie { margin-bottom: 14px; }
+.a-sectie-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; user-select: none;
+}
+.a-sectie-hdr:hover .a-sectie-titel { color: var(--action); }
+.a-sectie-titel {
+  font-family: var(--font-serif); font-weight: 600; font-size: 1.02rem;
+  color: var(--ink); transition: color .15s;
+  display: flex; align-items: center; gap: 8px;
+}
+.a-sectie-count {
+  font-family: var(--font-sans); font-size: .7rem; font-weight: 700;
+  padding: 1px 8px; border-radius: 20px;
+}
+.a-chevron { font-size: .8rem; color: var(--ink-soft); transition: transform .2s; }
+.dicht .a-chevron { transform: rotate(-90deg); }
+.a-sectie-body { padding-top: 12px; }
+.dicht .a-sectie-body { display: none; }
+.samenvatting-blok {
+  background: var(--paper); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px 16px;
+  font-size: .88rem; line-height: 1.65; box-shadow: var(--shadow-sm);
+}
+
+/* Analyse cards */
+.a-card {
+  background: var(--paper); border: 1.5px solid var(--border);
+  border-left: 4px solid var(--border); border-radius: var(--r-md);
+  padding: 12px 14px; margin-bottom: 8px;
+  box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: box-shadow .15s;
+}
+.a-card:hover { box-shadow: 0 4px 12px rgba(200,106,60,.12), var(--shadow-sm); }
+.a-card.ok   { border-left-color: var(--ok); }
+.a-card.warn { border-left-color: var(--warn); }
+.a-card.bad  { border-left-color: var(--bad); }
+.a-card-kop  { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.a-card-label { font-weight: 600; font-size: .9rem; line-height: 1.3; }
+.a-card-badge {
+  font-size: .65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.a-card-badge.ok   { background: var(--score-ok-bg);   color: var(--score-ok-text); }
+.a-card-badge.warn { background: var(--score-warn-bg);  color: var(--score-warn-text); }
+.a-card-badge.bad  { background: var(--score-bad-bg);   color: var(--score-bad-text); }
+.a-card-body { font-size: .83rem; color: var(--ink-mid); margin-top: 5px; line-height: 1.5; }
+.a-card-cite {
+  display: inline-block; margin-top: 7px;
+  font-family: var(--font-mono); font-size: .74rem;
+  color: var(--action-hover); background: var(--action-light);
+  padding: 2px 8px; border-radius: 4px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.a-card-wet {
+  display: inline-block; margin-left: 6px; font-size: .67rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 20px;
+  background: #E8EEF8; color: #1E3F8A; border: 1px solid #C4D3F0;
+}
+.a-card-suggestie {
+  margin-top: 9px; padding: 9px 11px;
+  background: #F0F7FF; border-left: 3px solid #4A90D9;
+  border-radius: 0 6px 6px 0; font-size: .82rem; color: #1a3a5c;
+}
+.a-card-sug-lbl {
+  font-weight: 700; font-size: .67rem; text-transform: uppercase;
+  letter-spacing: .05em; color: #4A90D9; margin-bottom: 3px;
+}
+.a-card-checkbox-row { display: flex; align-items: flex-start; gap: 10px; }
+.a-card-checkbox-row input[type=checkbox] {
+  margin-top: 2px; width: 16px; height: 16px;
+  accent-color: var(--ok); cursor: pointer; flex-shrink: 0;
+}
+.a-card-checkbox-body { flex: 1; min-width: 0; }
+.a-card-opmerking {
+  width: 100%; margin-top: 8px;
+  font-family: inherit; font-size: .8rem;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 7px 10px; resize: vertical; min-height: 32px;
+  background: #FCFAF7; color: var(--ink);
+}
+.a-card-opmerking::placeholder { color: var(--ink-faint); }
+
+/* MfN elementen */
+.mfn-el-list { display: flex; flex-direction: column; gap: 3px; }
+.mfn-el-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 5px 7px; border-radius: var(--r-sm); font-size: .82rem;
+}
+.mfn-el-row.ok   { background: var(--ok-light); }
+.mfn-el-row.warn { background: var(--warn-light); }
+.mfn-el-row.bad  { background: var(--bad-light); }
+.mfn-el-ic { flex-shrink: 0; width: 16px; font-size: .82rem; padding-top: 1px; font-weight: 700; }
+.mfn-el-row.ok   .mfn-el-ic { color: var(--ok); }
+.mfn-el-row.warn .mfn-el-ic { color: var(--warn); }
+.mfn-el-row.bad  .mfn-el-ic { color: var(--bad); }
+.mfn-el-txt { flex: 1; color: var(--ink); }
+.mfn-el-toe { display: block; font-size: .74rem; color: var(--ink-soft); margin-top: 2px; font-style: italic; }
+
+/* Statusbalk split */
+.split-statusbalk {
+  background: var(--paper); border-top: 1px solid var(--border);
+  padding: 8px 18px; display: flex; align-items: center; gap: 12px;
+  font-size: .78rem; color: var(--ink-soft); flex-shrink: 0;
+}
+.split-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.split-status-dot.onopgeslagen { background: var(--warn); animation: puls .9s infinite; }
+@keyframes puls { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ══════════════════════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════════════════════ */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(10,20,40,.45);
+  align-items: center; justify-content: center;
+}
+.modal-backdrop.act { display: flex; }
+.modal-card {
+  background: var(--paper); border-radius: var(--r-xl);
+  padding: 32px; width: 100%; max-width: 420px; margin: 16px;
+  box-shadow: var(--shadow-lg);
+}
+.modal-title {
+  font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600;
+  margin: 0 0 22px; letter-spacing: -.01em;
+}
+.form-field { margin-bottom: 14px; }
+.form-label { display: block; font-size: .82rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 5px; }
+.form-input, .form-select {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-family: inherit; font-size: .93rem;
+  background: var(--bg); color: var(--ink); outline: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--action); }
+.modal-acties { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+/* ══════════════════════════════════════════════════════════
+   UTIL
+   ══════════════════════════════════════════════════════════ */
+.mt8  { margin-top: 8px; }
+.mt16 { margin-top: 16px; }
+.divider { height: 1px; background: var(--border); margin: 18px 0; }
+
+</style>
+</head>
+<body>
+
+<!-- ══ MOCKUP-BALK ══════════════════════════════════════ -->
+<div class="mockup-bar">
+  <span class="mockup-bar-label">Mockup</span>
+  <button class="mockup-btn act" onclick="toonScreen('detail')">① Dossier detail</button>
+  <button class="mockup-btn"     onclick="toonScreen('analyse')">② Nieuwe versie</button>
+  <button class="mockup-btn"     onclick="toonScreen('split')">③ Analyse-resultaat</button>
+  <button class="mockup-btn"     onclick="toggleModal()">④ Nieuw dossier</button>
+  <span class="mockup-note">Clausula · Master-detail layout — geen sidebar</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     APP
+     ══════════════════════════════════════════════════════ -->
+<div class="app" id="app">
+
+  <!-- ── Topbar ─────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">Cl</div>
+      <span class="brand-name">Clausula</span>
+      <div class="brand-sep"></div>
+      <span class="brand-sub">Documentscreening</span>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-icon-btn" title="Instellingen">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="10" cy="10" r="3"/>
+          <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+      <div class="topbar-divider"></div>
+      <span class="topbar-email">alenders@dalstein.nl</span>
+      <button class="topbar-logout">Uitloggen</button>
+    </div>
+  </header>
+
+  <!-- ── Master-detail ──────────────────────────────── -->
+  <div class="master-detail">
+
+    <!-- ░░ Lijstpanel (links) ░░░░░░░░░░░░░░░░░░░░░░░░ -->
+    <nav class="list-panel">
+      <div class="list-toolbar">
+        <div class="list-search-wrap">
+          <svg class="list-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="8.5" cy="8.5" r="5.5"/>
+            <line x1="13" y1="13" x2="17" y2="17" stroke-linecap="round"/>
+          </svg>
+          <input class="list-search" placeholder="Zoeken…" type="text">
+        </div>
+        <button class="list-nieuw-btn" onclick="toggleModal()" title="Nieuw dossier">+</button>
+      </div>
+
+      <div class="list-scroll">
+        <div class="list-section">Actief</div>
+
+        <button class="list-row act" id="row-vandenberg" onclick="toonRij(this)">
+          <div class="list-row-naam">Familie Van der Berg</div>
+          <div class="list-row-chips">
+            <span class="chip chip-gold">MfN 12/15</span>
+            <span class="chip chip-warn">2 punten</span>
+          </div>
+          <div class="list-row-datum">2 uur geleden</div>
+        </button>
+
+        <button class="list-row" onclick="toonRij(this)">
+          <div class="list-row-naam">De Wit</div>
+          <div class="list-row-chips">
+            <span class="chip chip-ok">MfN 15/15</span>
+          </div>
+          <div class="list-row-datum">gisteren</div>
+        </button>
+
+        <button class="list-row" onclick="toonRij(this)">
+          <div class="list-row-naam">Hermans-Koopman</div>
+          <div class="list-row-chips">
+            <span class="chip chip-bad">MfN 7/15</span>
+            <span class="chip chip-bad">5 punten</span>
+          </div>
+          <div class="list-row-datum">3 dagen geleden</div>
+        </button>
+
+        <button class="list-row" onclick="toonRij(this)">
+          <div class="list-row-naam">Visser</div>
+          <div class="list-row-chips">
+            <span class="chip chip-grijs">Nog geen analyse</span>
+          </div>
+          <div class="list-row-datum">18 juni</div>
+        </button>
+
+        <div class="list-section">Afgerond</div>
+
+        <button class="list-row" onclick="toonRij(this)">
+          <div class="list-row-naam">Bakker-Janssen</div>
+          <div class="list-row-chips">
+            <span class="chip chip-ok">MfN 14/15</span>
+          </div>
+          <div class="list-row-datum">14 mei</div>
+        </button>
+
+        <button class="list-row" onclick="toonRij(this)">
+          <div class="list-row-naam">Oosterbeek</div>
+          <div class="list-row-chips">
+            <span class="chip chip-ok">MfN 13/15</span>
+          </div>
+          <div class="list-row-datum">2 april</div>
+        </button>
+
+      </div><!-- /list-scroll -->
+    </nav><!-- /list-panel -->
+
+    <!-- ░░ Detailpanel (rechts) ░░░░░░░░░░░░░░░░░░░░░░ -->
+    <main class="detail-panel">
+
+      <!-- ── State: dossier detail ─────────────────── -->
+      <div class="rp act" id="rp-detail">
+        <div class="rp-header">
+          <div class="rp-header-detail">
+            <div>
+              <h1 class="rp-title">Familie Van der Berg</h1>
+              <div class="rp-meta">
+                Marco van der Berg &nbsp;×&nbsp; Elise van der Berg-Smit
+                &nbsp;·&nbsp;
+                <select class="status-select">
+                  <option selected>Actief</option>
+                  <option>Afgerond</option>
+                  <option>Gearchiveerd</option>
+                </select>
+              </div>
+            </div>
+            <div class="rp-acties">
+              <button class="btn-primary" onclick="toonScreen('analyse')">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/>
+                </svg>
+                Nieuwe versie analyseren
+              </button>
+              <button class="btn-danger">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <polyline points="3 6 17 6"/><path d="M8 6V4h4v2"/><rect x="5" y="6" width="10" height="12" rx="1.5"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div><!-- /rp-header -->
+
+        <div class="rp-body">
+          <div class="detail-sectie-kop">Versiehistorie</div>
+          <div class="versie-list">
+
+            <!-- v3 -->
+            <div class="versie-kaart" onclick="toonScreen('split')">
+              <div class="versie-nr">v3</div>
+              <div class="versie-body">
+                <div class="versie-label">Na bespreking 20 juni</div>
+                <div class="versie-datum">Geanalyseerd op 20 juni 2026 om 14:22</div>
+                <div class="versie-chips">
+                  <span class="chip chip-gold">MfN 12/15</span>
+                  <span class="chip chip-warn">2 juridische punten</span>
+                  <span class="chip chip-ok">Volledigheid 13/15</span>
+                </div>
+                <div class="versie-docs">
+                  <span class="doc-pill"><span class="doc-pill-icon">📄</span><span class="doc-pill-name">Convenant_v3.pdf</span><button class="doc-pill-dl">↓</button></span>
+                  <span class="doc-pill"><span class="doc-pill-icon">📊</span><span class="doc-pill-name">Waardebepaling.pdf</span><button class="doc-pill-dl">↓</button></span>
+                  <span class="doc-pill"><span class="doc-pill-icon">📋</span><span class="doc-pill-name">HV_2019.pdf</span><button class="doc-pill-dl">↓</button></span>
+                </div>
+              </div>
+              <div class="versie-acties">
+                <button class="icon-btn" title="RTF exporteren">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 14l-3 3h16l-3-3M10 3v11M7 6l3-3 3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="icon-btn danger" title="Versie verwijderen">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="3 6 17 6"/><path d="M8 6V4h4v2"/><rect x="5" y="6" width="10" height="12" rx="1.5"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- v2 -->
+            <div class="versie-kaart" onclick="toonScreen('split')">
+              <div class="versie-nr">v2</div>
+              <div class="versie-body">
+                <div class="versie-label">Concept na eerste sessie</div>
+                <div class="versie-datum">Geanalyseerd op 10 juni 2026 om 10:07</div>
+                <div class="versie-chips">
+                  <span class="chip chip-warn">MfN 9/15</span>
+                  <span class="chip chip-bad">5 juridische punten</span>
+                </div>
+                <div class="versie-docs">
+                  <span class="doc-pill"><span class="doc-pill-icon">📄</span><span class="doc-pill-name">Convenant_v2_concept.pdf</span><button class="doc-pill-dl">↓</button></span>
+                </div>
+              </div>
+              <div class="versie-acties">
+                <button class="icon-btn" title="RTF exporteren">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 14l-3 3h16l-3-3M10 3v11M7 6l3-3 3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="icon-btn danger" title="Versie verwijderen">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="3 6 17 6"/><path d="M8 6V4h4v2"/><rect x="5" y="6" width="10" height="12" rx="1.5"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- v1 -->
+            <div class="versie-kaart">
+              <div class="versie-nr">v1</div>
+              <div class="versie-body">
+                <div class="versie-label">Initieel concept</div>
+                <div class="versie-datum">Geanalyseerd op 1 juni 2026 om 15:40</div>
+                <div class="versie-chips">
+                  <span class="chip chip-bad">MfN 5/15</span>
+                  <span class="chip chip-bad">9 juridische punten</span>
+                </div>
+                <div class="versie-docs">
+                  <span class="doc-pill"><span class="doc-pill-icon">📄</span><span class="doc-pill-name">Eerste_draft_convenant.docx</span><button class="doc-pill-dl">↓</button></span>
+                </div>
+              </div>
+              <div class="versie-acties">
+                <button class="icon-btn" title="RTF exporteren">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 14l-3 3h16l-3-3M10 3v11M7 6l3-3 3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="icon-btn danger" title="Versie verwijderen">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="3 6 17 6"/><path d="M8 6V4h4v2"/><rect x="5" y="6" width="10" height="12" rx="1.5"/></svg>
+                </button>
+              </div>
+            </div>
+
+          </div><!-- /versie-list -->
+        </div><!-- /rp-body -->
+      </div><!-- /rp-detail -->
+
+
+      <!-- ── State: nieuwe versie analyseren ──────── -->
+      <div class="rp" id="rp-analyse">
+        <div class="rp-header rp-header-analyse">
+          <button class="rp-back" onclick="toonScreen('detail')">← Terug</button>
+          <div>
+            <p class="rp-title-sm">Nieuwe versie analyseren</p>
+            <div class="rp-meta" style="margin-top:2px">Familie Van der Berg</div>
+          </div>
+        </div>
+
+        <div class="rp-body">
+          <div class="analyse-content">
+
+            <!-- Dossier context -->
+            <div class="koppel-actief">
+              <div class="koppel-actief-icon">📁</div>
+              <div class="koppel-actief-info">
+                <div class="koppel-actief-naam">Familie Van der Berg</div>
+                <div class="koppel-actief-sub">Versie v4 wordt toegevoegd aan dit dossier</div>
+                <input class="versie-label-input" placeholder="Versielabel (optioneel) — bijv. 'Na overleg 25 juni'" type="text">
+              </div>
+            </div>
+
+            <!-- Dropzone -->
+            <div class="dropzone">
+              <div class="drop-icon-ring">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <h3>Sleep documenten hierheen</h3>
+              <p>of klik om bestanden te kiezen</p>
+              <p class="hint" style="font-size:.75rem;margin-top:5px;opacity:.65">PDF, DOCX, JPG — max. 20 MB per bestand</p>
+            </div>
+
+            <!-- Tray -->
+            <div class="mt16">
+              <div class="tray">
+                <div class="tray-item">
+                  <div class="tray-item-icon">📄</div>
+                  <div class="tray-item-info">
+                    <span class="tray-item-naam">Convenant_Van_der_Berg_v4.pdf</span>
+                    <span class="tray-item-sub">Nieuw geüpload · 2,4 MB</span>
+                  </div>
+                  <select class="tray-type-sel primair">
+                    <option selected>Convenant</option>
+                    <option>Ouderschapsplan</option>
+                    <option>Waardebepaling</option>
+                    <option>Huwelijkse Voorwaarden</option>
+                    <option>Pensioenopgave</option>
+                    <option>Overig</option>
+                  </select>
+                  <button class="tray-del">✕</button>
+                </div>
+                <div class="tray-item" style="opacity:.85">
+                  <div class="tray-item-icon">📋</div>
+                  <div class="tray-item-info">
+                    <span class="tray-item-naam">HuwelijkseVoorwaarden_2019.pdf</span>
+                    <span class="tray-item-sub">Uit dossier · 0,8 MB · Bijlage (context)</span>
+                  </div>
+                  <select class="tray-type-sel bijlage">
+                    <option>Convenant</option>
+                    <option>Ouderschapsplan</option>
+                    <option>Waardebepaling</option>
+                    <option selected>Huwelijkse Voorwaarden</option>
+                    <option>Pensioenopgave</option>
+                    <option>Overig</option>
+                  </select>
+                  <button class="tray-del">✕</button>
+                </div>
+                <div class="tray-footer">
+                  <button class="tray-add">+ Document toevoegen</button>
+                  <div style="display:flex;gap:6px;font-size:.75rem;color:var(--ink-soft);align-items:center">
+                    <span>1 primair · 1 bijlage</span>
+                    <button class="tray-wis">Alles wissen</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button class="analyse-btn">Analyseer 1 document →</button>
+
+          </div>
+        </div>
+      </div><!-- /rp-analyse -->
+
+    </main><!-- /detail-panel -->
+  </div><!-- /master-detail -->
+</div><!-- /app -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     SCREEN: Split-view analyse resultaat — FULLSCREEN
+     ══════════════════════════════════════════════════════ -->
+<div id="screen-split">
+
+  <div class="split-hdr">
+    <div class="split-hdr-top">
+      <button class="split-hdr-back" onclick="toonScreen('detail')">← Terug naar dossier</button>
+
+      <div class="split-hdr-docs">
+        <button class="split-doc-tab act">
+          <span class="split-doc-tab-type">Convenant</span>
+          Convenant_v3.pdf
+        </button>
+        <button class="split-doc-tab">
+          <span class="split-doc-tab-type">Waardebepaling</span>
+          Waardebepaling_2025.pdf
+        </button>
+      </div>
+
+      <div class="split-hdr-acties">
+        <input class="split-versielabel" placeholder="Versielabel (optioneel)" type="text" value="Na bespreking 20 juni">
+        <button class="btn-primary" style="font-size:.82rem;padding:7px 14px">Opslaan</button>
+        <button class="btn-ghost" style="font-size:.82rem;padding:7px 12px">↓ RTF export</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="split-body">
+
+    <!-- Document panel -->
+    <div class="panel-doc">
+      <div class="mock-pdf-page">
+        <div class="mock-pdf-titel">CONVENANT / VASTSTELLINGSOVEREENKOMST</div>
+        <div class="mock-pdf-sub">Inzake de gevolgen van de echtscheiding tussen<br>Marco van der Berg en Elise van der Berg-Smit</div>
+        <div class="mock-pdf-sectie">Artikel 1 — Partneralimentatie</div>
+        <div class="mock-pdf-line midden"></div>
+        <div class="mock-pdf-line kort"></div>
+        <div class="mock-pdf-hl"></div>
+        <div class="mock-pdf-line midden"></div>
+        <div class="mock-pdf-sectie">Artikel 2 — Kinderalimentatie</div>
+        <div class="mock-pdf-line"></div>
+        <div class="mock-pdf-line midden"></div>
+        <div class="mock-pdf-line kort"></div>
+        <div class="mock-pdf-sectie">Artikel 3 — Pensioenverevening</div>
+        <div class="mock-pdf-line midden"></div>
+        <div class="mock-pdf-line"></div>
+        <div class="mock-pdf-hl"></div>
+        <div class="mock-pdf-sectie">Artikel 4 — Eigen woning</div>
+        <div class="mock-pdf-line"></div>
+        <div class="mock-pdf-line midden"></div>
+        <div class="mock-pdf-line kort"></div>
+        <div class="mock-pdf-line"></div>
+      </div>
+    </div>
+
+    <!-- Analyse panel -->
+    <div class="panel-analyse">
+
+      <div class="score-banner">
+        <div class="mfn-getal">12<span class="mfn-van">/15</span></div>
+        <div class="mfn-rechts">
+          <div class="mfn-lbl">MfN-compliantie · Convenant</div>
+          <div class="mfn-balk"><div class="mfn-balk-vul" style="width:80%"></div></div>
+          <div class="mfn-samen">80% · Goed — 3 elementen incompleet of ontbrekend</div>
+        </div>
+        <div class="mfn-issues">
+          <div class="mfn-issue-item"><div class="mfn-dot ok"></div>12 aanwezig</div>
+          <div class="mfn-issue-item"><div class="mfn-dot warn"></div>2 onvolledig</div>
+          <div class="mfn-issue-item"><div class="mfn-dot bad"></div>1 ontbreekt</div>
+        </div>
+      </div>
+
+      <!-- Samenvatting -->
+      <div class="a-sectie">
+        <div class="a-sectie-hdr">
+          <span class="a-sectie-titel">Samenvatting</span>
+          <span class="a-chevron">▾</span>
+        </div>
+        <div class="a-sectie-body">
+          <div class="samenvatting-blok">
+            Het convenant regelt de gevolgen van de echtscheiding tussen Marco en Elise van der Berg.
+            Partneralimentatie: €850/mnd voor 6 jaar. Kinderalimentatie: €480/mnd per kind conform Tremanormen.
+            De gezamenlijke woning wordt toebedeeld aan Marco; Elise ontvangt een uitkoopsom van €97.500.
+            <strong>Aandachtspunt:</strong> de pensioenverevening ontbeert concrete percentages (WVPS art. 2).
+            Huwelijkse voorwaarden (2019, koude uitsluiting) zijn als context meegeleverd.
+          </div>
+        </div>
+      </div>
+
+      <!-- MfN detail -->
+      <div class="a-sectie">
+        <div class="a-sectie-hdr">
+          <span class="a-sectie-titel">
+            MfN-compliantie
+            <span class="a-sectie-count chip chip-warn">2 onvolledig · 1 ontbreekt</span>
+          </span>
+          <span class="a-chevron">▾</span>
+        </div>
+        <div class="a-sectie-body">
+          <div class="mfn-el-list">
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Persoonsgegevens beide partijen</span></div>
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Huwelijksdatum en huwelijkse voorwaarden</span></div>
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Minderjarige kinderen vermeld</span></div>
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Eigen woning: eigendom, bestemming en waarde</span></div>
+            <div class="mfn-el-row warn">
+              <span class="mfn-el-ic">△</span>
+              <span class="mfn-el-txt">Pensioenverevening conform WVPS art. 2
+                <span class="mfn-el-toe">Aanwezig maar zonder concrete percentages of bedragen.</span>
+              </span>
+            </div>
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Partneralimentatie: bedrag + indexering</span></div>
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Kinderalimentatie + Tremanormen</span></div>
+            <div class="mfn-el-row warn">
+              <span class="mfn-el-ic">△</span>
+              <span class="mfn-el-txt">Fiscale afwikkeling: fiscaal partnerschap en aanslagen
+                <span class="mfn-el-toe">Fiscaal partnerschap eindatum niet expliciet vermeld.</span>
+              </span>
+            </div>
+            <div class="mfn-el-row bad">
+              <span class="mfn-el-ic">✗</span>
+              <span class="mfn-el-txt">Schulden: verdeling en aansprakelijkheid
+                <span class="mfn-el-toe">Schulden worden in het geheel niet besproken in het convenant.</span>
+              </span>
+            </div>
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Datum van ondertekening</span></div>
+            <div class="mfn-el-row ok"><span class="mfn-el-ic">✓</span><span class="mfn-el-txt">Handtekeningen beide partijen</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Volledigheid -->
+      <div class="a-sectie dicht">
+        <div class="a-sectie-hdr" onclick="this.parentElement.classList.toggle('dicht')">
+          <span class="a-sectie-titel">Volledigheid <span class="a-sectie-count chip chip-warn">2 onvolledig · 1 ontbreekt</span></span>
+          <span class="a-chevron">▾</span>
+        </div>
+        <div class="a-sectie-body">
+          <div class="a-card ok"><div class="a-card-kop"><span class="a-card-label">Partneralimentatie</span><span class="a-card-badge ok">Aanwezig</span></div><div class="a-card-body">€850/mnd voor 6 jaar met jaarlijkse indexering — volledig en concreet.</div></div>
+          <div class="a-card warn">
+            <div class="a-card-kop"><span class="a-card-label">Pensioenverevening</span><span class="a-card-badge warn">Onvolledig</span></div>
+            <div class="a-card-body">Regeling aanwezig maar zonder concrete percentages of WVPS-verwijzing.</div>
+            <div class="a-card-cite">"…pensioenrechten worden naar rato verdeeld…"</div>
+            <div class="a-card-suggestie"><div class="a-card-sug-lbl">Suggestie</div>"De pensioenrechten worden conform WVPS art. 2 over de huwelijkse periode gelijkelijk (50/50) verdeeld. Partijen doen hierbij afstand van verdere aanspraken."</div>
+          </div>
+          <div class="a-card bad">
+            <div class="a-card-kop"><span class="a-card-label">Schulden</span><span class="a-card-badge bad">Ontbreekt</span></div>
+            <div class="a-card-body">Het convenant bevat geen bepaling over bestaande schulden of aansprakelijkheid tegenover derden.</div>
+            <div class="a-card-suggestie"><div class="a-card-sug-lbl">Suggestie</div>"Partijen verklaren dat er geen gezamenlijke schulden bestaan, dan wel [specificeer schulden] welke door [naam] worden overgenomen."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Juridisch -->
+      <div class="a-sectie dicht">
+        <div class="a-sectie-hdr" onclick="this.parentElement.classList.toggle('dicht')">
+          <span class="a-sectie-titel">Juridische juistheid <span class="a-sectie-count chip chip-warn">2 aandachtspunten</span></span>
+          <span class="a-chevron">▾</span>
+        </div>
+        <div class="a-sectie-body">
+          <div class="a-card warn">
+            <div class="a-card-checkbox-row"><input type="checkbox">
+              <div class="a-card-checkbox-body">
+                <div class="a-card-kop"><span class="a-card-label">Pensioenverevening zonder concrete berekening</span><span class="a-card-badge warn">Midden</span></div>
+                <div class="a-card-body">De formulering "naar rato" is juridisch onvoldoende — bij geschil is niet bepaalbaar wat de exacte aanspraken zijn.</div>
+                <div class="a-card-cite">"…pensioenrechten worden naar rato verdeeld…"</div>
+                <span class="a-card-wet">WVPS art. 2</span>
+                <textarea class="a-card-opmerking" placeholder="Opmerking toevoegen…"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="a-card warn">
+            <div class="a-card-checkbox-row"><input type="checkbox">
+              <div class="a-card-checkbox-body">
+                <div class="a-card-kop"><span class="a-card-label">Fiscaal partnerschap: einddatum ontbreekt</span><span class="a-card-badge warn">Midden</span></div>
+                <div class="a-card-body">Niet gespecificeerd tot welke datum partijen fiscaal partners zijn, wat tot aansprakelijkheid kan leiden.</div>
+                <span class="a-card-wet">art. 5a AWR</span>
+                <textarea class="a-card-opmerking" placeholder="Opmerking toevoegen…"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balans -->
+      <div class="a-sectie dicht">
+        <div class="a-sectie-hdr" onclick="this.parentElement.classList.toggle('dicht')">
+          <span class="a-sectie-titel">Balans tussen partijen <span class="a-sectie-count chip chip-grijs">Geen onevenwichtigheden</span></span>
+          <span class="a-chevron">▾</span>
+        </div>
+        <div class="a-sectie-body">
+          <p style="font-size:.87rem;color:var(--ink-soft);font-style:italic">Geen significante onevenwichtigheden gesignaleerd.</p>
+        </div>
+      </div>
+
+      <!-- Grammatica -->
+      <div class="a-sectie dicht">
+        <div class="a-sectie-hdr" onclick="this.parentElement.classList.toggle('dicht')">
+          <span class="a-sectie-titel">Grammatica &amp; taal</span>
+          <span class="a-chevron">▾</span>
+        </div>
+        <div class="a-sectie-body">
+          <p style="font-size:.87rem;color:var(--ink-soft);font-style:italic">Geen grammaticale opmerkingen.</p>
+        </div>
+      </div>
+
+    </div><!-- /panel-analyse -->
+  </div><!-- /split-body -->
+
+  <div class="split-statusbalk">
+    <div class="split-status-dot onopgeslagen"></div>
+    <span>Niet opgeslagen · Na bespreking 20 juni · Familie Van der Berg v3</span>
+    <span style="margin-left:auto;color:var(--ink-faint)">Analyse: 20 juni 2026 14:22 · claude-sonnet-4-6</span>
+  </div>
+
+</div><!-- /screen-split -->
+
+
+<!-- ══ MODAL: Nieuw dossier ════════════════════════════ -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal-card">
+    <h2 class="modal-title">Nieuw dossier</h2>
+    <div class="form-field">
+      <label class="form-label">Naam dossier <span style="color:var(--bad)">*</span></label>
+      <input class="form-input" placeholder="bijv. Familie De Vries">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Partij A</label>
+      <input class="form-input" placeholder="Voornaam of volledige naam">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Partij B</label>
+      <input class="form-input" placeholder="Voornaam of volledige naam">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Verwacht documenttype</label>
+      <select class="form-select">
+        <option value="">Nog onbekend</option>
+        <option value="convenant">Convenant</option>
+        <option value="ouderschapsplan">Ouderschapsplan</option>
+        <option value="beide">Convenant + Ouderschapsplan</option>
+      </select>
+    </div>
+    <div class="modal-acties">
+      <button class="btn-ghost" onclick="toggleModal()">Annuleren</button>
+      <button class="btn-primary">Dossier aanmaken</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toonScreen(naam) {
+  const isSplit = naam === 'split';
+  document.getElementById('screen-split').classList.toggle('act', isSplit);
+  document.getElementById('app').style.display = isSplit ? 'none' : 'flex';
+
+  if (!isSplit) {
+    document.querySelectorAll('.rp').forEach(el => el.classList.remove('act'));
+    const rp = document.getElementById('rp-' + naam);
+    if (rp) rp.classList.add('act');
+  }
+
+  // Mockup-balk highlight
+  const labels = { detail: '①', analyse: '②', split: '③' };
+  document.querySelectorAll('.mockup-btn').forEach(btn => {
+    btn.classList.toggle('act', btn.textContent.trim().startsWith(labels[naam] || '___'));
+  });
+}
+
+function toonRij(el) {
+  document.querySelectorAll('.list-row').forEach(r => r.classList.remove('act'));
+  el.classList.add('act');
+  // Altijd naar detail-state
+  toonScreen('detail');
+}
+
+function toggleModal() {
+  document.getElementById('modal').classList.toggle('act');
+}
+
+// Sluit modal op backdrop-klik
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) toggleModal();
+});
+
+// Chevron toggle voor analyse-secties
+document.querySelectorAll('.a-sectie-hdr').forEach(hdr => {
+  // Alleen sections die geen eigen onclick hebben (volledigheid/juridisch hebben al inline)
+  if (!hdr.getAttribute('onclick')) {
+    hdr.addEventListener('click', () => hdr.parentElement.classList.toggle('dicht'));
+  }
+});
+</script>
+</body>
+</html>
