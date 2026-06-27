@@ -1270,27 +1270,33 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
     const pad       = item.storageInfo?.pad;
 
     let tekst;
-    if (pad && tekstPerPad.has(pad)) {
-      // Gecachede tekst: skip download + OCR
+    const isPdf = item.bestand.name.toLowerCase().endsWith('.pdf');
+    const cachedTekst = (pad && tekstPerPad.has(pad)) ? tekstPerPad.get(pad) : null;
+    // Gecachede PDF-tekst die nog geen LlamaParse-markdown heeft (oud PDF.js-formaat)?
+    // Dan toch opnieuw extraheren zodat oudere dossiers ook beter worden.
+    const cacheIsLlamaKwaliteit = !isPdf || (cachedTekst !== null && /^#{1,3}\s/m.test(cachedTekst));
+
+    if (cachedTekst !== null && cacheIsLlamaKwaliteit) {
+      // Gecachede tekst is al van goede kwaliteit: skip download + extractie
       onProgress(`${prefix}Tekst uit cache…`);
-      tekst = tekstPerPad.get(pad);
+      tekst = cachedTekst;
     } else {
-      const isPdf = item.bestand.name.toLowerCase().endsWith('.pdf');
       if (isPdf) {
         // Probeer LlamaParse (gestructureerde markdown); fallback naar PDF.js bij fout
         try {
+          if (cachedTekst !== null) onProgress(`${prefix}Tekst herextraheren (verbeterde parser)…`);
           tekst = await extractTextViaParse(item.bestand, msg => onProgress(`${prefix}${msg}`));
           onProgress(`${prefix}Structuur herkend ✓`);
         } catch (parseErr) {
           console.warn('[LlamaParse] mislukt, fallback naar PDF.js:', parseErr.message);
           onProgress(`${prefix}Tekst uitlezen (fallback)…`);
-          tekst = await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
+          tekst = cachedTekst ?? await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
         }
       } else {
         onProgress(`${prefix}Tekst uitlezen…`);
-        tekst = await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
+        tekst = cachedTekst ?? await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
       }
-      // Sla op in sessie-cache zodat een volgende versie dit bestand overslaat
+      // Bijwerken in sessie-cache
       if (pad) tekstPerPad.set(pad, tekst);
     }
 
@@ -2868,7 +2874,8 @@ function preprocessConceptTekst(tekst) {
   t = t.replace(/paraaf\s+man:\s*paraaf\s*vrouw:\s*\d+\/\d+\s*/gi, '');
 
   // 2. "=== CONTEXT: bestand.pdf ===" scheidingstekens een eigen regel geven
-  t = t.replace(/([^\n])(={2,}\s)/g, '$1\n$2');
+  // Let op: [^=\n] zodat "=== CONVENANT ===" niet wordt gesplitst in "=" + "\n== CONVENANT =="
+  t = t.replace(/([^=\n])(={2,}\s)/g, '$1\n$2');
 
   // 3. Artikelen op een eigen regel: "...zin.Artikel 3" → "...zin.\n\nArtikel 3"
   t = t.replace(/([.!?;])\s*(Artikel\s+\d+)/gi, '$1\n\n$2');
