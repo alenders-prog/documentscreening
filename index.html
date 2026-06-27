@@ -3111,6 +3111,33 @@ function renderConceptChips() {
   });
 }
 
+// Extraheer de tekst van één documenttype uit de gecombineerde _document_tekst.
+// De gecombineerde tekst heeft secties gescheiden door "=== TYPE: naam.pdf ===".
+// Fallback naar de volledige tekst als het type niet gevonden wordt.
+function haalDocTypeTekst(volledigeTekst, docType) {
+  if (!volledigeTekst || !docType) return volledigeTekst || '';
+  const typeLabel = (DOC_TYPE_LABELS[docType] || docType).toUpperCase();
+  const regels = volledigeTekst.split('\n');
+  let inDoelSectie = false;
+  let resultRegels = [];
+  let gevonden = false;
+
+  for (const regel of regels) {
+    const tr = regel.trim();
+    if (/^={2,}\s*.+\s*={2,}$/.test(tr)) {
+      const label = tr.replace(/^={2,}\s*|\s*={2,}$/g, '').trim().toUpperCase();
+      const isDoelSectie = label.startsWith(typeLabel + ':') || label === typeLabel;
+      if (isDoelSectie) gevonden = true;
+      inDoelSectie = isDoelSectie;
+    } else if (inDoelSectie) {
+      resultRegels.push(regel);
+    }
+  }
+
+  const result = resultRegels.join('\n').trim();
+  return (gevonden && result) ? result : volledigeTekst;
+}
+
 // Pas search-replace wijzigingen toe op de originele documenttekst.
 // Probeert eerst exacte match, dan genormaliseerde whitespace-match als fallback.
 function pasWijzigingenToe(origineel, wijzigingen) {
@@ -3141,14 +3168,18 @@ document.getElementById('genereerConceptBtn').addEventListener('click', async ()
   const aangevinkt = verzamelAangevinkt();
   if (!aangevinkt.length) return;
 
-  const origineleTekst = huidigRapport._document_tekst || '';
+  // Doc-type van het actieve tabblad (niet de hoofd-classificatie, want die kan een ander doc zijn)
+  const huidigDocType = huidigeDocumenten[huidigeDocIdx]?.doc_type || huidigeClassificatie?.doc_type || '';
+
+  // Alleen de tekst van dit documenttype — niet de volledige gecombineerde tekst met alle docs
+  const volledigeTekst = huidigRapport._document_tekst || '';
+  const origineleTekst = haalDocTypeTekst(volledigeTekst, huidigDocType);
   if (!origineleTekst) {
     alert('Geen documenttekst beschikbaar. Analyseer het document opnieuw om conceptgeneratie te gebruiken.');
     return;
   }
 
   // Controleer of er al een concept is voor dit documenttype — vraag bevestiging
-  const huidigDocType = (huidigeDocumenten[huidigeDocIdx]?.doc_type) || huidigeClassificatie?.doc_type || '';
   const bestaandConcept = huidigRapport._concepts?.[huidigDocType] || huidigRapport._concept;
   if (bestaandConcept) {
     const datum = bestaandConcept.gegenereerd_op
@@ -3161,7 +3192,7 @@ document.getElementById('genereerConceptBtn').addEventListener('click', async ()
   // Snapshot van de huidige context (gebruiker kan ondertussen wisselen)
   const snapId      = huidigeId;
   const snapRapport = huidigRapport;
-  const snapDocType = huidigeClassificatie?.doc_type || 'document';
+  const snapDocType = huidigDocType;
   const snapAangevinkt = aangevinkt;
   const snapOrigineel  = origineleTekst;
   // Pseudonimiseringsmap op basis van de bekende namen
