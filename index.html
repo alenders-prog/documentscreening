@@ -3138,26 +3138,53 @@ function haalDocTypeTekst(volledigeTekst, docType) {
   return (gevonden && result) ? result : volledigeTekst;
 }
 
-// Pas search-replace wijzigingen toe op de originele documenttekst.
-// Probeert eerst exacte match, dan genormaliseerde whitespace-match als fallback.
+// Pas wijzigingen ATOMISCH toe: zoek alle posities in het ORIGINELE document,
+// pas ze daarna van achter naar voren toe zodat posities stabiel blijven.
+// Voorkomt dubbele tekst doordat latere patches niet afhankelijk zijn van
+// eerder aangepaste tekst.
 function pasWijzigingenToe(origineel, wijzigingen) {
-  let tekst = origineel;
+  // Stap 1 — verzamel (start, end, vervang) tuples op basis van het origineel
+  const patches = [];
   for (const w of wijzigingen) {
-    const zoek = w.originele_tekst?.trim();
+    const zoek    = w.originele_tekst?.trim();
     const vervang = w.aangepaste_tekst?.trim();
     if (!zoek || vervang == null) continue;
-    if (tekst.includes(zoek)) {
-      tekst = tekst.replace(zoek, vervang);
+
+    const idx = origineel.indexOf(zoek);
+    if (idx !== -1) {
+      patches.push({ start: idx, end: idx + zoek.length, vervang });
     } else {
-      // Fallback: normaliseer witruimte en probeer opnieuw
+      // Fallback: genormaliseerde witruimte-match
       const normZoek = zoek.replace(/\s+/g, ' ');
-      const normTekst = tekst.replace(/\s+/g, ' ');
-      if (normTekst.includes(normZoek)) {
-        // Herbouw de originele tekst met genormaliseerde versie
-        tekst = tekst.replace(/\s+/g, ' ').replace(normZoek, vervang);
+      const normOrig = origineel.replace(/\s+/g, ' ');
+      const normIdx  = normOrig.indexOf(normZoek);
+      if (normIdx !== -1) {
+        patches.push({ start: normIdx, end: normIdx + normZoek.length, vervang, norm: true });
       } else {
         console.warn(`[concept] Vervanging niet gevonden voor item ${w.item_nr}: "${zoek.slice(0, 60)}…"`);
       }
+    }
+  }
+
+  // Stap 2 — verwijder overlappende patches (bewaar de eerste in het origineel)
+  patches.sort((a, b) => a.start - b.start);
+  const uniek = [];
+  let grens = -1;
+  for (const p of patches) {
+    if (p.start >= grens) { uniek.push(p); grens = p.end; }
+    else console.warn('[concept] Overlappende passage overgeslagen');
+  }
+
+  // Stap 3 — pas toe van achter naar voren (posities in origineel blijven geldig)
+  uniek.sort((a, b) => b.start - a.start);
+  let tekst = origineel;
+  for (const p of uniek) {
+    if (p.norm) {
+      // Genormaliseerde variant: werk op witruimte-genormaliseerde string
+      tekst = tekst.replace(/\s+/g, ' ').replace(
+        tekst.replace(/\s+/g, ' ').slice(p.start, p.end), p.vervang);
+    } else {
+      tekst = tekst.slice(0, p.start) + p.vervang + tekst.slice(p.end);
     }
   }
   return tekst;
@@ -3210,29 +3237,83 @@ document.getElementById('genereerConceptBtn').addEventListener('click', async ()
   // Start op de achtergrond — geen await, geen modal
   (async () => {
     try {
-      // Stuur document (geanonimiseerd) + verbeterpunten naar server-side API.
-      // De API roept Claude aan en geeft het VOLLEDIGE verbeterde document terug,
-      // plus wijzigingen met originele/aangepaste tekstparen voor track-changes.
-      const apiResp = await fetch('/api/genereer-concept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documentTekst: anonimiseerTekst(snapOrigineel, snapNaarAnon),
-          aangevinkt:    snapAangevinkt,
-          documentType:  snapDocType,
-          bestandsnaam:  huidigeBestandsnaam || '',
-        }),
-      });
-      if (!apiResp.ok) {
-        const errJson = await apiResp.json().catch(() => ({}));
-        throw new Error(errJson.error || `Concept genereren mislukt (${apiResp.status})`);
-      }
-      const raw = await apiResp.json();
-      if (!raw.documentTekst) throw new Error('Geen documenttekst ontvangen van de server.');
+      // Vraag Claude om ALLEEN de gewijzigde passages (origineel → nieuw),
+      // niet het volledige document — sneller, past binnen Vercel Hobby timeout.
+      // Atomische vervanging in pasWijzigingenToe voorkomt duplicaten.
+      const systeemPrompt =
+`Je bent een ervaren Nederlandse juridische documentschrijver gespecialiseerd in echtscheidingsdocumenten.
 
-      // Herstel namen/PII (server zag [PERSOON_A], concept toont echte naam)
-      const documentTekst   = herstelAnonObj(raw.documentTekst, snapNaarEcht);
-      const wijzigingenEcht = herstelAnonObj(raw.wijzigingen || [], snapNaarEcht);
+WERKWIJZE:
+- Geef per verbeterpunt PRECIES ÉÉN vervanging: de originele passage → de verbeterde versie.
+- originele_tekst: kopieer de EXACTE, UNIEKE tekst uit het document (minstens 2 volledige zinnen zodat de passage nergens anders voorkomt).
+- aangepaste_tekst: de verbeterde versie ter vervanging, zelfde toon en stijl.
+- Zorg dat originele_tekst-passages NIET overlappen met elkaar.
+- Als een verbetering gevolgen heeft voor een ander artikel, voeg dat als aparte vervanging toe.
+
+KERNREGELS:
+1. Behoud EXACT de structuur, nummering en formele toon van het origineel.
+2. Pas ALLEEN aan wat nodig is voor het genoemde verbeterpunt.
+3. Gebruik concrete "Suggestie" of "Opmerking mediator" letterlijk als leidraad.
+4. Behoud namen van partijen zoals ze in het origineel staan.`;
+
+      const conceptTool = {
+        name: 'registreer_wijzigingen',
+        description: 'Geeft per verbeterpunt één originele→nieuwe tekstpaar terug',
+        input_schema: {
+          type: 'object',
+          properties: {
+            wijzigingen: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  item_nr:         { type: 'integer' },
+                  artikel:         { type: 'string' },
+                  wat_gewijzigd:   { type: 'string' },
+                  originele_tekst: { type: 'string', description: 'EXACTE unieke passage uit het document (≥2 volledige zinnen, nergens anders in het doc aanwezig)' },
+                  aangepaste_tekst:{ type: 'string', description: 'Verbeterde versie ter vervanging' },
+                  ook_aangepast:   { type: 'array', items: { type: 'string' } },
+                },
+                required: ['item_nr','artikel','wat_gewijzigd','originele_tekst','aangepaste_tekst','ook_aangepast'],
+              },
+            },
+          },
+          required: ['wijzigingen'],
+        },
+      };
+
+      const itemsTekst = snapAangevinkt.map((item, i) => {
+        const nr  = i + 1;
+        const cat = item.categorie || '?';
+        const loc = item.locatie || item.sectie || item.onderwerp || item.signalering || '';
+        const bev = item.bevinding || item.toelichting || item.probleem || item.signalering || '';
+        const sug = item.suggestie || '';
+        const opm = item.opmerking || '';
+        const pas = item.passage   || item.citaat || '';
+        let t = `[${nr}] (${cat})`;
+        if (loc) t += `\n   Locatie: ${loc}`;
+        if (bev) t += `\n   Bevinding: ${bev}`;
+        if (sug) t += `\n   Suggestie: ${sug}`;
+        if (opm) t += `\n   Opmerking mediator: ${opm}`;
+        if (pas) t += `\n   Passage in document: "${pas}"`;
+        return t;
+      }).join('\n\n');
+
+      const userTekst =
+`DOCUMENTTYPE: ${snapDocType}
+
+TE VERWERKEN VERBETERPUNTEN (${snapAangevinkt.length} stuks):
+${itemsTekst}
+
+ORIGINEEL DOCUMENT:
+${anonimiseerTekst(snapOrigineel, snapNaarAnon)}`;
+
+      const data = await askClaudeForJson(systeemPrompt, userTekst, conceptTool, 8000);
+      if (!data?.wijzigingen?.length) throw new Error('Geen wijzigingen ontvangen. Controleer of de aangevinkte punten concrete suggesties bevatten.');
+
+      // Herstel namen/PII en pas wijzigingen atomisch toe op het origineel
+      const wijzigingenEcht = herstelAnonObj(data.wijzigingen, snapNaarEcht);
+      const documentTekst   = pasWijzigingenToe(snapOrigineel, wijzigingenEcht);
 
       // Opslaan per documenttype — zodat convenant en ouderschapsplan elk hun eigen concept hebben
       const conceptData = {
