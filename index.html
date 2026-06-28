@@ -834,7 +834,7 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
   <div class="concept-review-header">
     <button class="back-btn" id="conceptReviewBackBtn">← Terug</button>
     <span class="concept-review-titel">Verbeterd concept — review</span>
-    <button class="primair" id="conceptDownloadBtn">↓ Download als PDF</button>
+    <button class="primair" id="conceptDownloadBtn">↓ Download als Word</button>
   </div>
   <div class="concept-review-body">
     <div class="concept-doc-panel" id="conceptDocPanel"></div>
@@ -2741,6 +2741,7 @@ async function documentTekstNaarDocx(tekst) {
 // ── Concept-review: staat ────────────────────────────────
 let _conceptDocumentTekst = '';
 let _conceptWijzigingen   = [];
+let _conceptOriginelePdf  = null; // origineel PDF-bestand voor Adobe DOCX-conversie
 
 // ── Pseudonimisering (AVG) ────────────────────────────
 // Bouwt twee maps: naarAnon (echt→placeholder) en naarEcht (placeholder→echt)
@@ -2975,9 +2976,10 @@ function highlightConceptPassage(passage) {
 }
 
 // Bouw en toon de full-screen concept-review
-function toonConceptReview(documentTekst, wijzigingen) {
+function toonConceptReview(documentTekst, wijzigingen, pdfBestand = null) {
   _conceptDocumentTekst = documentTekst;
   _conceptWijzigingen   = wijzigingen || [];
+  _conceptOriginelePdf  = pdfBestand;
 
   // Links: documentpreview met track-changes markering
   document.getElementById('conceptDocPanel').innerHTML =
@@ -3096,9 +3098,9 @@ function renderConceptChips() {
       if (g.screeningId && huidigeId !== g.screeningId) {
         // Navigeer naar het juiste document en open dan de review
         laadScreening(g.screeningId, splitOrigin).then(() =>
-          toonConceptReview(g.documentTekst, g.wijzigingen));
+          toonConceptReview(g.documentTekst, g.wijzigingen, g.bestand || null));
       } else {
-        toonConceptReview(g.documentTekst, g.wijzigingen);
+        toonConceptReview(g.documentTekst, g.wijzigingen, g.bestand || null);
       }
     });
   });
@@ -3222,6 +3224,11 @@ document.getElementById('genereerConceptBtn').addEventListener('click', async ()
   const snapDocType = huidigDocType;
   const snapAangevinkt = aangevinkt;
   const snapOrigineel  = origineleTekst;
+  // Origineel PDF-bestand voor Adobe DOCX-conversie
+  const snapBestand    = huidigePrimaireBest[huidigeDocIdx]
+    ?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
+    || huidigePrimaireBest[huidigeDocIdx]?.[0]
+    || null;
   // Pseudonimiseringsmap op basis van de bekende namen
   const { naarAnon: snapNaarAnon, naarEcht: snapNaarEcht } = bouwAnonMap(huidigeClassificatie || {});
   // Chip-label: "Convenant · Familie De Vries"
@@ -3330,7 +3337,7 @@ ${anonimiseerTekst(snapOrigineel, snapNaarAnon)}`;
       }
 
       // Chip bijwerken
-      _generaties.set(genId, { naam: snapNaam, screeningId: snapId, status: 'klaar', documentTekst, wijzigingen: wijzigingenEcht });
+      _generaties.set(genId, { naam: snapNaam, screeningId: snapId, status: 'klaar', documentTekst, wijzigingen: wijzigingenEcht, bestand: snapBestand });
       renderConceptChips();
 
       // Als gebruiker nog op hetzelfde document zit → direct openen
@@ -3339,7 +3346,7 @@ ${anonimiseerTekst(snapOrigineel, snapNaarAnon)}`;
         huidigRapport._concepts[snapDocType] = conceptData;
         const bekijkBtn = document.getElementById('bekijkConceptBtn');
         if (bekijkBtn) bekijkBtn.style.display = 'inline-flex';
-        toonConceptReview(documentTekst, data.wijzigingen);
+        toonConceptReview(documentTekst, data.wijzigingen, snapBestand);
         // Chip verdwijnt na autoopen
         setTimeout(() => { _generaties.delete(genId); renderConceptChips(); }, 100);
       }
@@ -3358,7 +3365,10 @@ document.getElementById('bekijkConceptBtn').addEventListener('click', () => {
   const concept  = huidigRapport?._concepts?.[docType]   // nieuw: per doctype
                 || huidigRapport?._concept;               // oud: terugvaloptie
   if (!concept) return;
-  toonConceptReview(concept.document_tekst, concept.wijzigingen || []);
+  const pdfVoorReview = huidigePrimaireBest[huidigeDocIdx]
+    ?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
+    || huidigePrimaireBest[huidigeDocIdx]?.[0] || null;
+  toonConceptReview(concept.document_tekst, concept.wijzigingen || [], pdfVoorReview);
 });
 
 // Terug-knop in review
@@ -3366,71 +3376,99 @@ document.getElementById('conceptReviewBackBtn').addEventListener('click', () => 
   document.getElementById('conceptReview').style.display = 'none';
 });
 
-// Download-knop: genereer PDF via browser-print vanuit schone HTML
-document.getElementById('conceptDownloadBtn').addEventListener('click', () => {
+// Download-knop: converteer origineel PDF naar DOCX via Adobe PDF Services
+document.getElementById('conceptDownloadBtn').addEventListener('click', async () => {
   if (!_conceptDocumentTekst) return;
 
-  const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || 'Concept';
-  const dossierDeel  = huidigDossierNaam ? ` — ${huidigDossierNaam}` : '';
-  const titel        = `${docTypeLabel}${dossierDeel}`;
+  // Zoek het originele PDF-bestand (vastgelegd bij concept-generatie, of opnieuw bepalen)
+  const pdfBestand = _conceptOriginelePdf
+    || huidigePrimaireBest[huidigeDocIdx]?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
+    || huidigePrimaireBest[huidigeDocIdx]?.[0]
+    || null;
 
-  // Schone documentHTML: geen track-changes (lege wijzigingen), geen UI-chrome
-  const previewHtml = documentTekstNaarHtml(_conceptDocumentTekst, []);
-
-  const printHtml = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="utf-8">
-  <title>${escH(titel)}</title>
-  <style>
-    @page { size: A4; margin: 2.8cm 3cm 2.8cm 3.5cm; }
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: 'Times New Roman', Georgia, serif;
-      font-size: 12pt;
-      line-height: 1.65;
-      color: #000;
-      margin: 0; padding: 0;
-    }
-    .cdoc-pagina { max-width: 100%; }
-    .cdoc-titel  { font-size: 14pt; font-weight: bold; text-align: center; margin: 0 0 4pt; }
-    .cdoc-datum  { font-size: 10pt; text-align: center; color: #555; font-style: italic; margin: 0 0 28pt; }
-    .cdoc-scheiding { display: none; }
-    .cdoc-kop {
-      font-size: 12pt; font-weight: bold; text-align: center;
-      margin: 20pt 0 6pt; page-break-after: avoid;
-    }
-    .cdoc-sub {
-      font-size: 12pt; font-weight: bold;
-      margin: 14pt 0 4pt; page-break-after: avoid;
-    }
-    .cdoc-par   { margin: 0 0 8pt; text-align: justify; }
-    .cdoc-lijst { margin: 0 0 4pt 22pt; text-align: justify; }
-    .cdoc-leeglijn { height: 5pt; }
-    /* Track-changes: del verbergen, ins als gewone tekst */
-    del.cdoc-del { display: none; }
-    ins.cdoc-ins { text-decoration: none; color: inherit; background: none; font-weight: inherit; }
-    /* Geen pagina-einde midden in een artikel */
-    .cdoc-kop + .cdoc-par,
-    .cdoc-sub + .cdoc-par { page-break-before: avoid; }
-  </style>
-</head>
-<body>${previewHtml}</body>
-</html>`;
-
-  const blob = new Blob([printHtml], { type: 'text/html;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const win  = window.open(url, '_blank');
-
-  if (!win) {
-    alert('Sta pop-ups toe voor deze pagina om het PDF-venster te openen.');
-    URL.revokeObjectURL(url);
+  if (!pdfBestand) {
+    alert(
+      'Het originele PDF-bestand is niet beschikbaar in deze sessie.\n\n' +
+      'Upload het document opnieuw en genereer het concept opnieuw om als Word te kunnen downloaden.'
+    );
     return;
   }
 
-  win.addEventListener('load', () => {
-    setTimeout(() => { win.print(); }, 250);
-  });
+  const btn = document.getElementById('conceptDownloadBtn');
+  const origLabel = btn.textContent;
+
+  try {
+    btn.disabled = true;
+
+    // ── Stap 1: PDF → base64 ──────────────────────────────
+    btn.textContent = '⏳ PDF uploaden…';
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(pdfBestand);
+    });
+
+    // ── Stap 2: Upload naar Adobe + job starten ───────────
+    btn.textContent = '⏳ Conversie starten…';
+    const startRes = await fetch('/api/adobe-start', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ pdfBase64: base64 }),
+    });
+    if (!startRes.ok) {
+      const err = await startRes.json().catch(() => ({}));
+      throw new Error(err.error || `Server-fout bij starten conversie (${startRes.status})`);
+    }
+    const { jobUrl } = await startRes.json();
+
+    // ── Stap 3: Polling tot klaar (max ~60 s) ────────────
+    btn.textContent = '⏳ Word-bestand genereren…';
+    let docxBase64 = null;
+    for (let poging = 0; poging < 30; poging++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const resultRes = await fetch('/api/adobe-result', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ jobUrl }),
+      });
+      if (!resultRes.ok) {
+        const err = await resultRes.json().catch(() => ({}));
+        throw new Error(err.error || `Status-fout (${resultRes.status})`);
+      }
+      const result = await resultRes.json();
+      if (result.status === 'done') { docxBase64 = result.docxBase64; break; }
+      if (result.status !== 'in_progress') throw new Error(`Onverwachte status: ${result.status}`);
+    }
+    if (!docxBase64) throw new Error('Conversie duurde te lang (timeout na 60 s)');
+
+    // ── Stap 4: DOCX downloaden naar browser ─────────────
+    const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || 'Concept';
+    const dossierDeel  = huidigDossierNaam ? ` — ${huidigDossierNaam}` : '';
+    const bestandsnaam = `${docTypeLabel}${dossierDeel} (origineel).docx`;
+
+    const byteChars = atob(docxBase64);
+    const byteArr   = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+
+    const blob = new Blob(
+      [byteArr],
+      { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = bestandsnaam;
+    a.click();
+    URL.revokeObjectURL(url);
+
+  } catch (err) {
+    alert(`Word-download mislukt:\n${err.message}`);
+    console.error('[adobe-download]', err);
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = origLabel;
+  }
 });
 
 // ── Master-detail navigatie ───────────────────────────
