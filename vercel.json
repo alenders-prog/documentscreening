@@ -1,5 +1,11 @@
 {
   "regions": ["fra1"],
+  "functions": {
+    "api/genereer-concept.js": { "maxDuration": 120 },
+    "api/claude.js":           { "maxDuration": 120 },
+    "api/screen.js":           { "maxDuration": 120 },
+    "api/extract-pdf.js":      { "maxDuration": 30  }
+  },
   "headers": [
     {
       "source": "/(.*)",
