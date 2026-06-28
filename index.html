@@ -848,6 +848,7 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js"></script>
 <!-- docx wordt lazy-geladen via esm.sh bij eerste gebruik (geen UMD-browser-build beschikbaar) -->
@@ -1069,7 +1070,7 @@ async function ocrPagina(pdfPagina) {
   return text;
 }
 
-// ── LlamaParse: gestructureerde PDF-extractie ─────────
+// ── Adobe PDF Services: PDF → DOCX conversie ─────────
 // Converteert een File naar base64 (chunked om stack overflow bij grote files te voorkomen)
 async function bestandNaarBase64(file) {
   const ab    = await file.arrayBuffer();
@@ -1082,33 +1083,49 @@ async function bestandNaarBase64(file) {
   return btoa(bin);
 }
 
-// Upload PDF naar LlamaParse via Vercel-proxy en peil totdat de job klaar is.
-// Geeft gestructureerde markdown terug; gooit een Error als het mislukt.
-async function extractTextViaParse(file, onProgress = () => {}) {
-  onProgress('Uploaden naar parser…');
-  const base64     = await bestandNaarBase64(file);
-  const uploadRes  = await fetch('/api/extract-pdf', {
+// Upload PDF naar Adobe PDF Services, converteert naar DOCX (incl. OCR voor gescande docs)
+// en retourneert de DOCX als Blob. Gooit een Error als het mislukt.
+async function adobeConverteerPdf(file, onProgress = () => {}) {
+  onProgress('PDF uploaden naar converter…');
+  const base64 = await bestandNaarBase64(file);
+
+  const startRes = await fetch('/api/adobe-start', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ filename: file.name, base64 }),
+    body:    JSON.stringify({ pdfBase64: base64 }),
   });
-  const uploadJson = await uploadRes.json();
-  if (!uploadRes.ok || uploadJson.error) {
-    throw new Error(uploadJson.error || `Upload mislukt (${uploadRes.status})`);
+  if (!startRes.ok) {
+    const err = await startRes.json().catch(() => ({}));
+    throw new Error(err.error || `Adobe start mislukt (${startRes.status})`);
   }
-  const { jobId } = uploadJson;
+  const { jobUrl } = await startRes.json();
 
-  // Poll elke 3 seconden, max 3 minuten
-  for (let poging = 0; poging < 60; poging++) {
-    await new Promise(r => setTimeout(r, 3000));
-    onProgress(`Structuur analyseren… (${(poging + 1) * 3}s)`);
-    const pollRes  = await fetch(`/api/extract-pdf?jobId=${encodeURIComponent(jobId)}`);
-    const pollJson = await pollRes.json();
-    if (pollJson.status === 'SUCCESS') return pollJson.tekst || '';
-    if (pollJson.status === 'ERROR')   throw new Error(pollJson.fout || 'Parsering mislukt');
-    // PENDING/STARTED → blijf pollen
+  // Poll elke 2 seconden, max 60 seconden
+  for (let poging = 0; poging < 30; poging++) {
+    await new Promise(r => setTimeout(r, 2000));
+    onProgress(`Converteren… (${(poging + 1) * 2}s)`);
+    const resultRes = await fetch('/api/adobe-result', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ jobUrl }),
+    });
+    if (!resultRes.ok) {
+      const err = await resultRes.json().catch(() => ({}));
+      throw new Error(err.error || `Adobe poll mislukt (${resultRes.status})`);
+    }
+    const result = await resultRes.json();
+    if (result.status === 'done') {
+      const byteChars = atob(result.docxBase64);
+      const byteArr   = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+      return new Blob(
+        [byteArr],
+        { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+      );
+    }
+    if (result.status !== 'in_progress') throw new Error(`Onverwachte status: ${result.status}`);
   }
-  throw new Error('Timeout: document parsering duurde langer dan 3 minuten');
+  throw new Error('Adobe conversie timeout (60s)');
 }
 
 // ── Tekst extraheren ──────────────────────────────────
@@ -1229,7 +1246,8 @@ async function askClaudeForJson(systemPrompt, userContent, tool, maxTokens = 409
 // ── Tekstcache per Storage-pad ────────────────────────
 // Slaat getekste inhoud op zodat OCR bij een nieuwe versie niet opnieuw hoeft.
 // Wordt ook gevuld vanuit eerder opgeslagen rapporten (_teksten_per_pad).
-const tekstPerPad = new Map(); // storageInfo.pad → tekst
+const tekstPerPad        = new Map(); // storageInfo.pad → tekst (mammoth of PDF.js)
+const docxPerBestandsnaam = new Map(); // bestand.name    → Blob  (DOCX van Adobe)
 
 // ── Document analyseren ───────────────────────────────
 async function analyseDocument(trayItems, onProgress = () => {}) {
@@ -1270,33 +1288,40 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
     const pad       = item.storageInfo?.pad;
 
     let tekst;
-    const isPdf = item.bestand.name.toLowerCase().endsWith('.pdf');
+    const isPdf      = item.bestand.name.toLowerCase().endsWith('.pdf');
+    const isHoofdDoc = HOOFD_TYPES.has(item.type);
     const cachedTekst = (pad && tekstPerPad.has(pad)) ? tekstPerPad.get(pad) : null;
-    // Gecachede PDF-tekst die nog geen LlamaParse-markdown heeft (oud PDF.js-formaat)?
-    // Dan toch opnieuw extraheren zodat oudere dossiers ook beter worden.
-    const cacheIsLlamaKwaliteit = !isPdf || (cachedTekst !== null && /^#{1,3}\s/m.test(cachedTekst));
 
-    if (cachedTekst !== null && cacheIsLlamaKwaliteit) {
-      // Gecachede tekst is al van goede kwaliteit: skip download + extractie
+    if (cachedTekst !== null) {
+      // Tekst al bekend uit deze sessie of eerder opgeslagen rapport
       onProgress(`${prefix}Tekst uit cache…`);
       tekst = cachedTekst;
+      // Probeer ook het DOCX-blob te laden als dat nog niet in geheugen zit
+      if (isPdf && !docxPerBestandsnaam.has(item.bestand.name)) {
+        adobeConverteerPdf(item.bestand, () => {}).then(blob => {
+          docxPerBestandsnaam.set(item.bestand.name, blob);
+        }).catch(() => {/* stil falen — viewer valt terug op PDF.js */});
+      }
     } else {
-      if (isPdf) {
-        // Probeer LlamaParse (gestructureerde markdown); fallback naar PDF.js bij fout
+      if (isPdf && isHoofdDoc) {
+        // Hoofddocumenten (convenant, ouderschapsplan): Adobe PDF→DOCX (incl. OCR)
         try {
-          if (cachedTekst !== null) onProgress(`${prefix}Tekst herextraheren (verbeterde parser)…`);
-          tekst = await extractTextViaParse(item.bestand, msg => onProgress(`${prefix}${msg}`));
-          onProgress(`${prefix}Structuur herkend ✓`);
-        } catch (parseErr) {
-          console.warn('[LlamaParse] mislukt, fallback naar PDF.js:', parseErr.message);
-          onProgress(`${prefix}Tekst uitlezen (fallback)…`);
-          tekst = cachedTekst ?? await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
+          const docxBlob = await adobeConverteerPdf(item.bestand, msg => onProgress(`${prefix}${msg}`));
+          docxPerBestandsnaam.set(item.bestand.name, docxBlob);
+          const ab = await docxBlob.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer: ab });
+          tekst = result.value;
+          onProgress(`${prefix}Tekst geëxtraheerd ✓`);
+        } catch (adobeErr) {
+          console.warn('[Adobe] mislukt, fallback naar PDF.js:', adobeErr.message);
+          onProgress(`${prefix}Fallback: tekst uitlezen…`);
+          tekst = await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
         }
       } else {
+        // Contextdocumenten (HV, bijlage, etc.) en DOCX-bestanden: PDF.js / mammoth
         onProgress(`${prefix}Tekst uitlezen…`);
-        tekst = cachedTekst ?? await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
+        tekst = await extractText(item.bestand, msg => onProgress(`${prefix}${msg}`));
       }
-      // Bijwerken in sessie-cache
       if (pad) tekstPerPad.set(pad, tekst);
     }
 
@@ -1768,12 +1793,26 @@ async function renderDocPanel(searchText) {
       }
       const naam = bestand.name.toLowerCase();
       if (naam.endsWith('.pdf')) {
-        const buf    = await bestand.arrayBuffer();
-        if (gen !== renderGeneratie) return;
-        const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
-        if (gen !== renderGeneratie) return;
-        huidigePdfDocCache[bestand.name] = pdfDoc;
-        await renderPdfPaginas(panel, pdfDoc, gen);
+        const docxBlob = docxPerBestandsnaam.get(bestand.name);
+        if (docxBlob) {
+          // DOCX van Adobe beschikbaar: render als mammoth HTML (mooie opmaak)
+          const ab     = await docxBlob.arrayBuffer();
+          if (gen !== renderGeneratie) return;
+          const result = await mammoth.convertToHtml({ arrayBuffer: ab });
+          if (gen !== renderGeneratie) return;
+          const div    = document.createElement('div');
+          div.className = 'docx-inhoud';
+          div.innerHTML = result.value;
+          panel.appendChild(div);
+        } else {
+          // Fallback: PDF.js canvas-rendering
+          const buf    = await bestand.arrayBuffer();
+          if (gen !== renderGeneratie) return;
+          const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+          if (gen !== renderGeneratie) return;
+          huidigePdfDocCache[bestand.name] = pdfDoc;
+          await renderPdfPaginas(panel, pdfDoc, gen);
+        }
       } else if (naam.endsWith('.docx')) {
         const buf    = await bestand.arrayBuffer();
         if (gen !== renderGeneratie) return;
@@ -2192,6 +2231,7 @@ function closeSplitView() {
   actieveKaart      = null;
   docPanelGereed    = false;
   huidigePdfDocCache = {};
+  docxPerBestandsnaam.clear();
   huidigeDocumenten = [];
   huidigeDocIdx     = 0;
   huidigePrimaireBest = [];
@@ -2636,6 +2676,80 @@ function verzamelAangevinkt() {
   return resultaat;
 }
 
+// ── DOCX-wijzigingen: voor download én concept-review ─
+// Opent de DOCX-Blob via JSZip, past tekst op paragraaf-niveau aan en retourneert
+// een nieuwe Blob. Behoudt paragraaf-opmaak (w:pPr), verliest run-opmaak in gewijzigde alinea's.
+async function pasWijzigingenToeInDocx(docxBlob, wijzigingen) {
+  if (!wijzigingen?.length) return docxBlob;
+  if (!window.JSZip) throw new Error('JSZip niet geladen');
+
+  const zip = new window.JSZip();
+  await zip.loadAsync(docxBlob);
+
+  const xmlStr      = await zip.file('word/document.xml').async('string');
+  const modifiedXml = vervangInDocxXml(xmlStr, wijzigingen);
+
+  zip.file('word/document.xml', modifiedXml);
+  return zip.generateAsync({
+    type:     'blob',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
+}
+
+function vervangInDocxXml(xml, wijzigingen) {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xml, 'application/xml');
+  const wNs    = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const paras  = Array.from(xmlDoc.getElementsByTagNameNS(wNs, 'p'));
+
+  for (const w of wijzigingen) {
+    const zoek    = w.originele_tekst?.replace(/\s+/g, ' ').trim();
+    const vervang = w.aangepaste_tekst?.trim();
+    if (!zoek || vervang == null) continue;
+
+    for (const para of paras) {
+      const tEls    = Array.from(para.getElementsByTagNameNS(wNs, 't'));
+      const paraTxt = tEls.map(t => t.textContent).join('').replace(/\s+/g, ' ').trim();
+      if (!paraTxt.includes(zoek)) continue;
+
+      const pPr = para.getElementsByTagNameNS(wNs, 'pPr')[0] || null;
+      while (para.firstChild) para.removeChild(para.firstChild);
+      if (pPr) para.appendChild(pPr);
+
+      const newRun = xmlDoc.createElementNS(wNs, 'w:r');
+      const newT   = xmlDoc.createElementNS(wNs, 'w:t');
+      newT.setAttribute('xml:space', 'preserve');
+      newT.textContent = paraTxt.replace(zoek, vervang);
+      newRun.appendChild(newT);
+      para.appendChild(newRun);
+      break;
+    }
+  }
+  return new XMLSerializer().serializeToString(xmlDoc);
+}
+
+// Markeert gewijzigde passages in mammoth HTML DOM (voor concept-review-weergave).
+// Vervangt originele tekst door aangepaste tekst op element-niveau en markeert het visueel.
+function markeerWijzigingenInDom(container, wijzigingen) {
+  const elementen = Array.from(
+    container.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, td, th')
+  );
+  for (const w of wijzigingen) {
+    const zoek    = w.originele_tekst?.replace(/\s+/g, ' ').trim();
+    const vervang = w.aangepaste_tekst?.trim();
+    if (!zoek || vervang == null) continue;
+    for (const el of elementen) {
+      const tekst = el.textContent.replace(/\s+/g, ' ').trim();
+      if (tekst.includes(zoek)) {
+        el.textContent = tekst.replace(zoek, vervang);
+        el.dataset.gewijzigd = 'true';
+        el.style.cssText += ';border-left:3px solid #22c55e;padding-left:8px;background:rgba(34,197,94,.07)';
+        break;
+      }
+    }
+  }
+}
+
 // Laad de docx-library eenmalig via esm.sh (cached na eerste aanroep)
 let _docxLib = null;
 async function laadDocxLib() {
@@ -2963,8 +3077,13 @@ function highlightConceptPassage(passage) {
   const eersteRegel = passage.split('\n').map(l => l.trim()).find(l => l.length > 0);
   if (!eersteRegel) return;
   const zoek = eersteRegel.slice(0, 60).toLowerCase();
+  // Werkt met zowel tekst-gebaseerde (cdoc-*) als mammoth HTML-elementen (.docx-inhoud)
   const els  = document.querySelectorAll(
-    '.concept-doc-panel .cdoc-par,.concept-doc-panel .cdoc-kop,.concept-doc-panel .cdoc-sub,.concept-doc-panel .cdoc-lijst');
+    '.concept-doc-panel .cdoc-par, .concept-doc-panel .cdoc-kop, ' +
+    '.concept-doc-panel .cdoc-sub, .concept-doc-panel .cdoc-lijst, ' +
+    '.concept-doc-panel .docx-inhoud p, .concept-doc-panel .docx-inhoud li, ' +
+    '.concept-doc-panel .docx-inhoud h1, .concept-doc-panel .docx-inhoud h2, ' +
+    '.concept-doc-panel .docx-inhoud h3');
   for (const el of els) {
     if (el.textContent.trim().toLowerCase().includes(zoek)) {
       el.classList.add('cdoc-hl-actief');
@@ -2981,9 +3100,27 @@ function toonConceptReview(documentTekst, wijzigingen, pdfBestand = null) {
   _conceptWijzigingen   = wijzigingen || [];
   _conceptOriginelePdf  = pdfBestand;
 
-  // Links: documentpreview met track-changes markering
-  document.getElementById('conceptDocPanel').innerHTML =
-    documentTekstNaarHtml(documentTekst, _conceptWijzigingen);
+  // Links: documentpreview — mammoth HTML van DOCX als beschikbaar, anders tekst-gebaseerd
+  const docPanel = document.getElementById('conceptDocPanel');
+  const docxBlob = pdfBestand ? docxPerBestandsnaam.get(pdfBestand.name) : null;
+  if (docxBlob) {
+    docPanel.innerHTML = '<p style="padding:24px;color:var(--ink-soft);font-size:.85rem">Document laden…</p>';
+    docxBlob.arrayBuffer()
+      .then(ab => mammoth.convertToHtml({ arrayBuffer: ab }))
+      .then(result => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'docx-inhoud';
+        wrapper.innerHTML = result.value;
+        markeerWijzigingenInDom(wrapper, _conceptWijzigingen);
+        docPanel.innerHTML = '';
+        docPanel.appendChild(wrapper);
+      })
+      .catch(() => {
+        docPanel.innerHTML = documentTekstNaarHtml(documentTekst, _conceptWijzigingen);
+      });
+  } else {
+    docPanel.innerHTML = documentTekstNaarHtml(documentTekst, _conceptWijzigingen);
+  }
 
   // Rechts: wijzigingskaarten
   const changesPanel = document.getElementById('conceptChangesPanel');
@@ -3376,23 +3513,11 @@ document.getElementById('conceptReviewBackBtn').addEventListener('click', () => 
   document.getElementById('conceptReview').style.display = 'none';
 });
 
-// Download-knop: converteer origineel PDF naar DOCX via Adobe PDF Services
+// Download-knop: geeft DOCX terug met wijzigingen toegepast
+// Gebruikt de DOCX die Adobe al heeft gegenereerd tijdens de analyse (geen extra API-call).
+// Fallback: nieuwe Adobe-conversie als DOCX niet meer in geheugen zit.
 document.getElementById('conceptDownloadBtn').addEventListener('click', async () => {
   if (!_conceptDocumentTekst) return;
-
-  // Zoek het originele PDF-bestand (vastgelegd bij concept-generatie, of opnieuw bepalen)
-  const pdfBestand = _conceptOriginelePdf
-    || huidigePrimaireBest[huidigeDocIdx]?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
-    || huidigePrimaireBest[huidigeDocIdx]?.[0]
-    || null;
-
-  if (!pdfBestand) {
-    alert(
-      'Het originele PDF-bestand is niet beschikbaar in deze sessie.\n\n' +
-      'Upload het document opnieuw en genereer het concept opnieuw om als Word te kunnen downloaden.'
-    );
-    return;
-  }
 
   const btn = document.getElementById('conceptDownloadBtn');
   const origLabel = btn.textContent;
@@ -3400,62 +3525,37 @@ document.getElementById('conceptDownloadBtn').addEventListener('click', async ()
   try {
     btn.disabled = true;
 
-    // ── Stap 1: PDF → base64 ──────────────────────────────
-    btn.textContent = '⏳ PDF uploaden…';
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(pdfBestand);
-    });
+    // ── Zoek DOCX-blob in geheugen ────────────────────────
+    const pdfBestand = _conceptOriginelePdf
+      || huidigePrimaireBest[huidigeDocIdx]?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
+      || huidigePrimaireBest[huidigeDocIdx]?.[0]
+      || null;
 
-    // ── Stap 2: Upload naar Adobe + job starten ───────────
-    btn.textContent = '⏳ Conversie starten…';
-    const startRes = await fetch('/api/adobe-start', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ pdfBase64: base64 }),
-    });
-    if (!startRes.ok) {
-      const err = await startRes.json().catch(() => ({}));
-      throw new Error(err.error || `Server-fout bij starten conversie (${startRes.status})`);
+    let docxBlob = pdfBestand ? docxPerBestandsnaam.get(pdfBestand.name) : null;
+
+    if (!docxBlob && pdfBestand) {
+      // DOCX niet meer in geheugen (nieuwe sessie?) → opnieuw converteren via Adobe
+      btn.textContent = '⏳ PDF converteren…';
+      docxBlob = await adobeConverteerPdf(pdfBestand, msg => { btn.textContent = `⏳ ${msg}`; });
+      docxPerBestandsnaam.set(pdfBestand.name, docxBlob);
     }
-    const { jobUrl } = await startRes.json();
 
-    // ── Stap 3: Polling tot klaar (max ~60 s) ────────────
-    btn.textContent = '⏳ Word-bestand genereren…';
-    let docxBase64 = null;
-    for (let poging = 0; poging < 30; poging++) {
-      await new Promise(r => setTimeout(r, 2000));
-      const resultRes = await fetch('/api/adobe-result', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ jobUrl }),
-      });
-      if (!resultRes.ok) {
-        const err = await resultRes.json().catch(() => ({}));
-        throw new Error(err.error || `Status-fout (${resultRes.status})`);
-      }
-      const result = await resultRes.json();
-      if (result.status === 'done') { docxBase64 = result.docxBase64; break; }
-      if (result.status !== 'in_progress') throw new Error(`Onverwachte status: ${result.status}`);
+    if (!docxBlob) {
+      throw new Error(
+        'Geen Word-bestand beschikbaar. Upload het document opnieuw en genereer het concept opnieuw.'
+      );
     }
-    if (!docxBase64) throw new Error('Conversie duurde te lang (timeout na 60 s)');
 
-    // ── Stap 4: DOCX downloaden naar browser ─────────────
+    // ── Wijzigingen toepassen via JSZip ──────────────────
+    btn.textContent = '⏳ Wijzigingen verwerken…';
+    const gewijzigdDocx = await pasWijzigingenToeInDocx(docxBlob, _conceptWijzigingen);
+
+    // ── Downloaden ────────────────────────────────────────
     const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || 'Concept';
     const dossierDeel  = huidigDossierNaam ? ` — ${huidigDossierNaam}` : '';
-    const bestandsnaam = `${docTypeLabel}${dossierDeel} (origineel).docx`;
+    const bestandsnaam = `${docTypeLabel}${dossierDeel} (concept).docx`;
 
-    const byteChars = atob(docxBase64);
-    const byteArr   = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
-
-    const blob = new Blob(
-      [byteArr],
-      { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
-    );
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(gewijzigdDocx);
     const a   = document.createElement('a');
     a.href     = url;
     a.download = bestandsnaam;
@@ -3464,7 +3564,7 @@ document.getElementById('conceptDownloadBtn').addEventListener('click', async ()
 
   } catch (err) {
     alert(`Word-download mislukt:\n${err.message}`);
-    console.error('[adobe-download]', err);
+    console.error('[concept-download]', err);
   } finally {
     btn.disabled    = false;
     btn.textContent = origLabel;
