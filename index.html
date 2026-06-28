@@ -1325,6 +1325,13 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
       if (pad) tekstPerPad.set(pad, tekst);
     }
 
+    // Tekst afkappen zodat Claude-aanroepen binnen de Vercel-timeout blijven.
+    // Hoofddocumenten krijgen meer ruimte; contextdocumenten zijn ter referentie.
+    const MAX_CHARS = isHoofdDoc ? 24000 : 10000;
+    if (tekst.length > MAX_CHARS) {
+      tekst = tekst.slice(0, MAX_CHARS) + '\n\n[... tekst afgekapt bij ' + MAX_CHARS + ' tekens ...]';
+    }
+
     documentDelen.push({
       header: `=== ${typeLabel.toUpperCase()}: ${item.bestandsnaam} ===`,
       tekst,
