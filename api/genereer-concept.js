@@ -1,6 +1,7 @@
 // api/genereer-concept.js
 // POST — Verwerkt aangevinkte analysepunten in een verbeterde versie van het document.
 // Retourneert JSON: { documentTekst, wijzigingen }
+// wijzigingen bevat originele_tekst + aangepaste_tekst voor track-changes weergave.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Alleen POST toegestaan' });
@@ -40,7 +41,10 @@ KERNREGELS:
 4. Als een aanpassing logische gevolgen heeft voor een ander artikel (bijv. pensioen in art. 5 hangt samen met een verwijzing in art. 2), pas dat artikel óók aan.
 5. Als een verbeterpunt een concrete "Suggestie" bevat, gebruik die formulering letterlijk tenzij het de samenhang schaadt.
 6. Gebruik de formele Nederlandse juridische schrijfstijl die in het origineel wordt gehanteerd.
-7. Gebruik NIET de termen "Partij A" of "Partij B" als het origineel concrete namen gebruikt — behoud die namen.`;
+7. Gebruik NIET de termen "Partij A" of "Partij B" als het origineel concrete namen gebruikt — behoud die namen.
+8. Elk verbeterpunt krijgt precies één item in wijzigingen, met:
+   - originele_tekst: de WOORDELIJKE tekst uit het origineel die is aangepast (minstens één volledige zin)
+   - aangepaste_tekst: de vervangende tekst zoals die in het definitieve document staat`;
 
   const userPrompt =
 `DOCUMENTTYPE: ${documentType || 'echtscheidingsdocument'}
@@ -53,7 +57,7 @@ ${documentTekst}`;
 
   const tool = {
     name: 'verbeterd_document',
-    description: 'Levert het volledig aangepaste document en een wijzigingslog',
+    description: 'Levert het volledig aangepaste document en een wijzigingslog met originele en nieuwe tekstparen',
     input_schema: {
       type: 'object',
       properties: {
@@ -68,16 +72,18 @@ ${documentTekst}`;
           items: {
             type: 'object',
             properties: {
-              item_nr:      { type: 'integer', description: 'Nummer van het verbeterpunt (1-based)' },
-              artikel:      { type: 'string',  description: 'Welk artikel of welke sectie is gewijzigd' },
-              wat_gewijzigd:{ type: 'string',  description: 'Beknopte omschrijving van de aanpassing (max 2 zinnen)' },
-              ook_aangepast:{
+              item_nr:         { type: 'integer', description: 'Nummer van het verbeterpunt (1-based)' },
+              artikel:         { type: 'string',  description: 'Welk artikel of welke sectie is gewijzigd' },
+              wat_gewijzigd:   { type: 'string',  description: 'Beknopte omschrijving van de aanpassing (max 2 zinnen)' },
+              originele_tekst: { type: 'string',  description: 'De EXACTE originele tekst uit het document die is vervangen (woordelijk, minstens één volledige zin)' },
+              aangepaste_tekst:{ type: 'string',  description: 'De vervangende tekst zoals die nu in het definitieve document staat' },
+              ook_aangepast:   {
                 type: 'array',
                 items: { type: 'string' },
                 description: 'Andere artikelen/secties die ook zijn aangepast vanwege samenhang (leeg als geen)',
               },
             },
-            required: ['item_nr', 'artikel', 'wat_gewijzigd', 'ook_aangepast'],
+            required: ['item_nr', 'artikel', 'wat_gewijzigd', 'originele_tekst', 'aangepaste_tekst', 'ook_aangepast'],
           },
         },
       },

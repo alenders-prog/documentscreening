@@ -3210,82 +3210,29 @@ document.getElementById('genereerConceptBtn').addEventListener('click', async ()
   // Start op de achtergrond — geen await, geen modal
   (async () => {
     try {
-      const itemsTekst = snapAangevinkt.map((item, i) => {
-        const nr  = i + 1;
-        const cat = item.categorie || '?';
-        const loc = item.locatie || item.sectie || item.onderwerp || item.signalering || '';
-        const bev = item.bevinding || item.toelichting || item.probleem || item.signalering || '';
-        const sug = item.suggestie || '';
-        const opm = item.opmerking || '';
-        const pas = item.passage   || item.citaat || '';
-        let t = `[${nr}] (${cat})`;
-        if (loc) t += `\n   Locatie: ${loc}`;
-        if (bev) t += `\n   Bevinding: ${bev}`;
-        if (sug) t += `\n   Suggestie: ${sug}`;
-        if (opm) t += `\n   Opmerking mediator: ${opm}`;
-        if (pas) t += `\n   Passage in document: "${pas}"`;
-        return t;
-      }).join('\n\n');
-
-      const systeemPrompt =
-`Je bent een ervaren Nederlandse juridische documentschrijver gespecialiseerd in echtscheidingsdocumenten.
-
-WERKWIJZE — je geeft ALLEEN de gewijzigde passages terug, niet het volledige document:
-- Neem per verbeterpunt de EXACTE originele zin(nen) of alinea op in originele_tekst (woordelijk uit het document).
-- Schrijf de verbeterde versie in aangepaste_tekst.
-- Het systeem past de vervangingen automatisch toe op het originele document.
-
-KERNREGELS:
-1. Behoud de formele toon, stijl en nummering van het origineel.
-2. Pas ALLEEN aan wat nodig is voor het genoemde verbeterpunt.
-3. Als een aanpassing gevolgen heeft voor een ander artikel, neem dat ook op als aparte vervanging.
-4. Gebruik een "Suggestie" of "Opmerking mediator" als leidende instructie.
-5. Behoud concrete namen van partijen zoals ze in het origineel staan.`;
-
-      const conceptTool = {
-        name: 'registreer_wijzigingen',
-        description: 'Geeft per verbeterpunt de originele en nieuwe tekst terug als vervangingsparen',
-        input_schema: {
-          type: 'object',
-          properties: {
-            wijzigingen: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  item_nr:         { type: 'integer' },
-                  artikel:         { type: 'string' },
-                  wat_gewijzigd:   { type: 'string' },
-                  originele_tekst: { type: 'string', description: 'Exacte tekst uit het originele document (minstens één volledige zin, woordelijk)' },
-                  aangepaste_tekst:{ type: 'string', description: 'Verbeterde versie ter vervanging' },
-                  ook_aangepast:   { type: 'array', items: { type: 'string' } },
-                },
-                required: ['item_nr','artikel','wat_gewijzigd','originele_tekst','aangepaste_tekst','ook_aangepast'],
-              },
-            },
-          },
-          required: ['wijzigingen'],
-        },
-      };
-
-      const userTekst =
-`DOCUMENTTYPE: ${snapDocType}
-
-TE VERWERKEN VERBETERPUNTEN (${snapAangevinkt.length} stuks):
-${itemsTekst}
-
-ORIGINEEL DOCUMENT:
-${anonimiseerTekst(snapOrigineel, snapNaarAnon)}`;
-
-      const data = await askClaudeForJson(systeemPrompt, userTekst, conceptTool, 16000);
-      if (!data?.wijzigingen?.length) {
-        console.warn('[concept] Lege wijzigingen — Claude-response:', data);
-        throw new Error('Claude gaf geen wijzigingen terug. Controleer of de aangevinkte punten concrete tekstsuggesties bevatten.');
+      // Stuur document (geanonimiseerd) + verbeterpunten naar server-side API.
+      // De API roept Claude aan en geeft het VOLLEDIGE verbeterde document terug,
+      // plus wijzigingen met originele/aangepaste tekstparen voor track-changes.
+      const apiResp = await fetch('/api/genereer-concept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentTekst: anonimiseerTekst(snapOrigineel, snapNaarAnon),
+          aangevinkt:    snapAangevinkt,
+          documentType:  snapDocType,
+          bestandsnaam:  huidigeBestandsnaam || '',
+        }),
+      });
+      if (!apiResp.ok) {
+        const errJson = await apiResp.json().catch(() => ({}));
+        throw new Error(errJson.error || `Concept genereren mislukt (${apiResp.status})`);
       }
+      const raw = await apiResp.json();
+      if (!raw.documentTekst) throw new Error('Geen documenttekst ontvangen van de server.');
 
-      // Herstel namen in wijzigingen (Claude zag [PERSOON_A], rapport toont echte naam)
-      const wijzigingenEcht = herstelAnonObj(data.wijzigingen, snapNaarEcht);
-      const documentTekst = pasWijzigingenToe(snapOrigineel, wijzigingenEcht);
+      // Herstel namen/PII (server zag [PERSOON_A], concept toont echte naam)
+      const documentTekst   = herstelAnonObj(raw.documentTekst, snapNaarEcht);
+      const wijzigingenEcht = herstelAnonObj(raw.wijzigingen || [], snapNaarEcht);
 
       // Opslaan per documenttype — zodat convenant en ouderschapsplan elk hun eigen concept hebben
       const conceptData = {
