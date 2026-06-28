@@ -1810,6 +1810,11 @@ async function renderDocPanel(searchText) {
           const div    = document.createElement('div');
           div.className = 'docx-inhoud';
           div.innerHTML = result.value;
+          // Filter PDF-footer-artefacten (paraaf-regels, paginanummers)
+          div.querySelectorAll('p').forEach(el => {
+            const t = el.textContent.trim();
+            if (/^paraaf\s+man\s*:/i.test(t) || /^\d+\/\d+$/.test(t)) el.remove();
+          });
           panel.appendChild(div);
         } else {
           // Fallback: PDF.js canvas-rendering
@@ -2736,8 +2741,15 @@ function vervangInDocxXml(xml, wijzigingen) {
 }
 
 // Markeert gewijzigde passages in mammoth HTML DOM (voor concept-review-weergave).
-// Vervangt originele tekst door aangepaste tekst op element-niveau en markeert het visueel.
+// Toont track-changes: <del> (rood doorgestreept) + <ins> (groen) per gewijzigde passage.
+// Filtert ook PDF-artefacten (paraaf-regels, paginanummers) uit de weergave.
 function markeerWijzigingenInDom(container, wijzigingen) {
+  // Verwijder PDF-footer-artefacten die Adobe als inline tekst overneemt
+  container.querySelectorAll('p').forEach(el => {
+    const t = el.textContent.trim();
+    if (/^paraaf\s+man\s*:/i.test(t) || /^\d+\/\d+$/.test(t)) el.remove();
+  });
+
   const elementen = Array.from(
     container.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, td, th')
   );
@@ -2747,12 +2759,22 @@ function markeerWijzigingenInDom(container, wijzigingen) {
     if (!zoek || vervang == null) continue;
     for (const el of elementen) {
       const tekst = el.textContent.replace(/\s+/g, ' ').trim();
-      if (tekst.includes(zoek)) {
-        el.textContent = tekst.replace(zoek, vervang);
-        el.dataset.gewijzigd = 'true';
-        el.style.cssText += ';border-left:3px solid #22c55e;padding-left:8px;background:rgba(34,197,94,.07)';
-        break;
-      }
+      if (!tekst.includes(zoek)) continue;
+
+      // Track-changes: toon oud (rood doorgestreept) + nieuw (groen) in het document
+      const idx  = tekst.indexOf(zoek);
+      const voor = tekst.slice(0, idx);
+      const na   = tekst.slice(idx + zoek.length);
+
+      el.innerHTML =
+        (voor ? escH(voor) + ' ' : '') +
+        `<del class="cdoc-del">${escH(zoek)}</del> ` +
+        `<ins class="cdoc-ins">${escH(vervang)}</ins>` +
+        (na ? ' ' + escH(na) : '');
+
+      el.dataset.gewijzigd = 'true';
+      el.style.cssText += ';border-left:3px solid #22c55e;padding-left:8px;';
+      break;
     }
   }
 }
