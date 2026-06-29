@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
@@ -15,7 +15,10 @@
   --blue:#4A90D9;
   --nav-bg:#1B3050; --nav-border:#243F68;
   --action-light:#FDF1EB; --action-border:#E8C4AE;
-  --ok:#2A7260; --ok-light:#EBF6F4;
+  --ok:#2A7260; --ok-light:#EBF6F4; --ok-border:#A8D8D0;
+  --warn:#B27820; --warn-light:#FFF7E6; --warn-border:#E8D090;
+  --bad:#A83838;  --bad-light:#FDF0F0;  --bad-border:#E8B8B8;
+  --gold:#8A6A10; --gold-light:#FFF8E0; --gold-border:#D8B848;
   --r-sm:6px; --r-md:10px; --r-lg:14px;
 }
 *{box-sizing:border-box;}
@@ -185,10 +188,32 @@ button.secundair:hover{background:#FFF1EA;}
   cursor:pointer;font-size:.9rem;padding:4px 7px;color:var(--ink-soft);
   transition:border-color .12s,color .12s,background .12s;line-height:1;}
 .versie-verwijder-btn:hover{border-color:#e57373;color:#c62828;background:#fff5f5;}
-.score-hoog{background:#FCEFEC;color:var(--terra);}
-.score-midden{background:#FFF8E1;color:#B45309;}
-.score-ok{background:#E8F5EA;color:#2E7D32;}
-.score-grijs{background:#F0F0F0;color:#666;}
+.score-hoog{background:var(--bad-light);color:var(--bad);}
+.score-midden{background:var(--warn-light);color:var(--warn);}
+.score-ok{background:var(--ok-light);color:#1E5A50;}
+.score-grijs{background:#F0EDE8;color:var(--ink-soft);}
+
+/* ── Score-banner (boven Samenvatting in analysescherm) ─── */
+.score-banner{background:var(--paper);border:1.5px solid var(--line);
+  border-radius:var(--r-lg);padding:16px 18px;margin-bottom:20px;
+  display:flex;align-items:center;gap:20px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.sb-getal{font-family:'Source Serif 4',serif;font-size:2.8rem;font-weight:700;
+  line-height:1;flex-shrink:0;}
+.sb-pct{font-size:1.6rem;font-weight:400;opacity:.5;}
+.sb-rechts{flex:1;min-width:0;}
+.sb-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink-soft);margin-bottom:6px;}
+.sb-balk{height:7px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:5px;}
+.sb-balk-vul{height:100%;border-radius:4px;transition:width .4s ease;}
+.sb-samen{font-size:.78rem;color:var(--ink-soft);}
+.sb-issues{display:flex;flex-direction:column;gap:4px;
+  border-left:1px solid var(--line);padding-left:18px;flex-shrink:0;}
+.sb-issue{font-size:.78rem;color:var(--ink-mid);display:flex;align-items:center;gap:6px;}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sb-dot.ok  {background:var(--ok);}
+.sb-dot.warn{background:var(--warn);}
+.sb-dot.bad {background:var(--bad);}
 
 /* ── Nieuw dossier modal ──────────────────────────── */
 .modal-overlay{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.4);
@@ -286,9 +311,12 @@ button.primair:hover{background:var(--coral-dark);}
 .concept-doc-panel .cdoc-lijst{margin:0 0 4px 24px;}
 /* cdoc-paraaf verwijderd — paraaf-paginakoppen worden gestript bij pre-processing */
 .concept-doc-panel .cdoc-leeglijn{height:8px;}
-/* Highlight-staten (klik vanuit wijzigingskaart) */
-.concept-doc-panel .cdoc-hl-actief{background:#FFF9E6;border-radius:2px;
-  outline:2px solid #F5A623;outline-offset:2px;}
+/* Highlight-staten (klik vanuit wijzigingskaart) — werkt voor tekst-fallback én docx-preview */
+.concept-doc-panel .cdoc-hl-actief,
+.concept-doc-panel .docx-render .cdoc-hl-actief{
+  background:#FFF9E6 !important;border-radius:2px;
+  outline:2px solid #F5A623;outline-offset:2px;
+  transition:background .2s;}
 /* Track-changes: inline oud (rood doorgestreept) + nieuw (groen) */
 .concept-doc-panel del.cdoc-del{
   background:#FDECEA;color:#c0392b;text-decoration:line-through;
@@ -296,6 +324,42 @@ button.primair:hover{background:var(--coral-dark);}
 .concept-doc-panel ins.cdoc-ins{
   background:#E8F5EA;color:#1e6e4a;text-decoration:none;
   border-radius:2px;padding:0 2px;font-style:normal;font-weight:500;}
+
+/* ── docx-preview: A4-pagina-weergave ───────────────────── */
+/* Het paneel zelf is de grijze "buiten-de-pagina" achtergrond  */
+/* De sectie binnen docx-render wordt behandeld als wit A4-vel  */
+.concept-doc-panel .docx-render{
+  background:#fff !important;
+  max-width:794px !important;   /* A4 bij 96 dpi                   */
+  width:794px !important;
+  margin:0 auto !important;
+  padding:56px 72px !important; /* ≈ 25 mm marges rondom           */
+  box-shadow:0 2px 16px rgba(0,0,0,.18) !important;
+  border-radius:2px;
+  font-family:'Times New Roman',Georgia,serif;
+  font-size:.97rem;
+  line-height:1.7;
+  color:#1a1a1a;
+  min-height:500px;
+  box-sizing:border-box !important;
+}
+/* Alinea-opmaak binnen docx-preview */
+.concept-doc-panel .docx-render p{margin:0 0 .5em;}
+/* Meer ruimte tussen opsommingsteken en tekst                  */
+.concept-doc-panel .docx-render p[style*="text-indent"],
+.concept-doc-panel .docx-render li{
+  padding-left:.4em;
+  margin-bottom:.35em;
+}
+/* ── Track-changes kleuren ─────────────────────────────── */
+.concept-doc-panel .docx-render ins,
+.concept-doc-panel .docx-render [class*="-ins"],
+.concept-doc-panel .docx-render [data-change="ins"]{
+  background:#E8F5EA;color:#1e6e4a;text-decoration:none !important;font-weight:500;}
+.concept-doc-panel .docx-render del,
+.concept-doc-panel .docx-render [class*="-del"],
+.concept-doc-panel .docx-render [data-change="del"]{
+  background:#FDECEA;color:#c0392b;text-decoration:line-through !important;}
 
 /* Wijzigingen-paneel (rechts) */
 .concept-changes-panel{width:380px;flex-shrink:0;overflow-y:auto;
@@ -309,8 +373,11 @@ button.primair:hover{background:var(--coral-dark);}
   transition:border-color .15s;}
 .change-card:hover,.change-card.act{border-color:var(--coral);}
 .change-card.act{box-shadow:0 0 0 2px rgba(232,113,74,.18);}
-.change-card-kop{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.change-card-kop{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
 .change-artikel{font-weight:600;font-size:.88rem;color:var(--ink);}
+.change-niet-toegepast{margin-left:auto;font-size:.72rem;font-weight:600;
+  color:#b45309;background:#fef3c7;border:1px solid #fbbf24;
+  border-radius:4px;padding:1px 6px;white-space:nowrap;cursor:help;}
 .change-beschrijving{font-size:.82rem;color:var(--ink-soft);margin-bottom:10px;
   line-height:1.5;}
 /* Toggle origineel/aangepast */
@@ -410,6 +477,15 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 .a-sectie.dicht .a-chevron{transform:rotate(-90deg);}
 .a-inhoud{padding-top:14px;}
 .a-sectie.dicht .a-inhoud{display:none;}
+/* filter-toggle per sectie */
+.a-filter-btn{font-size:.71rem;font-weight:600;padding:2px 10px;border-radius:12px;
+  border:1px solid var(--line);background:transparent;color:var(--ink-soft);cursor:pointer;
+  margin-left:auto;flex-shrink:0;transition:all .15s;white-space:nowrap;}
+.a-filter-btn:hover{border-color:var(--coral);color:var(--coral);}
+.a-filter-btn.actief{background:#FFF0EB;color:var(--coral-dark);border-color:var(--coral);}
+/* verberg ok-items als filter actief is */
+.a-sectie.filter-issues .card[data-ok="1"],
+.a-sectie.filter-issues .mfn-el[data-ok="1"]{display:none;}
 .samenvatting{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;padding:16px 18px;font-size:.97rem;}
 .card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
   border-radius:8px;padding:14px 16px;margin-bottom:9px;transition:border-color .15s,box-shadow .15s;}
@@ -419,8 +495,14 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 .card.sev-midden,.card.status-onvolledig{border-left-color:var(--amber);}
 .card.sev-hoog,.card.status-ontbreekt{border-left-color:var(--terra);}
 .card.heeft-passage{cursor:pointer;}
-.card.heeft-passage:hover{border-top-color:var(--coral);border-right-color:var(--coral);border-bottom-color:var(--coral);box-shadow:0 1px 6px rgba(232,113,74,.15);}
-.card.actief{border-color:var(--coral)!important;box-shadow:0 0 0 2px rgba(232,113,74,.25);}
+/* Hover/actief: alleen oranje rand voor kaarten MET een aandachtspunt (data-ok=0) */
+.card[data-ok="0"].heeft-passage:hover{
+  border-top-color:var(--coral);border-right-color:var(--coral);border-bottom-color:var(--coral);
+  box-shadow:0 1px 6px rgba(232,113,74,.15);}
+.card[data-ok="0"].actief{border-color:var(--coral)!important;box-shadow:0 0 0 2px rgba(232,113,74,.25);}
+/* Kaarten zonder aandachtspunt: subtiele highlight zonder accentkleur */
+.card[data-ok="1"].heeft-passage:hover{background:#FAFAF7;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.card[data-ok="1"].actief{background:#F5F2EC;}
 .item-row{display:flex;align-items:flex-start;gap:10px;}
 .item-row input[type=checkbox]{margin-top:3px;width:17px;height:17px;accent-color:var(--sage);cursor:pointer;flex:none;}
 .item-body{flex:1;min-width:0;}
@@ -592,15 +674,18 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 /* Mini chips voor dossierlijst */
 .chip{display:inline-flex;align-items:center;font-size:.67rem;font-weight:700;
   padding:2px 7px;border-radius:20px;letter-spacing:.02em;white-space:nowrap;}
-.chip-ok{background:#E8F5EA;color:#2E7D32;}
-.chip-warn{background:#FFF8E1;color:#8A5A00;}
-.chip-bad{background:#FCEFEC;color:var(--terra);}
+.chip-ok   {background:var(--ok-light);  color:#1E5A50;}
+.chip-warn {background:var(--warn-light);color:#7A5010;}
+.chip-bad  {background:var(--bad-light); color:#7A2828;}
 .chip-grijs{background:#F0EDE8;color:var(--ink-soft);}
+.chip-gold {background:var(--gold-light);color:var(--gold);border:1px solid var(--gold-border);}
 
 /* Upload in rp-analyse */
 .koppel-actief-naam{font-weight:600;font-size:.93rem;color:var(--coral-dark);}
 .koppel-actief-sub{font-size:.78rem;color:var(--coral);margin-top:1px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
 </head>
 <body style="display:none">
 
@@ -620,7 +705,12 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
       <span class="brand-sub">Documentscreening</span>
     </div>
     <div class="topbar-right">
-      <button class="topbar-icon-btn" id="instellingenBtn" title="Praktijkinstellingen">⚙</button>
+      <button class="topbar-icon-btn" id="instellingenBtn" title="Praktijkinstellingen">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="10" cy="10" r="3"/>
+          <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke-linecap="round"/>
+        </svg>
+      </button>
       <div class="topbar-divider"></div>
       <span class="topbar-email" id="topbarEmail"></span>
       <button class="topbar-logout" id="uitloggenBtn">Uitloggen</button>
@@ -849,6 +939,7 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="/docx-preview.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js"></script>
 <!-- docx wordt lazy-geladen via esm.sh bij eerste gebruik (geen UMD-browser-build beschikbaar) -->
@@ -1208,34 +1299,24 @@ async function askClaudeForJson(systemPrompt, userContent, tool, maxTokens = 409
 
   const extraHeaders = cache ? { 'anthropic-beta': 'prompt-caching-2024-07-31' } : {};
 
-  let res;
-  if (typeof ANTHROPIC_API_KEY !== 'undefined') {
-    res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        ...extraHeaders,
-      },
-      body: JSON.stringify(body),
-    });
-  } else {
-    res = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...extraHeaders },
-      body: JSON.stringify(body),
-    });
-  }
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+    body: JSON.stringify(body),
+  });
   if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
   const json    = await res.json();
   const toolUse = json.content?.find(b => b.type === 'tool_use');
+  console.log(`[claude/${tool.name}] stop_reason=${json.stop_reason}, toolUse=${!!toolUse}`);
   if (json.stop_reason === 'max_tokens') {
-    // Tokenbudget bereikt — output is afgekapt; input is waarschijnlijk leeg of onvolledig
-    const heeftBruikbareOutput = toolUse && toolUse.input && Object.keys(toolUse.input).length > 0;
+    // Tokenbudget bereikt — output is afgekapt; input is leeg of onvolledig
+    // Beschouw {wijzigingen: []} ook als niet-bruikbaar (Claude had nog niets gegenereerd)
+    const heeftBruikbareOutput = toolUse && toolUse.input &&
+      Object.entries(toolUse.input).some(([, v]) =>
+        v !== null && v !== undefined && (!Array.isArray(v) || v.length > 0)
+      );
     if (!heeftBruikbareOutput) {
-      throw new Error(`Tokenbudget (${maxTokens}) bereikt — het document of de selectie is te lang. Selecteer minder verbeterpunten of gebruik een kortere tekst.`);
+      throw new Error(`Tokenbudget (${maxTokens}) bereikt — het document is te lang voor het aantal geselecteerde verbeterpunten. Selecteer minder punten of splits de analyse.`);
     }
     console.warn(`[Claude] max_tokens bereikt voor tool "${tool.name}" — output mogelijk onvolledig.`);
   }
@@ -1297,9 +1378,11 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
       onProgress(`${prefix}Tekst uit cache…`);
       tekst = cachedTekst;
       // Probeer ook het DOCX-blob te laden als dat nog niet in geheugen zit
-      if (isPdf && !docxPerBestandsnaam.has(item.bestand.name)) {
+      if (isPdf && isHoofdDoc && !docxPerBestandsnaam.has(item.bestand.name)) {
         adobeConverteerPdf(item.bestand, () => {}).then(blob => {
           docxPerBestandsnaam.set(item.bestand.name, blob);
+          docPanelGereed = false; // force re-render met mammoth zodra blob klaar is
+          renderDocPanel(''); // direct opnieuw renderen — panel is nu zichtbaar
         }).catch(() => {/* stil falen — viewer valt terug op PDF.js */});
       }
     } else {
@@ -1308,6 +1391,8 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
         try {
           const docxBlob = await adobeConverteerPdf(item.bestand, msg => onProgress(`${prefix}${msg}`));
           docxPerBestandsnaam.set(item.bestand.name, docxBlob);
+          // Document-panel opnieuw renderen zodra DOCX beschikbaar is (ook als panel al zichtbaar was)
+          docPanelGereed = false;
           const ab = await docxBlob.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer: ab });
           tekst = result.value;
@@ -1325,11 +1410,13 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
       if (pad) tekstPerPad.set(pad, tekst);
     }
 
-    // Tekst afkappen zodat Claude-aanroepen binnen de Vercel-timeout blijven.
-    // Hoofddocumenten krijgen meer ruimte; contextdocumenten zijn ter referentie.
-    const MAX_CHARS = isHoofdDoc ? 24000 : 10000;
-    if (tekst.length > MAX_CHARS) {
-      tekst = tekst.slice(0, MAX_CHARS) + '\n\n[... tekst afgekapt bij ' + MAX_CHARS + ' tekens ...]';
+    // Hoofddocumenten worden NOOIT afgekapt — de volledige tekst is vereist voor juridische analyse.
+    // Contextdocumenten (HV, bijlagen) zijn ter referentie en krijgen een ruime maar begrensde limiet.
+    if (!isHoofdDoc) {
+      const MAX_CHARS = 25000;
+      if (tekst.length > MAX_CHARS) {
+        tekst = tekst.slice(0, MAX_CHARS) + '\n\n[... tekst afgekapt bij ' + MAX_CHARS + ' tekens ...]';
+      }
     }
 
     documentDelen.push({
@@ -1810,11 +1897,7 @@ async function renderDocPanel(searchText) {
           const div    = document.createElement('div');
           div.className = 'docx-inhoud';
           div.innerHTML = result.value;
-          // Filter PDF-footer-artefacten (paraaf-regels, paginanummers)
-          div.querySelectorAll('p').forEach(el => {
-            const t = el.textContent.trim();
-            if (/^paraaf\s+man\s*:/i.test(t) || /^\d+\/\d+$/.test(t)) el.remove();
-          });
+          schoonmaakMammothHtml(div); // verwijder inline footer-artefacten
           panel.appendChild(div);
         } else {
           // Fallback: PDF.js canvas-rendering
@@ -2017,13 +2100,22 @@ function getPassage(item, cat) {
   return cat === 'juridisch' ? (item.citaat || item.passage || '') : (item.passage || '');
 }
 
+// Filter-toggle per analyse-sectie: "Alles" ↔ "Verbeterpunten"
+function toggleFilter(btn) {
+  const sectie = btn.closest('.a-sectie');
+  const actief = sectie.classList.toggle('filter-issues');
+  btn.classList.toggle('actief', actief);
+  btn.textContent = actief ? 'Alles' : 'Verbeterpunten';
+}
+
 function kaart(cat, idx, extraClass, kopHtml, metaHtml, citaatHtml) {
   const item     = huidigRapport[cat][idx];
   const passage  = getPassage(item, cat);
   const klikbaar = !!passage;
   const suggestie = item.suggestie || '';
+  const isOk = /status-aanwezig|sev-laag/.test(extraClass);
   return `
-  <div class="card ${extraClass}${klikbaar?' heeft-passage':''}" data-cat="${cat}" data-idx="${idx}">
+  <div class="card ${extraClass}${klikbaar?' heeft-passage':''}" data-cat="${cat}" data-idx="${idx}" data-ok="${isOk?'1':'0'}">
     <div class="item-row">
       <input type="checkbox" ${item.afgehandeld?'checked':''}
         onchange="huidigRapport['${cat}'][${idx}].afgehandeld=this.checked;updateConceptKnop();autoSlaOp()">
@@ -2057,23 +2149,24 @@ async function toonRapport(cls, rp) {
   huidigeDocIdx     = 0;
 
   // ── Helpers ──
-  const sectie = (titel, inhoud, open = false) => `
+  const sectie = (titel, inhoud, open = false, filterbaar = false) => `
     <div class="a-sectie${open ? '' : ' dicht'}">
-      <h2>${titel}<span class="a-chevron">▾</span></h2>
+      <h2>${titel}<span class="a-chevron">▾</span>${filterbaar ? '<button class="a-filter-btn" onclick="event.stopPropagation();toggleFilter(this)">Verbeterpunten</button>' : ''}</h2>
       <div class="a-inhoud">${inhoud}</div>
     </div>`;
 
   function renderMfnScore(mfn) {
     if (!mfn?.elementen?.length) return '';
-    const totaal     = mfn.score_totaal   || mfn.elementen.length;
-    const aanwezig   = mfn.score_aanwezig ?? mfn.elementen.filter(e => e.status === 'aanwezig').length;
+    // Altijd berekenen vanuit de elementen-array — niet vertrouwen op Claude's score-velden
+    const totaal     = mfn.elementen.length;
+    const aanwezig   = mfn.elementen.filter(e => e.status === 'aanwezig').length;
     const onvolledig = mfn.elementen.filter(e => e.status === 'onvolledig').length;
     const ontbreekt  = mfn.elementen.filter(e => e.status === 'ontbreekt').length;
     const pct   = Math.round((aanwezig / totaal) * 100);
     const kleur = pct >= 90 ? '#2a7a4e' : pct >= 70 ? '#b86800' : '#c0392b';
     const statusIcoon = { aanwezig: '✓', onvolledig: '△', ontbreekt: '✗' };
     const elementenHtml = mfn.elementen.map(e => `
-      <div class="mfn-el mfn-el-${e.status}">
+      <div class="mfn-el mfn-el-${e.status}" data-ok="${e.status === 'aanwezig' ? '1' : '0'}">
         <span class="mfn-el-icon">${statusIcoon[e.status] || '·'}</span>
         <span class="mfn-el-tekst">
           ${escH(e.element)}
@@ -2107,19 +2200,27 @@ async function toonRapport(cls, rp) {
 
   // ── Analyse-HTML voor één document-rapport ──
   function bouwAnalyseHtml(drp) {
-    return sectie('MfN-compliantie', renderMfnScore(drp.mfn_score) || '<p class="empty">Geen MfN-score beschikbaar.</p>', true) +
-      sectie('Samenvatting', `<div class="samenvatting">${escH(drp.samenvatting)}</div>`) +
+    const mfnHtml = drp.mfn_score?.elementen?.length
+      ? sectie('MfN-compliantie', renderMfnScore(drp.mfn_score), false, true)
+      : '';
+    return bouwScoreBannerHtml(drp) +
+      sectie('Samenvatting', `<div class="samenvatting">${escH(drp.samenvatting)}</div>`, true) +
       sectie('Volledigheid',
-        lijstKaarten('volledigheid',drp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.')) +
+        lijstKaarten('volledigheid',drp.volledigheid,(v,i)=>kaart('volledigheid',i,'status-'+v.status,escH(v.sectie),`${v.status} — ${escH(v.toelichting)}`,''),'Geen volledigheidscontrole beschikbaar.'),
+        false, true) +
       sectie('Juridische juistheid',
         lijstKaarten('juridisch',drp.juridisch,(j,i)=>kaart('juridisch',i,'sev-'+j.ernst,
           escH(j.onderwerp) + (j.wetsartikel ? `<span class="wet-badge">${escH(j.wetsartikel)}</span>` : ''),
           escH(j.bevinding),
-          j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.')) +
+          j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.'),
+        false, true) +
       sectie('Balans tussen partijen',
-        lijstKaarten('balans',drp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.')) +
+        lijstKaarten('balans',drp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.'),
+        false, true) +
       sectie('Grammatica &amp; taal',
-        lijstKaarten('grammatica',drp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'));
+        lijstKaarten('grammatica',drp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'),
+        false, true) +
+      mfnHtml;
   }
 
   function activeerAnalysePanel(drp) {
@@ -2708,75 +2809,237 @@ async function pasWijzigingenToeInDocx(docxBlob, wijzigingen) {
   });
 }
 
+// Voegt echte Word track-changes toe aan de DOCX XML:
+// <w:del> (rood doorgestreept in Word) + <w:ins> (groen in Word) per wijziging.
+// Word toont dit identiek aan handmatig bijgehouden wijzigingen.
 function vervangInDocxXml(xml, wijzigingen) {
+  const wNs    = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const xmlNs  = 'http://www.w3.org/XML/1998/namespace';
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, 'application/xml');
-  const wNs    = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
   const paras  = Array.from(xmlDoc.getElementsByTagNameNS(wNs, 'p'));
+  const datum  = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+  let   revId  = 1000; // hoog getal om conflict met bestaande IDs te vermijden
+  const verwerkt = new Set(); // alinea-indices die al del/ins bevatten
 
-  for (const w of wijzigingen) {
-    const zoek    = w.originele_tekst?.replace(/\s+/g, ' ').trim();
-    const vervang = w.aangepaste_tekst?.trim();
-    if (!zoek || vervang == null) continue;
+  const norm     = s => s.replace(/\s+/g, ' ').toLowerCase().trim();
+  const paraTxt  = p => Array.from(p.getElementsByTagNameNS(wNs, 't')).map(t => t.textContent).join('');
+  const paraRPr  = p => p.getElementsByTagNameNS(wNs, 'r')[0]?.getElementsByTagNameNS(wNs, 'rPr')[0] || null;
 
-    for (const para of paras) {
-      const tEls    = Array.from(para.getElementsByTagNameNS(wNs, 't'));
-      const paraTxt = tEls.map(t => t.textContent).join('').replace(/\s+/g, ' ').trim();
-      if (!paraTxt.includes(zoek)) continue;
+  // Maak een <w:r> run met tekst (normaal of deleteText)
+  function maakRun(tekst, rPr, isDelText) {
+    const r = xmlDoc.createElementNS(wNs, 'w:r');
+    if (rPr) r.appendChild(rPr.cloneNode(true));
+    const t = xmlDoc.createElementNS(wNs, isDelText ? 'w:delText' : 'w:t');
+    t.setAttributeNS(xmlNs, 'xml:space', 'preserve');
+    t.textContent = tekst;
+    r.appendChild(t);
+    return r;
+  }
+
+  // Markeer een volledige alinea als verwijderd; retourneert de genormaliseerde tekstlengte
+  function markeerVolleAlineaAlsDel(para, rPr) {
+    const txt = paraTxt(para);
+    const pPr = para.getElementsByTagNameNS(wNs, 'pPr')[0] || null;
+    while (para.firstChild) para.removeChild(para.firstChild);
+    if (pPr) para.appendChild(pPr.cloneNode(true));
+    const delEl = xmlDoc.createElementNS(wNs, 'w:del');
+    delEl.setAttributeNS(wNs, 'w:id',     String(revId++));
+    delEl.setAttributeNS(wNs, 'w:author', 'Clausula');
+    delEl.setAttributeNS(wNs, 'w:date',   datum);
+    delEl.appendChild(maakRun(txt, rPr, true));
+    para.appendChild(delEl);
+    return norm(txt).length;
+  }
+
+  const toegepasteIdx = new Set(); // bijhouden welke wijziging-indices gevonden zijn
+
+  for (let wIdx = 0; wIdx < wijzigingen.length; wIdx++) {
+    const w        = wijzigingen[wIdx];
+    const oudNorm  = norm(w.originele_tekst || '');
+    const nieuwTxt = (w.aangepaste_tekst ?? '').trim();
+    if (!oudNorm) continue;
+
+    for (let pIdx = 0; pIdx < paras.length; pIdx++) {
+      if (verwerkt.has(pIdx)) continue;
+      const para = paras[pIdx];
+      if (para.getElementsByTagNameNS(wNs, 'del').length) continue;
+
+      const txt     = paraTxt(para);
+      const normTxt = norm(txt);
+
+      // Progressief kortere zoekterm
+      let zoekNorm = oudNorm;
+      let gevonden = normTxt.includes(zoekNorm);
+      if (!gevonden && oudNorm.length > 80) { zoekNorm = oudNorm.slice(0, 80); gevonden = normTxt.includes(zoekNorm); }
+      if (!gevonden && oudNorm.length > 40) { zoekNorm = oudNorm.slice(0, 40); gevonden = normTxt.includes(zoekNorm); }
+      if (!gevonden) continue;
+      toegepasteIdx.add(wIdx); // wijziging gevonden en verwerkt
+
+      // Positie in ruwe tekst
+      const idx     = txt.toLowerCase().indexOf(zoekNorm);
+      let txtVoor   = idx >= 0 ? txt.slice(0, idx) : '';
+      let txtOud    = idx >= 0 ? txt.slice(idx, idx + zoekNorm.length) : txt;
+      let txtNa     = idx >= 0 ? txt.slice(idx + zoekNorm.length) : '';
+
+      // Hele alinea markeren als match aan begin staat en zin loopt door
+      if (!txtVoor.trim() && txtNa.trim()) { txtOud = txt; txtNa = ''; }
 
       const pPr = para.getElementsByTagNameNS(wNs, 'pPr')[0] || null;
-      while (para.firstChild) para.removeChild(para.firstChild);
-      if (pPr) para.appendChild(pPr);
+      const rPr = paraRPr(para);
 
-      const newRun = xmlDoc.createElementNS(wNs, 'w:r');
-      const newT   = xmlDoc.createElementNS(wNs, 'w:t');
-      newT.setAttribute('xml:space', 'preserve');
-      newT.textContent = paraTxt.replace(zoek, vervang);
-      newRun.appendChild(newT);
-      para.appendChild(newRun);
-      break;
+      // Eerste alinea herbouwen met del
+      while (para.firstChild) para.removeChild(para.firstChild);
+      if (pPr) para.appendChild(pPr.cloneNode(true));
+      if (txtVoor) para.appendChild(maakRun(txtVoor, rPr, false));
+
+      const delEl = xmlDoc.createElementNS(wNs, 'w:del');
+      delEl.setAttributeNS(wNs, 'w:id',     String(revId++));
+      delEl.setAttributeNS(wNs, 'w:author', 'Clausula');
+      delEl.setAttributeNS(wNs, 'w:date',   datum);
+      delEl.appendChild(maakRun(txtOud, rPr, true));
+      para.appendChild(delEl);
+      verwerkt.add(pIdx);
+
+      // ── Multi-alinea: markeer volgende alinea's als verwijderd totdat
+      //    de volledige originele_tekst-lengte gedekt is ────────────────
+      let gedekt      = norm(txtOud).length;
+      let lastDelPara = para;
+      let lastRPr     = rPr;
+
+      if (gedekt < oudNorm.length) {
+        let nextIdx = pIdx + 1;
+        while (gedekt < oudNorm.length && nextIdx < paras.length) {
+          const nextPara = paras[nextIdx];
+          if (verwerkt.has(nextIdx) || nextPara.getElementsByTagNameNS(wNs, 'del').length) {
+            nextIdx++;
+            continue;
+          }
+          const nextRPr = paraRPr(nextPara);
+          gedekt += markeerVolleAlineaAlsDel(nextPara, nextRPr || lastRPr);
+          verwerkt.add(nextIdx);
+          lastDelPara = nextPara;
+          lastRPr = nextRPr || lastRPr;
+          nextIdx++;
+        }
+      }
+
+      // <w:ins> in de laatste verwijderde alinea invoegen
+      if (nieuwTxt) {
+        const insEl = xmlDoc.createElementNS(wNs, 'w:ins');
+        insEl.setAttributeNS(wNs, 'w:id',     String(revId++));
+        insEl.setAttributeNS(wNs, 'w:author', 'Clausula');
+        insEl.setAttributeNS(wNs, 'w:date',   datum);
+        insEl.appendChild(maakRun(nieuwTxt, lastRPr, false));
+        lastDelPara.appendChild(insEl);
+      }
+
+      // Tekst ná de wijziging in de eerste alinea (ongewijzigd)
+      if (txtNa) para.appendChild(maakRun(txtNa, rPr, false));
+
+      break; // volgende wijziging
     }
   }
+
+  // Maak de toegepaste set beschikbaar voor de UI (side-channel)
+  _toegepasteWijzigingIdx = toegepasteIdx;
+
   return new XMLSerializer().serializeToString(xmlDoc);
 }
 
 // Markeert gewijzigde passages in mammoth HTML DOM (voor concept-review-weergave).
 // Toont track-changes: <del> (rood doorgestreept) + <ins> (groen) per gewijzigde passage.
 // Filtert ook PDF-artefacten (paraaf-regels, paginanummers) uit de weergave.
-function markeerWijzigingenInDom(container, wijzigingen) {
-  // Verwijder PDF-footer-artefacten die Adobe als inline tekst overneemt
-  container.querySelectorAll('p').forEach(el => {
+// Verwijder PDF-artefacten uit mammoth-HTML:
+// - Losse <p> die alleen "paraaf man:" of "X/Y" bevatten
+// - Inline "paraaf man: paraaf vrouw: …" midden in een alinea (Adobe page-footer)
+// - Lege alinea's na het opschonen
+function schoonmaakMammothHtml(container) {
+  container.querySelectorAll('p, li').forEach(el => {
     const t = el.textContent.trim();
-    if (/^paraaf\s+man\s*:/i.test(t) || /^\d+\/\d+$/.test(t)) el.remove();
+    // Verwijder losse footer-paragraphs
+    const isPagNr = (() => {
+      const m = t.match(/^(\d+)\/(\d+)$/);
+      return m && +m[1] <= +m[2]; // paginanummer: huidige ≤ totaal
+    })();
+    if (/^paraaf\s+man\s*:/i.test(t) || isPagNr) {
+      el.remove();
+      return;
+    }
+    // Verwijder inline "paraaf man: … paraaf vrouw: …" (ook met paginanummer)
+    if (/paraaf\s+man\s*:/i.test(t)) {
+      el.innerHTML = el.innerHTML
+        .replace(/\s*paraaf\s+man\s*:.*?paraaf\s+vrouw\s*:[^<\n]*/gi, '')
+        .replace(/\bparaaf\s+man\s*:[^<\n]*/gi, '');
+    }
   });
+  // Verwijder nu-lege alinea's
+  container.querySelectorAll('p').forEach(el => {
+    if (!el.textContent.trim()) el.remove();
+  });
+}
 
-  const elementen = Array.from(
-    container.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, td, th')
-  );
+// Geeft terug: aantal wijzigingen dat gemarkeerd is (0 = helemaal niks gevonden)
+function markeerWijzigingenInDom(container, wijzigingen) {
+  schoonmaakMammothHtml(container);
+  let gevondAantal = 0;
+
+  const individ = Array.from(container.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, td, th'));
+  const lijsten = Array.from(container.querySelectorAll('ul, ol'));
+  const stijl   = 'border-left:3px solid #22c55e;padding-left:8px;background:rgba(34,197,94,.07);';
+  // Normaliseer: whitespace-varianten + speciale tekens (Adobe/mammoth vs Claude-output)
+  const norm = s => s
+    .replace(/\s+/g, ' ')
+    .replace(/[‑‒–—―]/g, '-')
+    .replace(/[‘’‚‛]/g, "'")
+    .replace(/[“”„‟]/g, '"')
+    .toLowerCase()
+    .trim();
+
   for (const w of wijzigingen) {
-    const zoek    = w.originele_tekst?.replace(/\s+/g, ' ').trim();
-    const vervang = w.aangepaste_tekst?.trim();
-    if (!zoek || vervang == null) continue;
-    for (const el of elementen) {
-      const tekst = el.textContent.replace(/\s+/g, ' ').trim();
-      if (!tekst.includes(zoek)) continue;
+    // Zoekstring is lowercase; vervang behoudt originele schrijfwijze
+    const volledig = norm(w.originele_tekst ?? '');
+    const vervang  = w.aangepaste_tekst?.trim() ?? '';
+    if (!volledig) continue;
 
-      // Track-changes: toon oud (rood doorgestreept) + nieuw (groen) in het document
-      const idx  = tekst.indexOf(zoek);
-      const voor = tekst.slice(0, idx);
-      const na   = tekst.slice(idx + zoek.length);
+    // Progressieve zoekstrings: volledig → 60 → 40 → 20 tekens
+    const kandidaten = [volledig, volledig.slice(0, 60), volledig.slice(0, 40), volledig.slice(0, 20)]
+      .filter((s, i, a) => s.length >= 10 && a.indexOf(s) === i);
 
-      el.innerHTML =
-        (voor ? escH(voor) + ' ' : '') +
-        `<del class="cdoc-del">${escH(zoek)}</del> ` +
-        `<ins class="cdoc-ins">${escH(vervang)}</ins>` +
-        (na ? ' ' + escH(na) : '');
+    let gevonden = false;
 
-      el.dataset.gewijzigd = 'true';
-      el.style.cssText += ';border-left:3px solid #22c55e;padding-left:8px;';
-      break;
+    // Poging 1: individuele blok-elementen (case-insensitief via norm)
+    outer: for (const zoek of kandidaten) {
+      for (const el of individ) {
+        if (!el.isConnected) continue;
+        if (!norm(el.textContent).includes(zoek)) continue;
+        // Gevonden — hele element markeren (behoudt originele opmaak en case)
+        el.innerHTML = `<del class="cdoc-del">${el.innerHTML}</del> <ins class="cdoc-ins">${escH(vervang)}</ins>`;
+        el.dataset.gewijzigd = 'true';
+        el.style.cssText += ';' + stijl;
+        gevonden = true;
+        gevondAantal++;
+        break outer;
+      }
+    }
+    if (gevonden) continue;
+
+    // Poging 2: ul/ol containers (multi-bullet wijzigingen)
+    outer2: for (const zoek of kandidaten) {
+      for (const el of lijsten) {
+        if (!el.isConnected) continue;
+        if (!norm(el.textContent).includes(zoek)) continue;
+        const nieuw = document.createElement('div');
+        nieuw.innerHTML = `<del class="cdoc-del">${el.innerHTML}</del><br><ins class="cdoc-ins">${escH(vervang)}</ins>`;
+        nieuw.dataset.gewijzigd = 'true';
+        nieuw.style.cssText = stijl + 'margin:8px 0;';
+        el.replaceWith(nieuw);
+        gevondAantal++;
+        break outer2;
+      }
     }
   }
+  return gevondAantal;
 }
 
 // Laad de docx-library eenmalig via esm.sh (cached na eerste aanroep)
@@ -2882,9 +3145,11 @@ async function documentTekstNaarDocx(tekst) {
 }
 
 // ── Concept-review: staat ────────────────────────────────
-let _conceptDocumentTekst = '';
-let _conceptWijzigingen   = [];
-let _conceptOriginelePdf  = null; // origineel PDF-bestand voor Adobe DOCX-conversie
+let _conceptDocumentTekst  = '';
+let _conceptWijzigingen    = [];
+let _conceptOriginelePdf   = null;  // origineel PDF-bestand voor Adobe DOCX-conversie
+let _conceptGewijzigdDocx  = null;  // DOCX met track-changes in geheugen (voor download)
+let _toegepasteWijzigingIdx = null; // Set van indices die daadwerkelijk in DOCX zijn aangebracht
 
 // ── Pseudonimisering (AVG) ────────────────────────────
 // Bouwt twee maps: naarAnon (echt→placeholder) en naarEcht (placeholder→echt)
@@ -2914,7 +3179,9 @@ function bouwAnonMap(classificatie) {
   return { naarAnon, naarEcht };
 }
 
-// Vervang namen en PII in platte tekst door placeholders
+// Vervang namen en gevoelige PII in platte tekst door placeholders.
+// Datums en postcodes worden NIET geanonimiseerd — Claude heeft deze nodig
+// om MfN-vereisten (geboortedatums, huwelijksdatum, passeerdatum) te toetsen.
 function anonimiseerTekst(tekst, naarAnon) {
   if (!tekst || !naarAnon?.size) return tekst;
   let t = tekst;
@@ -2924,12 +3191,10 @@ function anonimiseerTekst(tekst, naarAnon) {
     t = t.replaceAll(echt, ph);
   }
 
-  // Regex-patronen
+  // Alleen echte risico-identifiers worden vervangen (niet datums/postcodes)
   t = t.replace(/\bNL\d{2}[A-Z]{4}\d{10}\b/g,              '[IBAN]');
   t = t.replace(/\b\d{9}\b/g,                                '[BSN]');
   t = t.replace(/\b0\d[-\s]?\d{8}\b|\b\+31[-\s]?\d{9}\b/g,  '[TEL]');
-  t = t.replace(/\b\d{4}\s?[A-Z]{2}\b/g,                    '[POSTCODE]');
-  t = t.replace(/\b\d{1,2}[-–\/]\d{1,2}[-–\/]\d{2,4}\b/g,  '[DATUM]');
 
   return t;
 }
@@ -2958,7 +3223,35 @@ const TC_I0 = '\x02I\x02', TC_I1 = '\x02/I\x02'; // nieuwe tekst (groen)
 
 function escRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-// Markeer gewijzigde passages in de tekst met track-changes-markers
+// Markeer wijzigingen in de ORIGINELE tekst met track-changes-markers.
+// Zoekt originele_tekst (oud) in origineelTekst — betrouwbaarder dan zoeken in gewijzigde tekst.
+function bouwTrackChangesOpOrigineel(origineelTekst, wijzigingen) {
+  if (!wijzigingen?.length) return origineelTekst;
+  let t = origineelTekst;
+  const norm = s => s.replace(/\s+/g, ' ').trim();
+
+  for (const w of wijzigingen) {
+    const oud  = w.originele_tekst?.trim();
+    const nieuw = w.aangepaste_tekst?.trim();
+    if (!oud || nieuw == null || oud === nieuw) continue;
+
+    const marker = `${TC_D0}${oud}${TC_D1}${TC_I0}${nieuw}${TC_I1}`;
+
+    if (t.includes(oud)) {
+      t = t.replace(oud, marker);                             // directe match in origineel
+    } else {
+      const normOud = norm(oud);
+      const normT   = norm(t);
+      if (normT.includes(normOud)) {
+        t = normT.replace(normOud, marker);                   // genormaliseerde match
+      }
+      // Geen match: wijziging overgeslagen, rechter paneel toont het wel
+    }
+  }
+  return t;
+}
+
+// Markeer gewijzigde passages in de GEWIJZIGDE tekst (fallback als origineel niet beschikbaar)
 function bouwTrackChangesTekst(tekst, wijzigingen) {
   if (!wijzigingen?.length) return tekst;
   let t = tekst;
@@ -2972,14 +3265,13 @@ function bouwTrackChangesTekst(tekst, wijzigingen) {
     const marker = `${TC_D0}${oud}${TC_D1}${TC_I0}${nieuw}${TC_I1}`;
 
     if (t.includes(nieuw)) {
-      t = t.replace(nieuw, marker);                           // directe match
+      t = t.replace(nieuw, marker);
     } else {
       const normNieuw = norm(nieuw);
       const normT     = norm(t);
       if (normT.includes(normNieuw)) {
-        t = normT.replace(normNieuw, marker);                 // genormaliseerde match
+        t = normT.replace(normNieuw, marker);
       }
-      // Geen match gevonden: wijziging overgeslagen (wordt wel getoond in rechter paneel)
     }
   }
   return t;
@@ -3038,15 +3330,16 @@ function preprocessConceptTekst(tekst) {
 }
 
 // Render documenttekst als gestyled HTML voor het review-paneel
-// wijzigingen: optioneel array — voegt track-changes markering toe
-function documentTekstNaarHtml(tekst, wijzigingen = []) {
+// wijzigingen: optioneel array — voegt track-changes markering toe (alleen als tekst nog geen TC-markers heeft)
+// skipPreprocess: true als de tekst al preprocessed is (bijv. al TC-markers bevat)
+function documentTekstNaarHtml(tekst, wijzigingen = [], skipPreprocess = false) {
   const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || '';
   const titelTekst   = [docTypeLabel, huidigDossierNaam].filter(Boolean).join(' — ') || 'Verbeterd concept';
 
-  // Preprocessing: PDF-artefacten verwijderen + structuur herstellen
-  const schoneTekst = preprocessConceptTekst(tekst);
-  // Track-changes: gewijzigde passages markeren met inline del/ins
-  const tcTekst     = bouwTrackChangesTekst(schoneTekst, wijzigingen);
+  // Preprocessing: PDF-artefacten verwijderen + structuur herstellen (overgeslagen als al gedaan)
+  const schoneTekst = skipPreprocess ? tekst : preprocessConceptTekst(tekst);
+  // Track-changes: alleen via bouwTrackChangesTekst als er geen markers al in zitten
+  const tcTekst     = wijzigingen?.length ? bouwTrackChangesTekst(schoneTekst, wijzigingen) : schoneTekst;
   const regels      = tcTekst.split('\n');
 
   let body = '';
@@ -3103,61 +3396,312 @@ function highlightConceptPassage(passage) {
   document.querySelectorAll('.concept-doc-panel .cdoc-hl-actief')
     .forEach(el => el.classList.remove('cdoc-hl-actief'));
   if (!passage?.trim()) return;
-  const eersteRegel = passage.split('\n').map(l => l.trim()).find(l => l.length > 0);
+  const eersteRegel = passage.split('\n').map(l => l.trim()).find(l => l.length > 8);
   if (!eersteRegel) return;
-  const zoek = eersteRegel.slice(0, 60).toLowerCase();
-  // Werkt met zowel tekst-gebaseerde (cdoc-*) als mammoth HTML-elementen (.docx-inhoud)
-  const els  = document.querySelectorAll(
+  // Probeer progressief kortere zoektermen tot we een match vinden
+  const kandidaten = [
+    eersteRegel.slice(0, 80),
+    eersteRegel.slice(0, 50),
+    eersteRegel.slice(0, 30),
+  ].filter((s, i, a) => s.length >= 8 && a.indexOf(s) === i);
+
+  // Selecteer alle inline-elementen — inclusief docx-preview alinea's
+  const els = Array.from(document.querySelectorAll(
     '.concept-doc-panel .cdoc-par, .concept-doc-panel .cdoc-kop, ' +
     '.concept-doc-panel .cdoc-sub, .concept-doc-panel .cdoc-lijst, ' +
     '.concept-doc-panel .docx-inhoud p, .concept-doc-panel .docx-inhoud li, ' +
     '.concept-doc-panel .docx-inhoud h1, .concept-doc-panel .docx-inhoud h2, ' +
-    '.concept-doc-panel .docx-inhoud h3');
-  for (const el of els) {
-    if (el.textContent.trim().toLowerCase().includes(zoek)) {
-      el.classList.add('cdoc-hl-actief');
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => el.classList.remove('cdoc-hl-actief'), 2000);
-      break;
+    '.concept-doc-panel .docx-inhoud h3, ' +
+    '.concept-doc-panel .docx-render p, .concept-doc-panel .docx-render li'
+  ));
+
+  for (const zoek of kandidaten) {
+    const zoekL = zoek.toLowerCase();
+    const gevonden = els.find(el => el.textContent.trim().toLowerCase().includes(zoekL));
+    if (gevonden) {
+      gevonden.classList.add('cdoc-hl-actief');
+      gevonden.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => gevonden.classList.remove('cdoc-hl-actief'), 2500);
+      return;
     }
   }
 }
 
 // Bouw en toon de full-screen concept-review
-function toonConceptReview(documentTekst, wijzigingen, pdfBestand = null) {
-  _conceptDocumentTekst = documentTekst;
-  _conceptWijzigingen   = wijzigingen || [];
-  _conceptOriginelePdf  = pdfBestand;
+// origineelTekst: de ongewijzigde documenttekst — gebruikt voor tekst-fallback diff
+function toonConceptReview(documentTekst, wijzigingen, pdfBestand = null, origineelTekst = null) {
+  _conceptDocumentTekst      = documentTekst;
+  _conceptWijzigingen        = Array.isArray(wijzigingen) ? wijzigingen : [];
+  _conceptOriginelePdf       = pdfBestand;
+  _conceptGewijzigdDocx      = null;  // reset — wordt opnieuw aangemaakt bij rendering
+  _toegepasteWijzigingIdx    = null;  // reset — wordt ingesteld door vervangInDocxXml
 
-  // Links: documentpreview — mammoth HTML van DOCX als beschikbaar, anders tekst-gebaseerd
   const docPanel = document.getElementById('conceptDocPanel');
-  const docxBlob = pdfBestand ? docxPerBestandsnaam.get(pdfBestand.name) : null;
-  if (docxBlob) {
-    docPanel.innerHTML = '<p style="padding:24px;color:var(--ink-soft);font-size:.85rem">Document laden…</p>';
-    docxBlob.arrayBuffer()
-      .then(ab => mammoth.convertToHtml({ arrayBuffer: ab }))
-      .then(result => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'docx-inhoud';
-        wrapper.innerHTML = result.value;
-        markeerWijzigingenInDom(wrapper, _conceptWijzigingen);
-        docPanel.innerHTML = '';
-        docPanel.appendChild(wrapper);
-      })
-      .catch(() => {
-        docPanel.innerHTML = documentTekstNaarHtml(documentTekst, _conceptWijzigingen);
-      });
-  } else {
-    docPanel.innerHTML = documentTekstNaarHtml(documentTekst, _conceptWijzigingen);
+  const wijzigingenVoorRender = _conceptWijzigingen; // snapshot — voorkomt stale closure
+
+  // Tekst-fallback: betrouwbaar maar minder mooi opgemaakt
+  function renderTekstFallback() {
+    if (!docPanel.isConnected) return;
+    const orig = origineelTekst || documentTekst;
+    const preprocessed = preprocessConceptTekst(orig);
+
+    // Simpel, zoals Word: zoek originele_tekst in het origineel, toon rood doorgestreept +
+    // aangepaste_tekst groen eronder. De rest van het document normaal en leesbaar.
+    if (wijzigingenVoorRender.length && origineelTekst) {
+      const prepTekst = preprocessConceptTekst(origineelTekst);
+
+      // Classificeer een regel voor het juiste div-type
+      function soortVan(tr) {
+        if (!tr) return 'par';
+        if (/^(Artikel|ARTIKEL)\s+\d+/i.test(tr)) return 'kop';
+        if (tr === tr.toUpperCase() && tr.length >= 4 && tr.length <= 80
+            && /^[A-Z\s]/.test(tr) && !/^\d/.test(tr)) return 'kop';
+        if (/^#{1,2}\s+/.test(tr))  return 'kop';
+        if (/^#{3,}\s+/.test(tr))   return 'sub';
+        if (/^\d+\.\d+\.?\s/.test(tr)) return 'sub';
+        if (/^\d+\.\s+[A-Z\S]/.test(tr) && tr.length < 200) return 'sub';
+        if (/^[a-z]\)\s/i.test(tr)) return 'lijst';
+        if (/^[-–•*]\s/.test(tr))   return 'lijst';
+        return 'par';
+      }
+
+      // Render een tekstblok (één of meer regels) als div-reeks
+      function renderBlok(tekst, wrapFn) {
+        let html = '';
+        for (const regel of tekst.split('\n')) {
+          const tr = regel.trim();
+          if (!tr) { html += '<div class="cdoc-leeglijn"></div>'; continue; }
+          if (/^={2,}\s*.+\s*={2,}$/.test(tr)) {
+            const lbl = tr.replace(/^={2,}\s*|\s*={2,}$/g, '').replace(/^(CONVENANT|OUDERSCHAPSPLAN|CONTEXT):\s*/i, '');
+            if (lbl) html += '<div class="cdoc-scheiding">' + escH(lbl) + '</div>';
+            continue;
+          }
+          const s = soortVan(tr);
+          html += `<div class="cdoc-${s}">${wrapFn(escH(regel.trimEnd()))}</div>`;
+        }
+        return html;
+      }
+
+      // Zoek originele_tekst in prepTekst via regex met flexibele witruimte
+      // Geeft array van {start, end, oud, nieuw} gesorteerd op positie
+      const treffers = [];
+      for (const w of wijzigingenVoorRender) {
+        const oud  = w.originele_tekst?.trim();
+        const nieuw = (w.aangepaste_tekst ?? '').trim();
+        if (!oud) continue;
+
+        const kandidaten = [oud, oud.slice(0, 120), oud.slice(0, 80), oud.slice(0, 50)]
+          .filter((s, i, a) => s.length >= 10 && a.indexOf(s) === i);
+
+        for (const zoek of kandidaten) {
+          try {
+            const rx = new RegExp(
+              zoek.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s]+'),
+              'i'
+            );
+            const m = prepTekst.match(rx);
+            if (m?.index !== undefined) {
+              treffers.push({ start: m.index, end: m.index + m[0].length, oud: m[0], nieuw });
+              break;
+            }
+          } catch (_) {}
+        }
+      }
+
+      // Sorteer op positie, verwijder overlappingen
+      treffers.sort((a, b) => a.start - b.start);
+      const uniek = [];
+      for (const t of treffers) {
+        if (!uniek.length || t.start >= uniek[uniek.length - 1].end) uniek.push(t);
+      }
+
+      // Bouw HTML: normaal tekst afgewisseld met del/ins blokken
+      const titelTekst = prepTekst.split('\n').find(r => r.trim()) || 'Concept';
+      let body = '';
+      let cursor = 0;
+
+      for (const { start, end, oud, nieuw } of uniek) {
+        // Stuk vóór de wijziging — normaal renderen
+        if (start > cursor) body += renderBlok(prepTekst.slice(cursor, start), t => t);
+        // Oud tekst rood doorgestreept
+        body += renderBlok(oud,  t => `<del class="cdoc-del">${t}</del>`);
+        // Nieuw tekst groen
+        if (nieuw) body += renderBlok(nieuw, t => `<ins class="cdoc-ins">${t}</ins>`);
+        cursor = end;
+      }
+      // Rest van het document
+      if (cursor < prepTekst.length) body += renderBlok(prepTekst.slice(cursor), t => t);
+
+      const datum = new Date().toLocaleDateString('nl-NL');
+      docPanel.innerHTML =
+        '<div class="cdoc-pagina">' +
+        '<div class="cdoc-titel">' + escH(titelTekst) + '</div>' +
+        '<div class="cdoc-datum">Gegenereerd op ' + datum + ' · Concept</div>' +
+        body + '</div>';
+
+    } else {
+      // Geen wijzigingen of geen origineel → toon nieuw document gewoon
+      const bronPrep = preprocessConceptTekst(documentTekst || origineelTekst);
+      docPanel.innerHTML = documentTekstNaarHtml(bronPrep, [], true);
+    }
   }
+
+  // docx-preview: rendert de originele DOCX met OOXML track-changes (<w:del>/<w:ins>).
+  // Dezelfde DOCX wordt bewaard in _conceptGewijzigdDocx voor de download-knop.
+  async function renderDocxMetTrackChanges(origBlob) {
+    if (!docPanel.isConnected) return;
+    // Controleer of docx-preview geladen is
+    if (typeof window.docx?.renderAsync !== 'function') {
+      console.warn('[docx-preview] bibliotheek niet geladen — tekst-fallback');
+      renderTekstFallback();
+      return;
+    }
+    console.log('[docx-preview] start — origBlob:', origBlob?.size, 'bytes,', wijzigingenVoorRender.length, 'wijzigingen');
+    docPanel.innerHTML = '<p style="padding:24px;color:var(--ink-soft);font-size:.85rem">⏳ Document laden…</p>';
+    try {
+      // Voeg OOXML track-changes toe aan de originele DOCX
+      console.log('[docx-preview] pasWijzigingenToeInDocx...');
+      const gewijzigd = await pasWijzigingenToeInDocx(origBlob, wijzigingenVoorRender);
+      console.log('[docx-preview] gewijzigde blob:', gewijzigd?.size, 'bytes');
+      _conceptGewijzigdDocx = gewijzigd;   // bewaar voor download-knop
+      if (!docPanel.isConnected) return;
+      docPanel.innerHTML = '';             // leegmaken voor docx-preview
+
+      console.log('[docx-preview] renderAsync aanroepen...');
+      await window.docx.renderAsync(gewijzigd, docPanel, null, {
+        renderChanges:    true,    // toon <w:del> rood + <w:ins> groen
+        inWrapper:        false,   // geen extra wrapper — wij bepalen de pagina-CSS
+        ignoreWidth:      true,    // breedte via CSS (794px A4), niet uit DOCX
+        ignoreHeight:     true,
+        ignoreFonts:      false,
+        breakPages:       false,   // één doorlopende scroll
+        useBase64URL:     false,
+        useMathMLPolyfill: false,
+        className:        'docx-render',
+      });
+      console.log('[docx-preview] renderAsync klaar ✓');
+
+      // ── Post-processing 1: bullet spacing ──────────────────────────────────
+      // docx-preview plaatst opsommingstekens direct naast de tekst zonder ruimte.
+      // Voeg een vaste spatie (U+00A0) in tussen het teken en de tekst.
+      docPanel.querySelectorAll('.docx-render p, .docx-render li').forEach(p => {
+        const raw = p.textContent;
+        if (/^[●•◦▪▸►▶‣⁃◉○\-–]\S/.test(raw.trim())) {
+          // Zoek het eerste tekstknooppunt met het teken
+          const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT, null, false);
+          let node;
+          while ((node = walker.nextNode())) {
+            if (/^[●•◦▪▸►▶‣⁃◉○\-–]\S/.test(node.textContent)) {
+              node.textContent = node.textContent.replace(/^([●•◦▪▸►▶‣⁃◉○\-–])(\S)/, '$1 $2');
+              break;
+            }
+            if (/^[●•◦▪▸►▶‣⁃◉○\-–]\s*$/.test(node.textContent)) {
+              // Bullet is enige inhoud van dit knooppunt — voeg spatie toe aan het volgende
+              const next = walker.nextNode();
+              if (next && next.textContent && !/^\s/.test(next.textContent)) {
+                next.textContent = ' ' + next.textContent;
+              }
+              break;
+            }
+          }
+        }
+      });
+
+      // ── Post-processing 2: markeer kaarten die niet in DOCX zijn toegepast ──
+      markeerNietToegepasteKaarten();
+
+    } catch (err) {
+      console.error('[docx-preview] fout op stap:', err?.message || err, err);
+      renderTekstFallback();
+    }
+  }
+
+  // Voegt een badge toe op change-cards waarvan de originele_tekst niet in de DOCX gevonden werd
+  function markeerNietToegepasteKaarten() {
+    if (!(_toegepasteWijzigingIdx instanceof Set)) return;
+    const changesPanel = document.getElementById('conceptChangesPanel');
+    if (!changesPanel) return;
+    changesPanel.querySelectorAll('.change-card[data-idx]').forEach(card => {
+      const idx = parseInt(card.dataset.idx, 10);
+      const w   = _conceptWijzigingen[idx];
+      // Alleen kaarten met originele_tekst kunnen "niet toegepast" zijn
+      if (!w?.originele_tekst) return;
+      const badge = card.querySelector('.change-niet-toegepast');
+      if (_toegepasteWijzigingIdx.has(idx)) {
+        if (badge) badge.remove();
+      } else {
+        if (!badge) {
+          const b = document.createElement('span');
+          b.className = 'change-niet-toegepast';
+          b.title = 'Originele tekst niet gevonden in document — wijziging niet ingevuld';
+          b.textContent = '⚠ niet in doc';
+          card.querySelector('.change-card-kop')?.appendChild(b);
+        }
+      }
+    });
+  }
+
+  // Primaire keuze: DOCX beschikbaar → docx-preview met track-changes.
+  // Fallback: tekst-diff renderer.
+  (async () => {
+    let docxBlob = null;
+    const dbg = s => console.log('[concept-review]', s);
+
+    dbg(`pdfBestand: ${pdfBestand?.name || 'null'}`);
+    dbg(`docx-cache heeft ${docxPerBestandsnaam.size} entries`);
+
+    if (pdfBestand) {
+      const naam = pdfBestand.name?.toLowerCase() || '';
+      if (naam.endsWith('.docx')) {
+        // Bestand is al een DOCX → direct gebruiken
+        dbg('direct DOCX-bestand → renderDocxMetTrackChanges');
+        docxBlob = pdfBestand;
+      } else if (naam.endsWith('.pdf')) {
+        // Probeer gecachte Adobe-conversie
+        docxBlob = docxPerBestandsnaam.get(pdfBestand.name) || null;
+        dbg(`cache hit: ${!!docxBlob}`);
+
+        if (!docxBlob) {
+          // Cache leeg → Adobe opnieuw proberen met timeout
+          dbg('cache leeg — Adobe opnieuw starten (timeout 45s)');
+          docPanel.innerHTML = '<p style="padding:24px;color:var(--ink-soft);font-size:.85rem">⏳ PDF converteren voor weergave…</p>';
+          try {
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000));
+            docxBlob = await Promise.race([adobeConverteerPdf(pdfBestand, () => {}), timeout]);
+            docxPerBestandsnaam.set(pdfBestand.name, docxBlob);
+            dbg('Adobe geslaagd — renderDocxMetTrackChanges');
+          } catch (adobeErr) {
+            dbg(`Adobe mislukt: ${adobeErr.message} → tekst-fallback`);
+            docxBlob = null;
+          }
+        }
+      }
+    } else {
+      dbg('geen pdfBestand → tekst-fallback');
+    }
+
+    if (docxBlob) {
+      renderDocxMetTrackChanges(docxBlob);
+    } else {
+      renderTekstFallback();
+    }
+  })();
 
   // Rechts: wijzigingskaarten
   const changesPanel = document.getElementById('conceptChangesPanel');
   if (!_conceptWijzigingen.length) {
     changesPanel.innerHTML = '<h3>Wijzigingen</h3><p style="font-size:.85rem;color:var(--ink-soft)">Geen wijzigingsdetails beschikbaar.</p>';
   } else {
+    // Sorteer wijzigingen op positie in het originele document
+    const bronTekstSort = (origineelTekst || documentTekst || '').toLowerCase().replace(/\s+/g, ' ');
+    const gesorteerd = [..._conceptWijzigingen].map((w, origIdx) => {
+      const zoek = (w.originele_tekst || w.artikel || '').slice(0, 60).toLowerCase().replace(/\s+/g, ' ').trim();
+      const pos  = zoek ? bronTekstSort.indexOf(zoek) : -1;
+      return { w, origIdx, pos: pos === -1 ? Infinity : pos };
+    }).sort((a, b) => a.pos - b.pos);
+
     let html = '<h3>Wijzigingen</h3>';
-    _conceptWijzigingen.forEach((w, idx) => {
+    gesorteerd.forEach(({ w, origIdx: idx }) => {
       const heeftNieuw = !!w.aangepaste_tekst;
       const heeftOud  = !!w.originele_tekst;
       html += `<div class="change-card" data-idx="${idx}">
@@ -3264,9 +3808,9 @@ function renderConceptChips() {
       if (g.screeningId && huidigeId !== g.screeningId) {
         // Navigeer naar het juiste document en open dan de review
         laadScreening(g.screeningId, splitOrigin).then(() =>
-          toonConceptReview(g.documentTekst, g.wijzigingen, g.bestand || null));
+          toonConceptReview(g.documentTekst, g.wijzigingen, g.bestand || null, g.origineelTekst || null));
       } else {
-        toonConceptReview(g.documentTekst, g.wijzigingen, g.bestand || null);
+        toonConceptReview(g.documentTekst, g.wijzigingen, g.bestand || null, g.origineelTekst || null);
       }
     });
   });
@@ -3348,9 +3892,14 @@ function pasWijzigingenToe(origineel, wijzigingen) {
   let tekst = origineel;
   for (const p of uniek) {
     if (p.norm) {
-      // Genormaliseerde variant: werk op witruimte-genormaliseerde string
-      tekst = tekst.replace(/\s+/g, ' ').replace(
-        tekst.replace(/\s+/g, ' ').slice(p.start, p.end), p.vervang);
+      // Genormaliseerde variant: bouw regex die witruimte-varianten matcht, maar
+      // werk op de ORIGINELE tekst zodat de rest van de witruimte bewaard blijft.
+      const normZoek  = origineel.replace(/\s+/g, ' ').slice(p.start, p.end);
+      const regexDeel = normZoek
+        .split(/\s+/)
+        .map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .join('\\s+');
+      tekst = tekst.replace(new RegExp(regexDeel), p.vervang);
     } else {
       tekst = tekst.slice(0, p.start) + p.vervang + tekst.slice(p.end);
     }
@@ -3410,18 +3959,15 @@ document.getElementById('genereerConceptBtn').addEventListener('click', async ()
   // Start op de achtergrond — geen await, geen modal
   (async () => {
     try {
-      // Vraag Claude om ALLEEN de gewijzigde passages (origineel → nieuw),
-      // niet het volledige document — sneller, past binnen Vercel Hobby timeout.
-      // Atomische vervanging in pasWijzigingenToe voorkomt duplicaten.
+      // Claude schrijft het volledige document opnieuw — betrouwbaarder dan patch-based aanpak.
+      // document_tekst wordt direct gebruikt voor track-changes diff (geen pasWijzigingenToe nodig).
       const systeemPrompt =
 `Je bent een ervaren Nederlandse juridische documentschrijver gespecialiseerd in echtscheidingsdocumenten.
 
 WERKWIJZE:
-- Geef per verbeterpunt PRECIES ÉÉN vervanging: de originele passage → de verbeterde versie.
-- originele_tekst: kopieer de EXACTE, UNIEKE tekst uit het document (minstens 2 volledige zinnen zodat de passage nergens anders voorkomt).
-- aangepaste_tekst: de verbeterde versie ter vervanging, zelfde toon en stijl.
-- Zorg dat originele_tekst-passages NIET overlappen met elkaar.
-- Als een verbetering gevolgen heeft voor een ander artikel, voeg dat als aparte vervanging toe.
+- Schrijf in document_tekst het VOLLEDIGE document opnieuw — alle artikelen, alle tekst, niets weglaten.
+- Verwerk alle opgegeven verbeterpunten erin.
+- In wijzigingen: beschrijf per verbeterpunt wat je hebt gewijzigd. Voeg ook originele_tekst en aangepaste_tekst toe als korte passages (1-3 zinnen) voor de kaartweergave.
 
 KERNREGELS:
 1. Behoud EXACT de structuur, nummering en formele toon van het origineel.
@@ -3430,28 +3976,31 @@ KERNREGELS:
 4. Behoud namen van partijen zoals ze in het origineel staan.`;
 
       const conceptTool = {
-        name: 'registreer_wijzigingen',
-        description: 'Geeft per verbeterpunt één originele→nieuwe tekstpaar terug',
+        name: 'registreer_concept',
+        description: 'Geeft het volledige aangepaste document terug met een overzicht van de wijzigingen',
         input_schema: {
           type: 'object',
           properties: {
+            document_tekst: {
+              type: 'string',
+              description: 'Het VOLLEDIGE herschreven document — alle artikelen, alle tekst, niets weglaten',
+            },
             wijzigingen: {
               type: 'array',
               items: {
                 type: 'object',
                 properties: {
-                  item_nr:         { type: 'integer' },
-                  artikel:         { type: 'string' },
-                  wat_gewijzigd:   { type: 'string' },
-                  originele_tekst: { type: 'string', description: 'EXACTE unieke passage uit het document (≥2 volledige zinnen, nergens anders in het doc aanwezig)' },
-                  aangepaste_tekst:{ type: 'string', description: 'Verbeterde versie ter vervanging' },
-                  ook_aangepast:   { type: 'array', items: { type: 'string' } },
+                  item_nr:          { type: 'integer' },
+                  artikel:          { type: 'string' },
+                  wat_gewijzigd:    { type: 'string', description: 'Korte samenvatting van de aanpassing' },
+                  originele_tekst:  { type: 'string', description: 'Korte passage uit het origineel (voor kaartweergave)' },
+                  aangepaste_tekst: { type: 'string', description: 'Corresponderende passage in het nieuwe document' },
                 },
-                required: ['item_nr','artikel','wat_gewijzigd','originele_tekst','aangepaste_tekst','ook_aangepast'],
+                required: ['item_nr', 'artikel', 'wat_gewijzigd'],
               },
             },
           },
-          required: ['wijzigingen'],
+          required: ['document_tekst', 'wijzigingen'],
         },
       };
 
@@ -3481,18 +4030,20 @@ ${itemsTekst}
 ORIGINEEL DOCUMENT:
 ${anonimiseerTekst(snapOrigineel, snapNaarAnon)}`;
 
-      const data = await askClaudeForJson(systeemPrompt, userTekst, conceptTool, 8000);
-      if (!data?.wijzigingen?.length) throw new Error('Geen wijzigingen ontvangen. Controleer of de aangevinkte punten concrete suggesties bevatten.');
+      const data = await askClaudeForJson(systeemPrompt, userTekst, conceptTool, 32000);
+      if (!data?.document_tekst) throw new Error('Geen document ontvangen van Claude. Probeer opnieuw.');
 
-      // Herstel namen/PII en pas wijzigingen atomisch toe op het origineel
-      const wijzigingenEcht = herstelAnonObj(data.wijzigingen, snapNaarEcht);
-      const documentTekst   = pasWijzigingenToe(snapOrigineel, wijzigingenEcht);
+      // Herstel namen/PII — document_tekst direct van Claude, geen patching meer nodig
+      const documentTekst   = herstelAnonObj(data.document_tekst, snapNaarEcht);
+      const wijzigingenRaw  = Array.isArray(data.wijzigingen) ? data.wijzigingen : [];
+      const wijzigingenEcht = herstelAnonObj(wijzigingenRaw, snapNaarEcht);
 
       // Opslaan per documenttype — zodat convenant en ouderschapsplan elk hun eigen concept hebben
       const conceptData = {
-        document_tekst: documentTekst,
-        wijzigingen:    wijzigingenEcht,   // echte namen, niet placeholders
-        gegenereerd_op: new Date().toISOString(),
+        document_tekst:  documentTekst,
+        origineel_tekst: snapOrigineel,    // nodig voor diff-weergave bij "Bekijk concept"
+        wijzigingen:     wijzigingenEcht,  // echte namen, niet placeholders
+        gegenereerd_op:  new Date().toISOString(),
       };
       if (!snapRapport._concepts) snapRapport._concepts = {};
       snapRapport._concepts[snapDocType] = conceptData;
@@ -3502,17 +4053,17 @@ ${anonimiseerTekst(snapOrigineel, snapNaarAnon)}`;
         } catch (e) { console.warn('Concept opslaan mislukt:', e.message); }
       }
 
-      // Chip bijwerken
-      _generaties.set(genId, { naam: snapNaam, screeningId: snapId, status: 'klaar', documentTekst, wijzigingen: wijzigingenEcht, bestand: snapBestand });
+      // Chip bijwerken (sla ook origineelTekst op voor de diff-weergave)
+      _generaties.set(genId, { naam: snapNaam, screeningId: snapId, status: 'klaar', documentTekst, origineelTekst: snapOrigineel, wijzigingen: wijzigingenEcht, bestand: snapBestand });
       renderConceptChips();
 
       // Als gebruiker nog op hetzelfde document zit → direct openen
       if (huidigeId === snapId) {
         if (!huidigRapport._concepts) huidigRapport._concepts = {};
-        huidigRapport._concepts[snapDocType] = conceptData;
+        huidigRapport._concepts[snapDocType] = { ...conceptData, origineel_tekst: snapOrigineel };
         const bekijkBtn = document.getElementById('bekijkConceptBtn');
         if (bekijkBtn) bekijkBtn.style.display = 'inline-flex';
-        toonConceptReview(documentTekst, data.wijzigingen, snapBestand);
+        toonConceptReview(documentTekst, wijzigingenEcht, snapBestand, snapOrigineel);
         // Chip verdwijnt na autoopen
         setTimeout(() => { _generaties.delete(genId); renderConceptChips(); }, 100);
       }
@@ -3534,7 +4085,7 @@ document.getElementById('bekijkConceptBtn').addEventListener('click', () => {
   const pdfVoorReview = huidigePrimaireBest[huidigeDocIdx]
     ?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
     || huidigePrimaireBest[huidigeDocIdx]?.[0] || null;
-  toonConceptReview(concept.document_tekst, concept.wijzigingen || [], pdfVoorReview);
+  toonConceptReview(concept.document_tekst, concept.wijzigingen || [], pdfVoorReview, concept.origineel_tekst || null);
 });
 
 // Terug-knop in review
@@ -3554,30 +4105,28 @@ document.getElementById('conceptDownloadBtn').addEventListener('click', async ()
   try {
     btn.disabled = true;
 
-    // ── Zoek DOCX-blob in geheugen ────────────────────────
-    const pdfBestand = _conceptOriginelePdf
-      || huidigePrimaireBest[huidigeDocIdx]?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
-      || huidigePrimaireBest[huidigeDocIdx]?.[0]
-      || null;
+    // ── DOCX ophalen: al in geheugen van de rendering, of opnieuw aanmaken ──
+    let gewijzigdDocx = _conceptGewijzigdDocx;  // rendering heeft dit al aangemaakt
 
-    let docxBlob = pdfBestand ? docxPerBestandsnaam.get(pdfBestand.name) : null;
+    if (!gewijzigdDocx) {
+      // Niet in geheugen (bijv. na paginaherlaad) → opnieuw opbouwen
+      const pdfBestand = _conceptOriginelePdf
+        || huidigePrimaireBest[huidigeDocIdx]?.find(f => f.name?.toLowerCase().endsWith('.pdf'))
+        || huidigePrimaireBest[huidigeDocIdx]?.[0]
+        || null;
 
-    if (!docxBlob && pdfBestand) {
-      // DOCX niet meer in geheugen (nieuwe sessie?) → opnieuw converteren via Adobe
-      btn.textContent = '⏳ PDF converteren…';
-      docxBlob = await adobeConverteerPdf(pdfBestand, msg => { btn.textContent = `⏳ ${msg}`; });
-      docxPerBestandsnaam.set(pdfBestand.name, docxBlob);
+      let origDocx = pdfBestand ? docxPerBestandsnaam.get(pdfBestand.name) : null;
+      if (!origDocx && pdfBestand) {
+        btn.textContent = '⏳ PDF converteren…';
+        origDocx = await adobeConverteerPdf(pdfBestand, msg => { btn.textContent = `⏳ ${msg}`; });
+        docxPerBestandsnaam.set(pdfBestand.name, origDocx);
+      }
+      if (!origDocx) throw new Error('Geen Word-bestand beschikbaar. Genereer het concept opnieuw.');
+
+      btn.textContent = '⏳ Wijzigingen verwerken…';
+      gewijzigdDocx = await pasWijzigingenToeInDocx(origDocx, _conceptWijzigingen);
+      _conceptGewijzigdDocx = gewijzigdDocx;
     }
-
-    if (!docxBlob) {
-      throw new Error(
-        'Geen Word-bestand beschikbaar. Upload het document opnieuw en genereer het concept opnieuw.'
-      );
-    }
-
-    // ── Wijzigingen toepassen via JSZip ──────────────────
-    btn.textContent = '⏳ Wijzigingen verwerken…';
-    const gewijzigdDocx = await pasWijzigingenToeInDocx(docxBlob, _conceptWijzigingen);
 
     // ── Downloaden ────────────────────────────────────────
     const docTypeLabel = DOC_TYPES.find(d => d.value === (huidigeClassificatie?.doc_type || ''))?.label || 'Concept';
@@ -3903,15 +4452,171 @@ document.getElementById('dossierZoek').addEventListener('input', function() {
 });
 
 // ── Dossier-lijst laden ───────────────────────────────
-function mfnChipHtml(versies) {
-  if (!versies?.length) return '';
-  const recentste = versies.reduce((a, b) => (b.versie_nr > a.versie_nr ? b : a), versies[0]);
-  const score = recentste.rapport?.mfn_score ?? recentste.rapport?.balans_score ?? null;
-  if (score == null) return '';
-  const pct = Math.round(score * 100);
-  let cls = pct >= 70 ? 'chip-ok' : pct >= 45 ? 'chip-warn' : 'chip-bad';
-  return `<span class="chip ${cls}">MfN ${pct}%</span>`;
+// ── Scoreberekenening ────────────────────────────────────────────────────────
+// Berekent een score 0–100 per categorie en het gemiddelde over alle categorieën.
+
+function berekenGemiddeldeScore(drp) {
+  if (!drp) return null;
+  const scores = [];
+
+  // Volledigheid: aanwezig=1, gedeeltelijk=0.5, ontbreekt=0
+  const vol = drp.volledigheid || [];
+  if (vol.length) {
+    const som = vol.reduce((a, v) => a + (v.status === 'aanwezig' ? 1 : v.status === 'gedeeltelijk' ? 0.5 : 0), 0);
+    scores.push(som / vol.length);
+  }
+
+  // Juridisch: geen items = perfect; laag=1, midden=0.5, hoog=0
+  const jur = drp.juridisch || [];
+  if (jur.length) {
+    const som = jur.reduce((a, j) => a + (j.ernst === 'laag' ? 1 : j.ernst === 'midden' ? 0.5 : 0), 0);
+    scores.push(som / jur.length);
+  } else {
+    scores.push(1.0);
+  }
+
+  // Balans: zelfde patroon als juridisch
+  const bal = drp.balans || [];
+  if (bal.length) {
+    const som = bal.reduce((a, b) => a + (b.ernst === 'laag' ? 1 : b.ernst === 'midden' ? 0.5 : 0), 0);
+    scores.push(som / bal.length);
+  } else {
+    scores.push(1.0);
+  }
+
+  // Grammatica: geen = perfect, daarna -10% per probleem
+  const gram = drp.grammatica;
+  if (Array.isArray(gram)) {
+    scores.push(Math.max(0, 1 - gram.length / 10));
+  }
+
+  // MfN: aanwezig / totaal
+  const mfn = drp.mfn_score;
+  if (mfn?.elementen?.length) {
+    const tot  = mfn.elementen.length;
+    const aanw = mfn.elementen.filter(e => e.status === 'aanwezig').length;
+    scores.push(aanw / tot);
+  }
+
+  if (!scores.length) return null;
+  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 100);
 }
+
+function berekenDeelscores(drp) {
+  if (!drp) return {};
+  const result = {};
+
+  const vol = drp.volledigheid || [];
+  if (vol.length) {
+    const aanw  = vol.filter(v => v.status === 'aanwezig').length;
+    const gedeel = vol.filter(v => v.status === 'gedeeltelijk').length;
+    const ontbr  = vol.length - aanw - gedeel;
+    result.volledigheid = { aanw, gedeel, ontbr, tot: vol.length,
+      pct: Math.round((aanw + gedeel * 0.5) / vol.length * 100) };
+  }
+
+  const jur = drp.juridisch || [];
+  if (jur.length) {
+    const hoog   = jur.filter(j => j.ernst === 'hoog').length;
+    const midden = jur.filter(j => j.ernst === 'midden').length;
+    result.juridisch = { hoog, midden, tot: jur.length };
+  }
+
+  const gram = drp.grammatica;
+  if (Array.isArray(gram) && gram.length) {
+    result.grammatica = { tot: gram.length };
+  }
+
+  const mfn = drp.mfn_score;
+  if (mfn?.elementen?.length) {
+    const tot   = mfn.elementen.length;
+    const aanw  = mfn.elementen.filter(e => e.status === 'aanwezig').length;
+    const onvol = mfn.elementen.filter(e => e.status === 'onvolledig').length;
+    const ontbr = mfn.elementen.filter(e => e.status === 'ontbreekt').length;
+    result.mfn = { aanw, onvol, ontbr, tot, pct: Math.round(aanw / tot * 100) };
+  }
+
+  return result;
+}
+
+function bouwScoreBannerHtml(drp) {
+  const pct = berekenGemiddeldeScore(drp);
+  if (pct === null) return '';
+
+  const kleurVar  = pct >= 80 ? 'var(--ok)' : pct >= 60 ? 'var(--warn)' : 'var(--bad)';
+  const ds        = berekenDeelscores(drp);
+
+  // Sub-tekst met deelscores
+  const samenDelen = [
+    ds.volledigheid ? `Volledigheid ${ds.volledigheid.pct}%` : null,
+    ds.juridisch    ? (ds.juridisch.hoog || ds.juridisch.midden
+                       ? `Juridisch: ${ds.juridisch.hoog} hoog · ${ds.juridisch.midden} midden`
+                       : 'Juridisch: geen bevindingen')
+                    : null,
+    ds.mfn          ? `MfN ${ds.mfn.aanw}/${ds.mfn.tot}` : null,
+  ].filter(Boolean).join(' · ');
+
+  // Dots in rechterkolom
+  const dots = [];
+  if (ds.mfn) {
+    dots.push(`<div class="sb-issue"><div class="sb-dot ok"></div>${ds.mfn.aanw} MfN aanwezig</div>`);
+    if (ds.mfn.onvol) dots.push(`<div class="sb-issue"><div class="sb-dot warn"></div>${ds.mfn.onvol} onvolledig</div>`);
+    if (ds.mfn.ontbr) dots.push(`<div class="sb-issue"><div class="sb-dot bad"></div>${ds.mfn.ontbr} ontbreekt</div>`);
+  } else if (ds.juridisch) {
+    if (ds.juridisch.hoog)   dots.push(`<div class="sb-issue"><div class="sb-dot bad"></div>${ds.juridisch.hoog} hoog</div>`);
+    if (ds.juridisch.midden) dots.push(`<div class="sb-issue"><div class="sb-dot warn"></div>${ds.juridisch.midden} midden</div>`);
+    if (!ds.juridisch.hoog && !ds.juridisch.midden) dots.push(`<div class="sb-issue"><div class="sb-dot ok"></div>Geen bevindingen</div>`);
+  }
+
+  return `<div class="score-banner">
+    <div class="sb-getal" style="color:${kleurVar}">${pct}<span class="sb-pct">%</span></div>
+    <div class="sb-rechts">
+      <div class="sb-lbl">Gemiddelde kwaliteitsscore</div>
+      <div class="sb-balk"><div class="sb-balk-vul" style="width:${pct}%;background:${kleurVar}"></div></div>
+      <div class="sb-samen">${escH(samenDelen)}</div>
+    </div>
+    ${dots.length ? `<div class="sb-issues">${dots.join('')}</div>` : ''}
+  </div>`;
+}
+
+// ── Dossier-lijst chips (linker panel) ───────────────────────────────────────
+// Toont de gemiddelde score % van de meest recente versie + deelscores.
+function dossierChipsHtml(versies) {
+  if (!versies?.length) return '<span class="chip chip-grijs">Nog geen analyse</span>';
+  const recentste = versies.reduce((a, b) => (b.versie_nr > a.versie_nr ? b : a), versies[0]);
+  const rp = recentste.rapport;
+  if (!rp) return '<span class="chip chip-grijs">Nog geen analyse</span>';
+
+  // Gebruik het primaire document bij multi-doc, anders het rapport zelf
+  const drp = rp.documenten?.[0] || rp;
+  const pct = berekenGemiddeldeScore(drp);
+  if (pct === null) return '';
+
+  // Hoofdchip: gemiddelde score
+  const kleur = pct >= 80 ? 'chip-ok' : pct >= 60 ? 'chip-gold' : pct >= 40 ? 'chip-warn' : 'chip-bad';
+  let html = `<span class="chip ${kleur}">${pct}%</span>`;
+
+  // MfN deelscore
+  const mfn = drp.mfn_score;
+  if (mfn?.elementen?.length) {
+    const aanw = mfn.elementen.filter(e => e.status === 'aanwezig').length;
+    const tot  = mfn.elementen.length;
+    const mk   = (aanw / tot) >= 0.8 ? 'chip-ok' : (aanw / tot) >= 0.6 ? 'chip-warn' : 'chip-bad';
+    html += ` <span class="chip ${mk}">MfN ${aanw}/${tot}</span>`;
+  }
+
+  // Juridische punten als er relevante zijn
+  const jur    = drp.juridisch || [];
+  const hoog   = jur.filter(j => j.ernst === 'hoog').length;
+  const midden = jur.filter(j => j.ernst === 'midden').length;
+  if (hoog)        html += ` <span class="chip chip-bad">${hoog} hoog</span>`;
+  else if (midden) html += ` <span class="chip chip-warn">${midden} midden</span>`;
+
+  return html;
+}
+
+// Legacy alias — was al in gebruik op enkele plaatsen
+function mfnChipHtml(versies) { return dossierChipsHtml(versies); }
 
 async function laadDossiers() {
   const el = document.getElementById('dossierLijst');
@@ -4016,41 +4721,37 @@ async function toonDossierDetail(id) {
     }
 
     content.innerHTML = versies.map(v => {
-      const rp       = v.rapport || {};
-      const jur      = rp.juridisch || [];
-      const hoog     = jur.filter(j => j.ernst === 'hoog').length;
-      const midden   = jur.filter(j => j.ernst === 'midden').length;
-      const vol      = rp.volledigheid || [];
-      const aanwezig = vol.filter(x => x.status === 'aanwezig').length;
-      const label    = v.versie_label || `Versie ${v.versie_nr}`;
-      const datum    = new Date(v.created_at).toLocaleString('nl-NL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-      const doctype  = v.classificatie?.doc_type || '';
+      const rp      = v.rapport || {};
+      const label   = v.versie_label || `Versie ${v.versie_nr}`;
+      const datum   = new Date(v.created_at).toLocaleString('nl-NL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const doctype = v.classificatie?.doc_type || '';
+      const vNr     = v.versie_nr ? `v${v.versie_nr}` : '';
 
-      // MfN-chips: voor multi-doc per document, voor single-doc één chip
-      const mfnChips = (() => {
-        const docsArr = rp.documenten?.length > 1 ? rp.documenten : [rp];
-        return docsArr.map(d => {
-          const mfn = d.mfn_score;
-          if (!mfn) return '';
-          const aanw = mfn.score_aanwezig ?? null;
-          const tot  = mfn.score_totaal   ?? null;
-          if (aanw === null || !tot) return '';
-          const pct   = Math.round((aanw / tot) * 100);
-          const kleur = pct >= 90 ? 'score-ok' : pct >= 70 ? 'score-midden' : 'score-hoog';
-          const label = rp.documenten?.length > 1
-            ? `${DOC_TYPE_LABELS[d.doc_type] || d.doc_type}: ${aanw}/${tot}`
-            : `MfN ${aanw}/${tot}`;
-          return `<span class="score-chip ${kleur}">${escH(label)}</span>`;
-        }).filter(Boolean).join('');
+      // Voor multi-doc: genereer chips per document; voor single-doc: gebruik rapport direct
+      const chipsHtml = (() => {
+        const docsArr = rp.documenten?.length ? rp.documenten : [rp];
+        return docsArr.map(drp => {
+          const pct     = berekenGemiddeldeScore(drp);
+          const kleur   = pct === null ? '' : pct >= 80 ? 'chip-ok' : pct >= 60 ? 'chip-gold' : pct >= 40 ? 'chip-warn' : 'chip-bad';
+          const mfn     = drp.mfn_score;
+          const jur     = drp.juridisch || [];
+          const hoogg   = jur.filter(j => j.ernst === 'hoog').length;
+          const midd    = jur.filter(j => j.ernst === 'midden').length;
+          const docLbl  = docsArr.length > 1 ? (DOC_TYPE_LABELS[drp.doc_type] || drp.doc_type) + ': ' : '';
+
+          return [
+            pct !== null ? `<span class="chip ${kleur}">${docLbl}${pct}%</span>` : '',
+            mfn?.elementen?.length ? (() => {
+              const aanw  = mfn.elementen.filter(e => e.status === 'aanwezig').length;
+              const tot   = mfn.elementen.length;
+              const mk    = (aanw/tot) >= 0.8 ? 'chip-ok' : (aanw/tot) >= 0.6 ? 'chip-warn' : 'chip-bad';
+              return `<span class="chip ${mk}">MfN ${aanw}/${tot}</span>`;
+            })() : '',
+            hoogg  ? `<span class="chip chip-bad">${hoogg} hoog</span>` : '',
+            midd   ? `<span class="chip chip-warn">${midd} midden</span>` : '',
+          ].filter(Boolean).join('');
+        }).join('');
       })();
-
-      const scores = [
-        mfnChips,
-        vol.length  ? `<span class="score-chip score-grijs">${aanwezig}/${vol.length} secties</span>` : '',
-        hoog        ? `<span class="score-chip score-hoog">${hoog} hoog</span>` : '',
-        midden      ? `<span class="score-chip score-midden">${midden} midden</span>` : '',
-        (!hoog && !midden && jur.length === 0) ? '<span class="score-chip score-grijs">Geen juridische bevindingen</span>' : '',
-      ].filter(Boolean).join('');
 
       // Bestanden
       const bestanden = rp._document_bestanden
@@ -4067,10 +4768,11 @@ async function toonDossierDetail(id) {
 
       return `
       <div class="versie-card" data-id="${v.id}" style="cursor:pointer">
+        ${vNr ? `<div class="versie-badge">${escH(vNr)}</div>` : ''}
         <div class="versie-info">
           <div class="versie-label-tekst">${escH(label)}</div>
           <div class="versie-submeta">${datum}${doctype ? ' · ' + escH(doctype) : ''}</div>
-          ${scores ? `<div class="versie-scores">${scores}</div>` : ''}
+          ${chipsHtml ? `<div class="versie-scores">${chipsHtml}</div>` : ''}
           ${bestandenHtml}
         </div>
         <div class="versie-acties" onclick="event.stopPropagation()">

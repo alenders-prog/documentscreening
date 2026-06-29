@@ -1,5 +1,37 @@
 // Vercel serverless proxy voor Anthropic Claude API
 // De ANTHROPIC_API_KEY staat in de Vercel omgevingsvariabelen, nooit in de browser-code.
+
+import https from 'https';
+
+export const config = {
+  api: { bodyParser: { sizeLimit: '12mb' } },
+};
+
+// Gebruikt https.request() in plaats van fetch() om Vercel/undici headersTimeout te omzeilen.
+function anthropicPost(headers, body) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(body);
+    const req = https.request({
+      hostname: 'api.anthropic.com',
+      path:     '/v1/messages',
+      method:   'POST',
+      headers: { ...headers, 'Content-Length': Buffer.byteLength(payload) },
+      timeout: 115_000,
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => (data += chunk));
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, json: JSON.parse(data) }); }
+        catch (e) { reject(new Error(`JSON-parse mislukt: ${data.slice(0, 200)}`)); }
+      });
+    });
+    req.on('error',   reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Anthropic API timeout')); });
+    req.write(payload);
+    req.end();
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Alleen POST toegestaan' });
@@ -18,13 +50,8 @@ export default async function handler(req, res) {
     const betaHeader = req.headers['anthropic-beta'];
     if (betaHeader) headers['anthropic-beta'] = betaHeader;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(req.body),
-    });
-    const data = await response.json();
-    res.status(response.status).json(data);
+    const { status, json } = await anthropicPost(headers, req.body);
+    res.status(status).json(json);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
