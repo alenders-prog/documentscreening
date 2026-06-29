@@ -2272,7 +2272,10 @@ async function toonRapport(cls, rp) {
        <span class="titel" id="splitTitel">${escH(huidigeBestandsnaam)}</span>`;
   }
 
-  activeerAnalysePanel(rp);
+  // Multi-doc: geef het eerste sub-document mee zodat de score-banner
+  // scores vindt (volledigheid/juridisch staan op docs[0], niet op de root).
+  const drpVoorBanner = docs ? { ...rp, ...docs[0] } : rp;
+  activeerAnalysePanel(drpVoorBanner);
   openSplitView();
   await renderDocPanel('');
 }
@@ -4766,7 +4769,6 @@ async function toonDossierDetail(id) {
 
       return `
       <div class="versie-card" data-id="${v.id}" style="cursor:pointer">
-        ${vNr ? `<div class="versie-badge">${escH(vNr)}</div>` : ''}
         <div class="versie-info">
           <div class="versie-label-tekst">${escH(label)}</div>
           <div class="versie-submeta">${datum}${doctype ? ' · ' + escH(doctype) : ''}</div>
