@@ -24,7 +24,7 @@ function anthropicPost(apiKey, body) {
         'x-api-key':         apiKey,
         'anthropic-version': '2023-06-01',
       },
-      timeout: 115_000, // 115 s socket-inactiviteits-timeout (< Vercel maxDuration 120s)
+      timeout: 55_000, // 55 s socket-inactiviteits-timeout (< Vercel maxDuration 60s)
     }, (res) => {
       let data = '';
       res.on('data', chunk => (data += chunk));

@@ -4,7 +4,7 @@
 // Retourneert: { jobUrl: string } — de Adobe job-status-URL voor polling.
 
 export const config = {
-  api: { bodyParser: { sizeLimit: '5mb' } },
+  api: { bodyParser: { sizeLimit: '25mb' } },
 };
 
 export default async function handler(req, res) {

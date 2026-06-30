@@ -34,7 +34,7 @@ async function askClaudeForJson(systemPrompt, userPrompt, tool, maxTokens = 4096
   });
   if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
   const json = await res.json();
-  const toolUse = json.content.find((b) => b.type === 'tool_use');
+  const toolUse = json.content?.find((b) => b.type === 'tool_use');
   if (!toolUse) throw new Error('Claude gaf geen tool-aanroep terug — onverwacht antwoordformaat.');
   return toolUse.input; // al een geparsed object, geen JSON.parse nodig
 }
@@ -144,8 +144,9 @@ export default async function handler(req, res) {
     }
 
     // 1. Situatie classificeren, op basis van de bestaande taxonomie.
-    const { data: kenmerken } = await supabase.from('situatie_kenmerken').select('key, label, categorie');
-    const kenmerkenLijst = kenmerken.map((k) => `${k.key} (${k.label})`).join(', ');
+    const { data: kenmerken, error: kenmerkenErr } = await supabase.from('situatie_kenmerken').select('key, label, categorie');
+    if (kenmerkenErr) throw kenmerkenErr;
+    const kenmerkenLijst = (kenmerken ?? []).map((k) => `${k.key} (${k.label})`).join(', ');
 
     const classificatie = await askClaudeForJson(
       `Je classificeert een Nederlands echtscheidingsdocument en haalt de namen van beide partijen eruit.
@@ -162,15 +163,16 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
       .eq('doc_type', classificatie.doc_type === 'onbekend' ? 'convenant' : classificatie.doc_type)
       .order('section_order');
 
+    const situatieKenmerken = classificatie.situatie_kenmerken ?? [];
     const checklist = (templates ?? []).filter(
-      (t) => !t.applies_when || t.applies_when.every((tag) => classificatie.situatie_kenmerken.includes(tag))
+      (t) => !t.applies_when || t.applies_when.every((tag) => situatieKenmerken.includes(tag))
     );
 
     // 3. Relevante wetsartikelen: via topic_tags-overlap, geen embeddings nodig.
     const { data: wetteksten } = await supabase
       .from('legal_chunks')
       .select('citation, content, topic_tags')
-      .overlaps('topic_tags', classificatie.situatie_kenmerken)
+      .overlaps('topic_tags', situatieKenmerken)
       .limit(20);
 
     // 4. Het hoofdrapport.

@@ -40,9 +40,9 @@ export default async function handler(req, res) {
     }
     const statusData = await statusRes.json();
 
-    const st = (statusData.status || '').toLowerCase().replace(' ', '_');
+    const st = (statusData.status || '').toLowerCase().replaceAll(' ', '_');
 
-    if (st === 'in_progress' || st === 'in progress') {
+    if (st === 'in_progress') {
       return res.status(200).json({ status: 'in_progress' });
     }
 

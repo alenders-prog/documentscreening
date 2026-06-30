@@ -3,3 +3,8 @@
 .env.local
 node_modules
 config.local.js
+
+# Tijdelijke bestanden en kopieën
+- kopie.env.old
+index.html.tmp.*
+Clausula_voorstel_redesign.html

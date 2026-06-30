@@ -15,6 +15,7 @@
   --blue:#4A90D9;
   --nav-bg:#1B3050; --nav-border:#243F68;
   --brass:#BFA05B; --seal-bg:rgba(191,160,91,.08);
+  --status-ok:var(--sage); --status-aandacht:var(--amber); --status-risico:var(--terra);
   --action-light:#FDF1EB; --action-border:#E8C4AE;
   --ok:#2A7260; --ok-light:#EBF6F4; --ok-border:#A8D8D0;
   --warn:#B27820; --warn-light:#FFF7E6; --warn-border:#E8D090;
@@ -164,13 +165,67 @@ button.secundair:hover{background:#FFF1EA;}
 .dossier-body{flex:1;overflow-y:auto;padding:28px 32px;}
 .dossier-body-inner{max-width:720px;margin:0 auto;}
 
-/* ── Versie cards ─────────────────────────────────── */
-.versie-badge{font-family:'IBM Plex Mono',monospace;font-size:.7rem;font-weight:600;
-  padding:3px 9px;background:#FFF1EA;color:var(--coral-dark);border-radius:5px;flex-shrink:0;}
+/* ── Versie cards (v2 stijl) ─────────────────────── */
+.v2-versielijst{display:flex;flex-direction:column;gap:10px;}
+.v2-kaart{background:var(--paper);border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px;display:flex;align-items:center;gap:18px;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s;}
+.v2-kaart:hover{border-color:var(--brass);box-shadow:0 1px 8px rgba(191,160,91,.15);}
+
+/* Grote score-cirkel (overall %) */
+.v2-score{flex-shrink:0;width:72px;height:72px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.1rem;
+  border:3px solid var(--ring,var(--line));color:var(--ring,var(--ink-faint));line-height:1;}
+
+/* Kleine cirkels per categorie */
+.v2-onderdelen{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
+.v2-mini{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.v2-mini-ring{width:48px;height:48px;border-radius:50%;
+  border:2.5px solid var(--ring,var(--line));color:var(--ring,var(--ink-faint));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.68rem;line-height:1.1;
+  text-align:center;white-space:nowrap;}
+.v2-mini-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--ink-soft);}
+
+/* Gesegmenteerde cirkel (Jur) — conic-gradient als "ring", witte kern */
+.v2-mini-seg{padding:3px;box-sizing:border-box;border:none !important;}
+.v2-mini-seg-inner{width:100%;height:100%;border-radius:50%;
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.68rem;
+  color:var(--ink);line-height:1;}
+
+.v2-info{flex:1;min-width:0;}
+.v2-label{font-weight:600;font-size:.96rem;color:var(--ink);margin-bottom:2px;}
+.v2-meta{font-size:.78rem;color:var(--ink-soft);margin-bottom:2px;}
+
+/* Bestanden-details knop (rechts in v2-acties) */
+.v2-bestanden-detail{margin:0;}
+.v2-bestanden-detail summary{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.72rem;color:var(--ink-soft);cursor:pointer;list-style:none;
+  padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);
+  transition:border-color .12s,color .12s;user-select:none;white-space:nowrap;}
+.v2-bestanden-detail summary:hover{border-color:var(--ink-mid);color:var(--ink);}
+.v2-bestanden-detail summary::-webkit-details-marker{display:none;}
+.v2-bestanden-detail[open] summary{border-color:var(--ink-mid);}
+.v2-bestanden-detail .versie-bestanden{
+  position:absolute;right:0;top:100%;margin-top:4px;
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  padding:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:10;min-width:180px;}
+.v2-acties-wrap{position:relative;}
+
+.v2-acties{display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  flex-shrink:0;align-self:stretch;justify-content:space-between;padding:2px 0;}
+.v2-acties-knoppen{display:flex;align-items:center;gap:6px;}
+.v2-icon-btn{width:32px;height:32px;border-radius:7px;border:1px solid var(--line);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  color:var(--ink-soft);cursor:pointer;transition:all .15s;font-size:.88rem;}
+.v2-icon-btn:hover{border-color:var(--terra);color:var(--terra);background:#FCEFEC;}
+/* Oud (fallback voor evt. andere verwijzingen) */
 .versie-card{background:var(--paper);border:1px solid var(--line);border-radius:10px;
-  padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;
-  transition:border-color .15s;}
-.versie-card:hover{border-color:var(--coral);}
+  padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:border-color .15s;}
 .versie-info{flex:1;min-width:0;}
 .versie-label-tekst{font-weight:600;font-size:.93rem;}
 .versie-submeta{color:var(--ink-soft);font-size:.82rem;margin-top:3px;}
@@ -414,10 +469,12 @@ button.primair:hover{background:var(--coral-dark);}
 .uitloggen-btn:hover{background:#FCEFEC;color:var(--terra);border-color:var(--terra);}
 
 /* ── Split-overlay (analyse) ──────────────────────── */
-.split-overlay{display:none;position:fixed;inset:0;z-index:200;flex-direction:column;background:var(--bg);}
+.split-overlay{display:none;position:fixed;top:76px;left:0;right:0;bottom:0;
+  z-index:200;flex-direction:column;background:var(--bg);}
 .split-overlay.active{display:flex;}
-.split-header{display:flex;align-items:center;gap:12px;padding:10px 20px;
-  background:var(--paper);border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap;}
+.split-header{display:flex;align-items:center;gap:10px;padding:10px 20px;
+  background:var(--paper);border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap;
+  min-height:52px;}
 .back-btn{padding:7px 14px;background:none;border:1px solid var(--line);border-radius:8px;
   font-family:inherit;font-size:.88rem;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
   transition:background .15s;}
@@ -490,9 +547,9 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 .samenvatting{background:#FFF8F4;border:1px solid #F0DCCB;border-radius:10px;padding:16px 18px;font-size:.97rem;}
 .card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--line);
   border-radius:8px;padding:14px 16px;margin-bottom:9px;transition:border-color .15s,box-shadow .15s;}
-/* aanwezig = geen issue → geen accentkleur (standaard lijnkleur volstaat) */
-.card.sev-laag{border-left-color:#27AE60;}
-.card.status-aanwezig{border-left-color:var(--line);}
+/* aanwezig = OK → groene linkerrand */
+.card.sev-laag{border-left-color:var(--status-ok);}
+.card.status-aanwezig{border-left-color:var(--status-ok);}
 .card.sev-midden,.card.status-onvolledig{border-left-color:var(--amber);}
 .card.sev-hoog,.card.status-ontbreekt{border-left-color:var(--terra);}
 .card.heeft-passage{cursor:pointer;}
@@ -535,11 +592,11 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 .mfn-elementen{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
 .mfn-el{display:flex;gap:8px;padding:5px 6px;border-radius:7px;font-size:.83rem;align-items:flex-start;}
 .mfn-el-aanwezig  {background:#F2FBF6;}
-.mfn-el-onvolledig{background:#FFF8ED;}
+.mfn-el-onvolledig{background:#FDF2F2;}  /* rood: onvolledig = ook niet-compliant */
 .mfn-el-ontbreekt {background:#FDF2F2;}
 .mfn-el-icon{flex:none;width:16px;font-weight:700;font-size:.85rem;padding-top:1px;}
 .mfn-el-aanwezig   .mfn-el-icon{color:#2a7a4e;}
-.mfn-el-onvolledig .mfn-el-icon{color:#b86800;}
+.mfn-el-onvolledig .mfn-el-icon{color:#c0392b;}
 .mfn-el-ontbreekt  .mfn-el-icon{color:#c0392b;}
 .mfn-el-tekst{flex:1;color:var(--ink);}
 .mfn-el-toe{display:block;font-size:.75rem;color:var(--ink-soft);margin-top:2px;font-style:italic;}
@@ -572,16 +629,16 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 
 /* Topbar */
 /* ── Topbar (goedgekeurde huisstijl Clausula) ─────────── */
-.topbar{height:64px;background:var(--nav-bg);border-bottom:1px solid var(--nav-border);
-  display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;}
-.topbar-brand{display:flex;align-items:center;gap:13px;}
-.brand-mark{width:34px;height:34px;background:var(--seal-bg);border-radius:4px;
+.topbar{height:72px;background:var(--nav-bg);border-bottom:1px solid var(--nav-border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;}
+.topbar-brand{display:flex;align-items:center;gap:14px;}
+.brand-mark{width:38px;height:38px;background:var(--seal-bg);border-radius:5px;
   border:1.5px solid var(--brass);
   display:flex;align-items:center;justify-content:center;
-  font-family:'Source Serif 4',serif;font-weight:600;font-size:1.15rem;
+  font-family:'Source Serif 4',serif;font-weight:600;font-size:1.25rem;
   color:var(--brass);flex-shrink:0;}
-.brand-stack{display:flex;flex-direction:column;justify-content:center;line-height:1.15;}
-.brand-name{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.08rem;
+.brand-stack{display:flex;flex-direction:column;justify-content:center;line-height:1.2;}
+.brand-name{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.18rem;
   letter-spacing:-.01em;color:#F5F1E8;}
 .brand-sep{display:none;}
 .brand-sub{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:500;
@@ -613,7 +670,8 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 .list-search-wrap{flex:1;position:relative;}
 .list-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);
   width:14px;height:14px;color:var(--ink-soft);pointer-events:none;}
-.list-search{width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--line);border-radius:6px;
+.list-search{width:100%;height:32px;box-sizing:border-box;
+  padding:0 10px 0 30px;border:1.5px solid var(--line);border-radius:6px;
   font-family:inherit;font-size:.82rem;background:var(--bg);color:var(--ink);
   outline:none;transition:border-color .15s;}
 .list-search::placeholder{color:var(--ink-soft);opacity:.6;}
@@ -924,7 +982,6 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
       <button class="secundair" id="downloadPdfBtn">↓ PDF-rapport</button>
       <button class="secundair" id="downloadBtn">↓ Word</button>
       <span class="opslagstatus" id="opslagStatus"></span>
-      <button class="uitloggen-btn" id="uitloggenBtn3">Uitloggen</button>
     </div>
   </div>
   <div class="split-body">
@@ -965,6 +1022,7 @@ mark.hl-match{background:rgba(255,213,0,.55);border-radius:2px;padding:0 1px;}
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _praktijknaam = ''; // vroeg declareren — auth-callback roept getPraktijknaam() aan vóór line 2560
 
 // ── Authenticatie ─────────────────────────────────────
 (async () => {
@@ -1005,7 +1063,6 @@ async function uitloggen() {
 }
 document.getElementById('uitloggenBtn').addEventListener('click', uitloggen);
 document.getElementById('uitloggenBtn2').addEventListener('click', uitloggen);
-document.getElementById('uitloggenBtn3').addEventListener('click', uitloggen);
 
 // ── MfN-compliantievereisten per documenttype ─────────
 const MFN_ELEMENTEN = {
@@ -1465,11 +1522,16 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
   // Mapping item.id → documentDeel
   const deelPerIdx = new Map(resolvedItems.map((item, i) => [item.id, documentDelen[i]]));
 
-  // Context-tekst: alle contextstukken samengevoegd, voor bijlage-sectie in de Claude-prompt
+  // Context-tekst: bijlagen ingekort tot eerste 4000 tekens per stuk (cross-doc context, niet volledig analyseren)
+  // Reden: grote context-prompts verhogen de Anthropic-responstijd disproportioneel.
+  const MAX_CTX_CHARS = 4000;
   const bijlagenTekst = effectieveContextItems
     .map(i => deelPerIdx.get(i.id))
     .filter(Boolean)
-    .map(d => `${d.header}\n${d.tekst}`)
+    .map(d => {
+      const tekst = d.tekst.length > MAX_CTX_CHARS ? d.tekst.slice(0, MAX_CTX_CHARS) + '\n[… ingekort voor context …]' : d.tekst;
+      return `${d.header}\n${tekst}`;
+    })
     .join('\n\n');
 
   const { data: kenmerken } = await db.from('situatie_kenmerken').select('key, label, categorie');
@@ -1597,12 +1659,18 @@ HV-D. CONSISTENTIE — Controleer of de formulering in het convenant over vermog
 MfN-VEREISTE ELEMENTEN (${docTypeLabel}):
 ${mfnElementen.map((e, i) => `${i + 1}. ${e}`).join('\n')}` : '';
 
-    // Andere hoofddocumenten als aanvullende context (volledig — nodig voor kruiscontroles)
+    // Andere hoofddocumenten als beknopte context (ingekort tot 5000 tekens per doc)
+    // Volledig meesturen verdubbelt/verdrievoudigt de promptgrootte en daarmee de Anthropic-responstijd.
+    // Voor kruiscontroles is het begin van het document (partijen, stelsel, kerncijfers) doorgaans voldoende.
+    const MAX_CROSS_CHARS = 5000;
     const anderePrimaireTekst = effectieveHoofdItems
       .filter((_, j) => j !== di)
       .map(andereItem => deelPerIdx.get(andereItem.id))
       .filter(Boolean)
-      .map(d => `${d.header}\n${d.tekst}`)
+      .map(d => {
+        const tekst = d.tekst.length > MAX_CROSS_CHARS ? d.tekst.slice(0, MAX_CROSS_CHARS) + '\n[… ingekort voor context …]' : d.tekst;
+        return `${d.header}\n${tekst}`;
+      })
       .join('\n\n');
 
     // Gepseudonimiseerde versies voor Claude (namen + PII → placeholders)
@@ -1750,13 +1818,14 @@ STRIKTE REGELS:
     _stopTimer = startTimer();
 
     // Drie calls tegelijk: structuur | juridisch | balans+grammatica (elk eigen tokenbudget)
+    // Tokenbudgetten bewust begrensd: minder tokens = snellere responstijd van Anthropic
     const [structuur, juridischResult, balansGrammaticaResult] = await Promise.all([
       askClaudeForJson(sysStructuur, userVoorStructuur, structuurTool,
-        heeftMfn ? 10000 : 3000, { cache: true }),
+        heeftMfn ? 6000 : 3000, { cache: true }),  // MfN-respons is typisch 3-5k tokens
       askClaudeForJson(sysJuridisch, userVoorJuridisch, juridischTool,
-        10000, { cache: true }),
+        6000, { cache: true }),                      // juridisch zelden >4k tokens
       askClaudeForJson(sysBalansGrammatica, userVoorBalansGrammatica, balansGrammaticaTool,
-        8000, { cache: true }),
+        4000, { cache: true }),                      // balans+grammatica compact
     ]);
     // Herstel namen/PII in Claude's output (placeholders → echte waarden)
     const docRapport = {
@@ -1964,6 +2033,8 @@ async function renderPdfPaginas(panel, pdf, gen) {
     canvas.height = viewport.height;
     const tekstlaag = document.createElement('div');
     tekstlaag.className = 'textLayer';
+    // Vereist door PDF.js 3.x: --scale-factor op de container zetten
+    tekstlaag.style.setProperty('--scale-factor', String(viewport.scale));
     wrap.appendChild(canvas);
     wrap.appendChild(tekstlaag);
     panel.appendChild(wrap);
@@ -1971,7 +2042,8 @@ async function renderPdfPaginas(panel, pdf, gen) {
     if (gen !== renderGeneratie) return;
     const tekstInhoud = await page.getTextContent();
     if (gen !== renderGeneratie) return;
-    const taak = pdfjsLib.renderTextLayer({ textContent: tekstInhoud, container: tekstlaag, viewport, textDivs: [] });
+    // textContentSource i.p.v. textContent (niet-deprecated API in PDF.js 3.x)
+    const taak = pdfjsLib.renderTextLayer({ textContentSource: tekstInhoud, container: tekstlaag, viewport, textDivs: [] });
     if (taak && taak.promise) await taak.promise;
     else if (taak && taak.then) await taak;
   }
@@ -2232,10 +2304,12 @@ async function toonRapport(cls, rp) {
           j.citaat?`<span class="cite" title="${escH(j.citaat)}">${escH(j.citaat)}</span>`:''),'Geen juridische opmerkingen.'),
         false, true) +
       sectie('Balans tussen partijen',
-        lijstKaarten('balans',drp.balans,(b,i)=>kaart('balans',i,'sev-'+b.ernst,escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.'),
+        lijstKaarten('balans',drp.balans,(b,i)=>kaart('balans',i,
+          'sev-'+(b.ernst==='hoog'?'hoog':'midden'),   // laag=midden: alle balans-punten zijn verbeterpunten
+          escH(b.signalering),'',''),'Geen onevenwichtigheden gesignaleerd.'),
         false, true) +
       sectie('Grammatica &amp; taal',
-        lijstKaarten('grammatica',drp.grammatica,(g,i)=>kaart('grammatica',i,'',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'),
+        lijstKaarten('grammatica',drp.grammatica,(g,i)=>kaart('grammatica',i,'sev-midden',escH(g.locatie),`${escH(g.probleem)} → <em>${escH(g.suggestie)}</em>`,''),'Geen taalkundige opmerkingen.'),
         false, true) +
       mfnHtml;
   }
@@ -2507,7 +2581,7 @@ function autoSlaOp() {
 
 // ── Praktijkinstellingen ──────────────────────────────
 // Opgeslagen in Supabase user-metadata (cross-device); localStorage als fallback bij migratie.
-let _praktijknaam = '';
+// (_praktijknaam is vroeg gedeclareerd bij db-initialisatie om TDZ te vermijden)
 
 function getPraktijknaam() { return _praktijknaam; }
 
@@ -4740,68 +4814,186 @@ async function toonDossierDetail(id) {
       return;
     }
 
-    content.innerHTML = versies.map(v => {
-      const rp      = v.rapport || {};
-      const label   = v.versie_label || `Versie ${v.versie_nr}`;
-      const datum   = new Date(v.created_at).toLocaleString('nl-NL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
-      const doctype = v.classificatie?.doc_type || '';
-      const vNr     = v.versie_nr ? `v${v.versie_nr}` : '';
+    content.innerHTML = '<div class="v2-versielijst">' + versies.map(v => {
+      const rp    = v.rapport || {};
+      const label = v.versie_label || `Versie ${v.versie_nr}`;
+      const datum = new Date(v.created_at).toLocaleString('nl-NL',
+        { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
-      // Voor multi-doc: genereer chips per document; voor single-doc: gebruik rapport direct
-      const chipsHtml = (() => {
-        const docsArr = rp.documenten?.length ? rp.documenten : [rp];
-        return docsArr.map(drp => {
-          const pct     = berekenGemiddeldeScore(drp);
-          const kleur   = pct === null ? '' : pct >= 80 ? 'chip-ok' : pct >= 60 ? 'chip-gold' : pct >= 40 ? 'chip-warn' : 'chip-bad';
-          const mfn     = drp.mfn_score;
-          const jur     = drp.juridisch || [];
-          const hoogg   = jur.filter(j => j.ernst === 'hoog').length;
-          const midd    = jur.filter(j => j.ernst === 'midden').length;
-          const docLbl  = docsArr.length > 1 ? (DOC_TYPE_LABELS[drp.doc_type] || drp.doc_type) + ': ' : '';
+      const docsArr = rp.documenten?.length ? rp.documenten : null;
+      const allDrps = docsArr || [rp];
 
-          return [
-            pct !== null ? `<span class="chip ${kleur}">${docLbl}${pct}%</span>` : '',
-            mfn?.elementen?.length ? (() => {
-              const aanw  = mfn.elementen.filter(e => e.status === 'aanwezig').length;
-              const tot   = mfn.elementen.length;
-              const mk    = (aanw/tot) >= 0.8 ? 'chip-ok' : (aanw/tot) >= 0.6 ? 'chip-warn' : 'chip-bad';
-              return `<span class="chip ${mk}">MfN ${aanw}/${tot}</span>`;
-            })() : '',
-            hoogg  ? `<span class="chip chip-bad">${hoogg} hoog</span>` : '',
-            midd   ? `<span class="chip chip-warn">${midd} midden</span>` : '',
-          ].filter(Boolean).join('');
-        }).join('');
-      })();
+      // Documenttype-label (multi-doc: & gescheiden)
+      const doctypeLbl = docsArr
+        ? docsArr.map(d => DOC_TYPE_LABELS[d.doc_type] || d.doc_type).filter(Boolean).join(' & ')
+        : (v.classificatie?.doc_type ? (DOC_TYPE_LABELS[v.classificatie.doc_type] || v.classificatie.doc_type) : '');
 
-      // Bestanden
+      // ── Aggregeer scores over alle documenten ─────────────────
+      let volAanw = 0, volOnvoll = 0, volTot = 0;
+      let jurHoog = 0, jurMidd = 0, jurLaag = 0;
+      let mfnAanw = 0, mfnOntbr = 0, mfnTot = 0;
+      let balHoog = 0, balMed = 0;
+      let gramN = 0;
+      let heeftData = false;
+      for (const drp of allDrps) {
+        const vol = drp.volledigheid || [];
+        volAanw  += vol.filter(v2 => v2.status === 'aanwezig').length;
+        volOnvoll += vol.filter(v2 => v2.status === 'onvolledig').length;
+        volTot   += vol.length;
+        const jur = drp.juridisch || [];
+        jurHoog += jur.filter(j => j.ernst === 'hoog').length;
+        jurMidd += jur.filter(j => j.ernst === 'midden').length;
+        jurLaag += jur.filter(j => j.ernst === 'laag' || j.ernst === 'info').length;
+        const mfnEl = drp.mfn_score?.elementen;
+        if (mfnEl?.length) {
+          mfnAanw += mfnEl.filter(e => e.status === 'aanwezig').length;
+          mfnOntbr += mfnEl.filter(e => e.status !== 'aanwezig').length; // ontbreekt + onvolledig
+          mfnTot  += mfnEl.length;
+        }
+        const bal = drp.balans || [];
+        balHoog += bal.filter(b => b.ernst === 'hoog').length;
+        balMed  += bal.filter(b => b.ernst !== 'hoog').length; // midden + laag = medium
+        gramN   += (drp.grammatica || []).length;
+        if (drp.samenvatting) heeftData = true;
+      }
+
+      // ── Grote score-cirkel: overall % ────────────────────────
+      const primDrp = allDrps[0];
+      const pct     = berekenGemiddeldeScore(primDrp) ?? (allDrps.length > 1 ? berekenGemiddeldeScore({ ...rp, ...allDrps[0] }) : null);
+      let ringKleur = 'var(--line)';
+      let scoreHtml = '<span style="opacity:.35">—</span>';
+      if (pct !== null) {
+        ringKleur = pct >= 80 ? 'var(--status-ok)' : pct >= 60 ? 'var(--status-aandacht)' : 'var(--status-risico)';
+        scoreHtml = `${pct}<span style="opacity:.35;font-size:.65em">%</span>`;
+      }
+
+      // ── Mini-helper ───────────────────────────────────────────
+      const mini = (lbl, inhoud, kleur) =>
+        `<div class="v2-mini">
+          <div class="v2-mini-ring" style="--ring:${kleur}">${inhoud}</div>
+          <div class="v2-mini-lbl">${lbl}</div>
+        </div>`;
+
+      // ── Kleine cirkels per categorie (geaggregeerd) ──────────
+      // Helper: gesegmenteerde cirkel (conic-gradient ring, witte kern)
+      const segCircle = (lbl, segs, inhoud) => {
+        // segs = [{kleur, n}] — proporties berekend over som
+        const som = segs.reduce((a, s) => a + s.n, 0);
+        let grad;
+        if (som === 0) {
+          grad = 'var(--status-ok) 0deg 360deg';
+        } else {
+          const stops = [];
+          let pos = 0;
+          for (const s of segs) {
+            if (s.n <= 0) continue;
+            const d = (s.n / som) * 360;
+            stops.push(`${s.kleur} ${pos}deg ${pos + d}deg`);
+            pos += d;
+          }
+          grad = stops.join(',');
+        }
+        return `<div class="v2-mini">
+          <div class="v2-mini-ring v2-mini-seg" style="background:conic-gradient(${grad})">
+            <div class="v2-mini-seg-inner">${inhoud}</div>
+          </div>
+          <div class="v2-mini-lbl">${lbl}</div>
+        </div>`;
+      };
+
+      let onderdelen = '';
+      if (heeftData) {
+        // Volledigheid — gesegmenteerd: rood=ontbreekt, geel=onvolledig, groen=aanwezig
+        // Tekst: verbeterpunten / totaal
+        if (volTot > 0) {
+          const volOntbr = volTot - volAanw - volOnvoll;
+          const volVp    = volOntbr + volOnvoll; // totaal verbeterpunten
+          const inhoud   = volVp === 0 ? '✓' : `${volVp}/${volTot}`;
+          onderdelen += segCircle('Vol', [
+            { kleur: 'var(--status-risico)',   n: volOntbr  },
+            { kleur: 'var(--status-aandacht)', n: volOnvoll },
+            { kleur: 'var(--status-ok)',        n: volAanw   },
+          ], inhoud);
+        }
+
+        // Juridisch — gesegmenteerd: rood=hoog, geel=midden, groen=laag
+        // Tekst: totaal verbeterpunten (hoog + midden + laag)
+        {
+          const jurTot  = jurHoog + jurMidd + jurLaag;
+          const inhoud  = jurTot === 0 ? '✓' : String(jurTot);
+          onderdelen += segCircle('Jur', [
+            { kleur: 'var(--status-risico)',   n: jurHoog },
+            { kleur: 'var(--status-aandacht)', n: jurMidd },
+            { kleur: 'var(--status-ok)',        n: jurLaag },
+          ], inhoud);
+        }
+
+        // MfN — groen=compliant, rood=niet-compliant (ontbreekt + onvolledig)
+        if (mfnTot > 0) {
+          const inhoud = mfnOntbr === 0 ? '✓' : `${mfnOntbr}/${mfnTot}`;
+          onderdelen += segCircle('MfN', [
+            { kleur: 'var(--status-risico)', n: mfnOntbr },
+            { kleur: 'var(--status-ok)',     n: mfnAanw  },
+          ], inhoud);
+        }
+
+        // Balans — rood=hoog, geel=medium (midden+laag zijn alle verbeterpunten)
+        if (balHoog + balMed > 0) {
+          const totBal = balHoog + balMed;
+          const inhoud = String(totBal);
+          onderdelen += segCircle('Bal', [
+            { kleur: 'var(--status-risico)',   n: balHoog },
+            { kleur: 'var(--status-aandacht)', n: balMed  },
+          ], inhoud);
+        } else if (heeftData) {
+          onderdelen += segCircle('Bal', [], '✓');
+        }
+
+        // Grammatica — geel=verbeterpunten (geen ernst-onderverdeling)
+        if (gramN > 0) {
+          onderdelen += segCircle('Gram', [
+            { kleur: 'var(--status-aandacht)', n: gramN },
+          ], String(gramN));
+        } else if (heeftData) {
+          onderdelen += segCircle('Gram', [], '✓');
+        }
+      }
+
+      // ── Bestanden achter toggle ───────────────────────────────
       const bestanden = rp._document_bestanden
         || (rp._document_pad ? [{ pad: rp._document_pad, naam: rp._document_naam }] : []);
       const bestandenHtml = bestanden.length
-        ? `<div class="versie-bestanden">
-            ${bestanden.map(b => `
-              <span class="versie-bestand-chip">
-                <span class="versie-bestand-naam" title="${escH(b.naam)}">${escH(b.naam)}</span>
-                ${b.pad ? `<button class="versie-bestand-dl" data-pad="${escH(b.pad)}" data-naam="${escH(b.naam)}" title="Download ${escH(b.naam)}" onclick="event.stopPropagation()">↓</button>` : ''}
-              </span>`).join('')}
-          </div>`
+        ? `<details class="v2-bestanden-detail" onclick="event.stopPropagation()">
+            <summary>📎 ${bestanden.length} bestand${bestanden.length !== 1 ? 'en' : ''}</summary>
+            <div class="versie-bestanden">
+              ${bestanden.map(b => `
+                <span class="versie-bestand-chip">
+                  <span class="versie-bestand-naam" title="${escH(b.naam)}">${escH(b.naam)}</span>
+                  ${b.pad ? `<button class="versie-bestand-dl" data-pad="${escH(b.pad)}" data-naam="${escH(b.naam)}" title="Download" onclick="event.stopPropagation()">↓</button>` : ''}
+                </span>`).join('')}
+            </div>
+          </details>`
         : '';
 
       return `
-      <div class="versie-card" data-id="${v.id}" style="cursor:pointer">
-        <div class="versie-info">
-          <div class="versie-label-tekst">${escH(label)}</div>
-          <div class="versie-submeta">${datum}${doctype ? ' · ' + escH(doctype) : ''}</div>
-          ${chipsHtml ? `<div class="versie-scores">${chipsHtml}</div>` : ''}
-          ${bestandenHtml}
+      <div class="v2-kaart" data-id="${v.id}">
+        <div class="v2-score" style="--ring:${ringKleur}">${scoreHtml}</div>
+        <div class="v2-info">
+          <div class="v2-label">${escH(label)}</div>
+          <div class="v2-meta">${datum}${doctypeLbl ? ' · ' + escH(doctypeLbl) : ''}</div>
+          ${onderdelen ? `<div class="v2-onderdelen">${onderdelen}</div>` : ''}
         </div>
-        <div class="versie-acties" onclick="event.stopPropagation()">
-          <button class="btn-ghost versie-bekijk-btn">Bekijken</button>
-          <button class="versie-verwijder-btn" title="Versie verwijderen">🗑</button>
+        <div class="v2-acties" onclick="event.stopPropagation()">
+          ${bestandenHtml ? `<div class="v2-acties-wrap">${bestandenHtml}</div>` : '<div></div>'}
+          <div class="v2-acties-knoppen">
+            <button class="btn-ghost versie-bekijk-btn">Bekijken</button>
+            <button class="v2-icon-btn versie-verwijder-btn" title="Versie verwijderen">🗑</button>
+          </div>
         </div>
       </div>`;
-    }).join('');
+    }).join('') + '</div>';
 
-    content.querySelectorAll('.versie-card').forEach(card => {
+    content.querySelectorAll('.v2-kaart').forEach(card => {
       card.addEventListener('click', () => laadScreening(card.dataset.id, 'dossier'));
     });
 
@@ -4833,7 +5025,7 @@ async function toonDossierDetail(id) {
     content.querySelectorAll('.versie-bekijk-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        laadScreening(btn.closest('.versie-card').dataset.id, 'dossier');
+        laadScreening(btn.closest('.v2-kaart').dataset.id, 'dossier');
       });
     });
 
@@ -4841,9 +5033,9 @@ async function toonDossierDetail(id) {
     content.querySelectorAll('.versie-verwijder-btn').forEach(btn => {
       btn.addEventListener('click', async e => {
         e.stopPropagation();
-        const card    = btn.closest('.versie-card');
+        const card    = btn.closest('.v2-kaart');
         const versieId = card.dataset.id;
-        const labelEl  = card.querySelector('.versie-label-tekst');
+        const labelEl  = card.querySelector('.v2-label');
         const naamTxt  = labelEl?.textContent || 'deze versie';
         if (!confirm(`Versie "${naamTxt}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
 
