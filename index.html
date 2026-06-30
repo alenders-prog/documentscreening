@@ -1339,22 +1339,22 @@ async function extractText(file, onProgress = () => {}) {
   throw new Error('Alleen .docx en .pdf worden ondersteund.');
 }
 
-// ── Claude API ────────────────────────────────────────
+// ── Claude API (via Edge Runtime streaming proxy) ─────
 // opts: { model, cache }
-//   model — standaard 'claude-sonnet-4-6'; gebruik 'claude-haiku-4-5-20251001' voor simpele taken
-//   cache — true: stuur prompt-caching beta-header + voeg cache_control toe aan system en
-//           gecachede user-blokken
-// userContent kan een string zijn of een array [{text, cache?}, ...]
-//   cache:true op een blok markeert alles t/m dat blok als cache-prefix (stabiel gedeelte)
+//   model — standaard 'claude-sonnet-4-6'
+//   cache — true: prompt-caching beta + cache_control op stabiele blokken
+// userContent: string of array [{text, cache?}, ...]
+//
+// Gebruikt /api/claude-edge (Edge Runtime) zodat er geen serverless tijdslimiet is:
+// de SSE-stream van Anthropic wordt direct doorgestuurd naar de browser.
+// De browser leest de stroom en assembleert de tool-input JSON.
 async function askClaudeForJson(systemPrompt, userContent, tool, maxTokens = 4096, opts = {}) {
   const { model = 'claude-sonnet-4-6', cache = false } = opts;
 
-  // System: bij caching als array met cache_control, anders gewone string
   const systemField = cache
     ? [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }]
     : systemPrompt;
 
-  // User content: string of array van blokken
   const messageContent = Array.isArray(userContent)
     ? userContent.map(b => b.cache
         ? { type: 'text', text: b.text, cache_control: { type: 'ephemeral' } }
@@ -1364,7 +1364,7 @@ async function askClaudeForJson(systemPrompt, userContent, tool, maxTokens = 409
   const body = {
     model,
     max_tokens: maxTokens,
-    temperature: 0,   // deterministisch: zelfde document → zelfde uitkomst
+    temperature: 0,
     system: systemField,
     messages: [{ role: 'user', content: messageContent }],
     tools: [tool],
@@ -1373,29 +1373,70 @@ async function askClaudeForJson(systemPrompt, userContent, tool, maxTokens = 409
 
   const extraHeaders = cache ? { 'anthropic-beta': 'prompt-caching-2024-07-31' } : {};
 
-  const res = await fetch('/api/claude', {
+  const res = await fetch('/api/claude-edge', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...extraHeaders },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Claude API fout (${res.status}): ${await res.text()}`);
-  const json    = await res.json();
-  const toolUse = json.content?.find(b => b.type === 'tool_use');
-  console.log(`[claude/${tool.name}] stop_reason=${json.stop_reason}, toolUse=${!!toolUse}`);
-  if (json.stop_reason === 'max_tokens') {
-    // Tokenbudget bereikt — output is afgekapt; input is leeg of onvolledig
-    // Beschouw {wijzigingen: []} ook als niet-bruikbaar (Claude had nog niets gegenereerd)
-    const heeftBruikbareOutput = toolUse && toolUse.input &&
-      Object.entries(toolUse.input).some(([, v]) =>
-        v !== null && v !== undefined && (!Array.isArray(v) || v.length > 0)
-      );
-    if (!heeftBruikbareOutput) {
-      throw new Error(`Tokenbudget (${maxTokens}) bereikt — het document is te lang voor het aantal geselecteerde verbeterpunten. Selecteer minder punten of splits de analyse.`);
+
+  // ── SSE-stream parsen ──────────────────────────────────
+  // Anthropic stuurt Server-Sent Events; wij lezen de tool input_json_delta events
+  // en assembleeren de volledige JSON zodra de stream klaar is.
+  const reader  = res.body.getReader();
+  const dec     = new TextDecoder();
+  let buf        = '';
+  let toolJson   = '';
+  let stopReason = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const payload = line.slice(6).trim();
+      if (!payload || payload === '[DONE]') continue;
+
+      let evt;
+      try { evt = JSON.parse(payload); } catch { continue; }
+
+      if (evt.type === 'content_block_delta' && evt.delta?.type === 'input_json_delta') {
+        toolJson += evt.delta.partial_json ?? '';
+      }
+      if (evt.type === 'message_delta') {
+        stopReason = evt.delta?.stop_reason ?? stopReason;
+      }
+      if (evt.type === 'error') {
+        throw new Error(`Anthropic stream fout: ${evt.error?.message ?? JSON.stringify(evt.error)}`);
+      }
     }
-    console.warn(`[Claude] max_tokens bereikt voor tool "${tool.name}" — output mogelijk onvolledig.`);
   }
-  if (!toolUse) throw new Error('Claude gaf geen tool-aanroep terug.');
-  return toolUse.input;
+
+  console.log(`[claude/${tool.name}] stop=${stopReason}, json-len=${toolJson.length}`);
+
+  if (stopReason === 'max_tokens' && !toolJson) {
+    throw new Error(`Tokenbudget (${maxTokens}) bereikt — het document is te lang voor het aantal geselecteerde verbeterpunten.`);
+  }
+  if (!toolJson) throw new Error('Claude gaf geen tool-aanroep terug.');
+
+  try {
+    const parsed = JSON.parse(toolJson);
+    if (stopReason === 'max_tokens') {
+      const heeftOutput = Object.values(parsed).some(v =>
+        v !== null && v !== undefined && (!Array.isArray(v) || v.length > 0));
+      if (!heeftOutput) throw new Error(`Tokenbudget (${maxTokens}) bereikt zonder bruikbare output.`);
+      console.warn(`[Claude] max_tokens voor "${tool.name}" — output mogelijk onvolledig.`);
+    }
+    return parsed;
+  } catch (e) {
+    if (e.message.startsWith('Tokenbudget')) throw e;
+    throw new Error(`Tool-output kon niet worden geparsed: ${toolJson.slice(0, 200)}`);
+  }
 }
 
 // ── Tekstcache per Storage-pad ────────────────────────
@@ -1522,16 +1563,11 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
   // Mapping item.id → documentDeel
   const deelPerIdx = new Map(resolvedItems.map((item, i) => [item.id, documentDelen[i]]));
 
-  // Context-tekst: bijlagen ingekort tot eerste 4000 tekens per stuk (cross-doc context, niet volledig analyseren)
-  // Reden: grote context-prompts verhogen de Anthropic-responstijd disproportioneel.
-  const MAX_CTX_CHARS = 4000;
+  // Context-tekst: volledige bijlagen meesturen (streaming Edge proxy heeft geen tijdslimiet)
   const bijlagenTekst = effectieveContextItems
     .map(i => deelPerIdx.get(i.id))
     .filter(Boolean)
-    .map(d => {
-      const tekst = d.tekst.length > MAX_CTX_CHARS ? d.tekst.slice(0, MAX_CTX_CHARS) + '\n[… ingekort voor context …]' : d.tekst;
-      return `${d.header}\n${tekst}`;
-    })
+    .map(d => `${d.header}\n${d.tekst}`)
     .join('\n\n');
 
   const { data: kenmerken } = await db.from('situatie_kenmerken').select('key, label, categorie');
@@ -1659,18 +1695,13 @@ HV-D. CONSISTENTIE — Controleer of de formulering in het convenant over vermog
 MfN-VEREISTE ELEMENTEN (${docTypeLabel}):
 ${mfnElementen.map((e, i) => `${i + 1}. ${e}`).join('\n')}` : '';
 
-    // Andere hoofddocumenten als beknopte context (ingekort tot 5000 tekens per doc)
-    // Volledig meesturen verdubbelt/verdrievoudigt de promptgrootte en daarmee de Anthropic-responstijd.
-    // Voor kruiscontroles is het begin van het document (partijen, stelsel, kerncijfers) doorgaans voldoende.
-    const MAX_CROSS_CHARS = 5000;
+    // Andere hoofddocumenten volledig meesturen als context (nodig voor kruiscontroles)
+    // Geen truncatie meer nodig: Edge Runtime streaming heeft geen tijdslimiet.
     const anderePrimaireTekst = effectieveHoofdItems
       .filter((_, j) => j !== di)
       .map(andereItem => deelPerIdx.get(andereItem.id))
       .filter(Boolean)
-      .map(d => {
-        const tekst = d.tekst.length > MAX_CROSS_CHARS ? d.tekst.slice(0, MAX_CROSS_CHARS) + '\n[… ingekort voor context …]' : d.tekst;
-        return `${d.header}\n${tekst}`;
-      })
+      .map(d => `${d.header}\n${d.tekst}`)
       .join('\n\n');
 
     // Gepseudonimiseerde versies voor Claude (namen + PII → placeholders)
