@@ -173,7 +173,7 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
       .from('legal_chunks')
       .select('citation, content, topic_tags')
       .overlaps('topic_tags', situatieKenmerken)
-      .limit(20);
+      .limit(40); // verhoogd naar 40 na uitbreiding kennisbank (was 20)
 
     // 4. Het hoofdrapport.
     const checklistTekst = checklist.map((c) => `- ${c.section_name}: ${c.instructions ?? '(vaste tekst, geen specifieke inhoud)'}`).join('\n');
@@ -182,7 +182,8 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
     const rapport = await askClaudeForJson(
       `Je bent een ervaren familiemediator die een al opgesteld echtscheidingsdocument controleert.
 Wees specifiek en beknopt. Bij "volledigheid" doorloop je de volledige checklist, ook de punten die in orde zijn (status "aanwezig").
-Verzin geen wetsartikelen die niet in de gegeven context staan; laat "citaat" dan leeg.`,
+Verzin geen wetsartikelen die niet in de gegeven context staan; laat "citaat" dan leeg.
+SCHRIJFSTIJL: Schrijf alle tekstvelden in lopend, natuurlijk Nederlands. Gebruik geen gedachtestrepjes of koppeltekens (-) als verbindingsteken tussen zinsdelen. Gebruik in plaats daarvan punten, komma's of puntkomma's. Geen opsommingen met streepjes binnen een tekstveld.`,
       `DOCUMENTTEKST:\n${documentTekst}\n\nVERWACHTE SECTIES (checklist op basis van de situatie):\n${checklistTekst}\n\nRELEVANTE WETSARTIKELEN:\n${wetTekst || '(geen specifiek relevante artikelen gevonden)'}`,
       rapportTool,
       8192
