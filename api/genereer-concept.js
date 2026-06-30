@@ -53,9 +53,8 @@ export default async function handler(req, res) {
   if (!documentTekst?.trim()) return res.status(400).json({ error: 'documentTekst ontbreekt' });
   if (!aangevinkt?.length)    return res.status(400).json({ error: 'Geen aangevinkte punten' });
 
-  // ── Formatteer verbeterpunten voor de prompt ──────────
-  const itemsTekst = aangevinkt.map((item, i) => {
-    const nr  = i + 1;
+  // ── Hulpfunctie: verbeterpunt formatteren voor de prompt ──────────
+  const formatItem = (item, nr) => {
     const cat = item.categorie || '?';
     const loc = item.locatie || item.sectie || item.onderwerp || item.signalering || '';
     const bev = item.bevinding || item.toelichting || item.probleem || item.signalering || '';
@@ -69,7 +68,7 @@ export default async function handler(req, res) {
     if (opm) tekst += `\n   Opmerking mediator: ${opm}`;
     if (pas) tekst += `\n   Passage in document: "${pas}"`;
     return tekst;
-  }).join('\n\n');
+  };
 
   const systemPrompt =
 `Je bent een ervaren Nederlandse juridische documentschrijver gespecialiseerd in echtscheidingsdocumenten. Je taak is het aanpassen van specifieke passages op basis van de gegeven verbeterpunten.
@@ -93,23 +92,9 @@ INVOEGEN VAN NIEUWE SECTIES (alleen als het verbeterpunt een nieuw artikel/secti
    Vul aangepaste_tekst met de volledige nieuwe sectietekst (inclusief nummering).
    Dit is alleen voor inhoud die volledig NIEUW is en niet al ergens in het document staat.`;
 
-  const userPrompt =
-`DOCUMENTTYPE: ${documentType || 'echtscheidingsdocument'}
-
-TE VERWERKEN VERBETERPUNTEN (${aangevinkt.length} stuks):
-${itemsTekst}
-
-Geef per verbeterpunt ALLEEN de gewijzigde passage terug.
-- Bestaande tekst aanpassen → originele_tekst invullen, invoeg_na leeg laten.
-- Nieuw artikel toevoegen → invoeg_na invullen (tekst NA welke ingevoegd wordt), originele_tekst leeg laten.
-Herschrijf het volledige document NIET.
-
-ORIGINEEL DOCUMENT:
-${documentTekst}`;
-
+  // ── Tool-definitie ────────────────────────────────────────────────
   // Alleen wijzigingen ophalen — NIET het volledige document herschrijven.
   // Het document wordt serverside gereconstrueerd door de wijzigingen toe te passen.
-  // Dit bespaart ~80–90% van de output-tokens en verlaagt de wachttijd van ~2 min naar ~15 sec.
   const tool = {
     name: 'document_wijzigingen',
     description: 'Levert uitsluitend de gewijzigde passages (origineel → aangepast). Het volledige document hoeft NIET te worden herhaald.',
@@ -143,30 +128,56 @@ ${documentTekst}`;
   };
 
   try {
-    const { status, body: json } = await anthropicPost(apiKey, {
-      model:       'claude-sonnet-4-6',
-      max_tokens:  4096,   // alleen wijzigingen → veel minder tokens nodig
-      temperature: 0,
-      system:      systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-      tools: [tool],
-      tool_choice: { type: 'tool', name: tool.name },
-    });
-
-    if (status >= 400) {
-      throw new Error(`Anthropic API fout (${status}): ${JSON.stringify(json)}`);
+    // ── Parallel batching: max 5 verbeterpunten per Claude-call ──────
+    // Meerdere kleine calls tegelijk zijn sneller dan één grote call,
+    // omdat de outputgeneratie de bottleneck is (niet de inputverwerking).
+    const BATCH_SIZE = 5;
+    const batches = [];
+    for (let i = 0; i < aangevinkt.length; i += BATCH_SIZE) {
+      batches.push(aangevinkt.slice(i, i + BATCH_SIZE));
     }
+    console.log(`[genereer-concept] ${aangevinkt.length} punten in ${batches.length} batch(es) van max ${BATCH_SIZE}`);
 
-    if (json.stop_reason === 'max_tokens') {
-      console.warn('[genereer-concept] max_tokens bereikt — sommige wijzigingen mogelijk afgekapt');
-    }
+    const batchResultaten = await Promise.all(batches.map(async (batch, bIdx) => {
+      const offsetNr  = bIdx * BATCH_SIZE; // globale nummering behouden
+      const itemsTekst = batch.map((item, i) => formatItem(item, offsetNr + i + 1)).join('\n\n');
 
-    const toolUse = json.content?.find(b => b.type === 'tool_use');
-    if (!toolUse?.input) {
-      throw new Error('Claude gaf geen gestructureerde output terug');
-    }
+      const userPrompt =
+`DOCUMENTTYPE: ${documentType || 'echtscheidingsdocument'}
 
-    const wijzigingen = toolUse.input.wijzigingen || [];
+TE VERWERKEN VERBETERPUNTEN (${batch.length} van ${aangevinkt.length} stuks, nummers ${offsetNr + 1}–${offsetNr + batch.length}):
+${itemsTekst}
+
+Geef per verbeterpunt ALLEEN de gewijzigde passage terug.
+- Bestaande tekst aanpassen → originele_tekst invullen, invoeg_na leeg laten.
+- Nieuw artikel toevoegen → invoeg_na invullen (tekst NA welke ingevoegd wordt), originele_tekst leeg laten.
+Herschrijf het volledige document NIET.
+
+ORIGINEEL DOCUMENT:
+${documentTekst}`;
+
+      const { status, body: json } = await anthropicPost(apiKey, {
+        model:       'claude-sonnet-4-6',
+        max_tokens:  2048, // per batch van 5: ruim voldoende
+        temperature: 0,
+        system:      systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+        tools: [tool],
+        tool_choice: { type: 'tool', name: tool.name },
+      });
+
+      if (status >= 400) {
+        throw new Error(`Anthropic API fout batch ${bIdx + 1} (${status}): ${JSON.stringify(json)}`);
+      }
+      if (json.stop_reason === 'max_tokens') {
+        console.warn(`[genereer-concept] batch ${bIdx + 1}: max_tokens bereikt — sommige wijzigingen mogelijk afgekapt`);
+      }
+
+      const toolUse = json.content?.find(b => b.type === 'tool_use');
+      return toolUse?.input?.wijzigingen || [];
+    }));
+
+    const wijzigingen = batchResultaten.flat();
 
     // ── Hulpfuncties voor tekst-matching ─────────────────────────────────
     // Normaliseert tekst: zachte koppeltekens, non-breaking spaties,
