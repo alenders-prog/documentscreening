@@ -1435,6 +1435,10 @@ async function askClaudeForJson(systemPrompt, userContent, tool, maxTokens = 409
     return parsed;
   } catch (e) {
     if (e.message.startsWith('Tokenbudget')) throw e;
+    // Afgebroken JSON door max_tokens → betere foutmelding
+    if (stopReason === 'max_tokens') {
+      throw new Error(`Tokenbudget (${maxTokens}) bereikt — analyse afgebroken. Probeer minder documenten tegelijk.`);
+    }
     throw new Error(`Tool-output kon niet worden geparsed: ${toolJson.slice(0, 200)}`);
   }
 }
@@ -1578,10 +1582,11 @@ async function analyseDocument(trayItems, onProgress = () => {}) {
     : documentTekst.slice(0, 6000);
 
   // Haiku: classificatie is een simpele herkenningstaak, geen diepe analyse nodig
+  // max_tokens 2048: bij 4 documenten kan de output (namen + kenmerken + samenvatting) >1024 tokens zijn
   const classificatie = await askClaudeForJson(
     `Je classificeert een Nederlands echtscheidingsdocument en haalt de namen van beide partijen eruit.
 Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijst}`,
-    classificatieTekst, classificatieTool, 1024,
+    classificatieTekst, classificatieTool, 2048,
     { model: 'claude-haiku-4-5-20251001' }
   );
 
