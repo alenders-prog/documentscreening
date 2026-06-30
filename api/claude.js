@@ -16,7 +16,7 @@ function anthropicPost(headers, body) {
       path:     '/v1/messages',
       method:   'POST',
       headers: { ...headers, 'Content-Length': Buffer.byteLength(payload) },
-      timeout: 55_000, // 55 s socket-timeout (< Vercel maxDuration 60s)
+      timeout: 115_000, // 115 s socket-timeout (< Vercel maxDuration 120s)
     }, (res) => {
       let data = '';
       res.on('data', chunk => (data += chunk));

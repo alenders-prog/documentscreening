@@ -1825,7 +1825,7 @@ STRIKTE REGELS:
       askClaudeForJson(sysJuridisch, userVoorJuridisch, juridischTool,
         6000, { cache: true }),                      // juridisch zelden >4k tokens
       askClaudeForJson(sysBalansGrammatica, userVoorBalansGrammatica, balansGrammaticaTool,
-        4000, { cache: true }),                      // balans+grammatica compact
+        4000, { model: 'claude-haiku-4-5-20251001', cache: true }), // Haiku: 5x sneller, voldoende voor taal+balans
     ]);
     // Herstel namen/PII in Claude's output (placeholders → echte waarden)
     const docRapport = {
