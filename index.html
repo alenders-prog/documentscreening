@@ -168,18 +168,18 @@ button.secundair:hover{background:#FFF1EA;}
 /* ── Versie cards (v2 stijl) ─────────────────────── */
 .v2-versielijst{display:flex;flex-direction:column;gap:10px;}
 .v2-kaart{background:var(--paper);border:1px solid var(--line);border-radius:10px;
-  padding:16px 18px;display:flex;align-items:center;gap:18px;cursor:pointer;
+  padding:14px 18px;display:flex;align-items:flex-start;gap:18px;cursor:pointer;
   transition:border-color .15s,box-shadow .15s;}
 .v2-kaart:hover{border-color:var(--brass);box-shadow:0 1px 8px rgba(191,160,91,.15);}
 
 /* Grote score-cirkel (overall %) */
-.v2-score{flex-shrink:0;width:72px;height:72px;border-radius:50%;
+.v2-score{flex-shrink:0;width:72px;height:72px;border-radius:50%;margin-top:2px;
   display:flex;align-items:center;justify-content:center;
   font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.1rem;
   border:3px solid var(--ring,var(--line));color:var(--ring,var(--ink-faint));line-height:1;}
 
 /* Kleine cirkels per categorie */
-.v2-onderdelen{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
+.v2-onderdelen{display:flex;gap:10px;flex-wrap:wrap;}
 .v2-mini{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .v2-mini-ring{width:48px;height:48px;border-radius:50%;
   border:2.5px solid var(--ring,var(--line));color:var(--ring,var(--ink-faint));
@@ -189,16 +189,26 @@ button.secundair:hover{background:#FFF1EA;}
 .v2-mini-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;
   letter-spacing:.05em;color:var(--ink-soft);}
 
-/* Gesegmenteerde cirkel (Jur) — conic-gradient als "ring", witte kern */
+/* Gesegmenteerde cirkel — conic-gradient als "ring", witte kern */
 .v2-mini-seg{padding:3px;box-sizing:border-box;border:none !important;}
 .v2-mini-seg-inner{width:100%;height:100%;border-radius:50%;
   background:var(--paper);display:flex;align-items:center;justify-content:center;
   font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.68rem;
   color:var(--ink);line-height:1;}
 
+/* Kaart inhoud */
 .v2-info{flex:1;min-width:0;}
-.v2-label{font-weight:600;font-size:.96rem;color:var(--ink);margin-bottom:2px;}
-.v2-meta{font-size:.78rem;color:var(--ink-soft);margin-bottom:2px;}
+.v2-kop{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;}
+.v2-label{font-weight:600;font-size:.96rem;color:var(--ink);}
+.v2-datum-lbl{font-size:.78rem;color:var(--ink-soft);white-space:nowrap;}
+/* Per-document kolommen naast elkaar */
+.v2-docs-rij{display:flex;gap:0;margin-top:4px;align-items:flex-start;}
+.v2-doc-kolom{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;padding:6px 14px 2px 0;}
+.v2-doc-kolom+.v2-doc-kolom{padding:6px 0 2px 14px;border-left:1px solid var(--line);}
+.v2-doc-kop{display:flex;align-items:baseline;gap:7px;}
+.v2-doc-titel{font-size:.73rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;
+  letter-spacing:.04em;}
+.v2-doc-score{font-size:.82rem;font-weight:700;font-family:'IBM Plex Mono',monospace;}
 
 /* Bestanden-details knop (rechts in v2-acties) */
 .v2-bestanden-detail{margin:0;}
@@ -1621,12 +1631,28 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
     ouderschapsplan: templateResultaten[1].data ?? [],
   };
 
-  // ── Stap 3: Per hoofddocument analyseren ─────────────────────────────
-  const totaalDocs = effectieveHoofdItems.length;
-  const documenten = [];
+  // ── Stap 3: Hoofddocumenten analyseren in batches van 2 ──────────────
+  // Docs per 2 parallel (elk met 3 Claude-calls → max 6 calls tegelijk).
+  // Bij volledig parallel (4 × 3 = 12 calls) ontstaan Anthropic rate-limit fouten.
+  // Batches van 2 = nog steeds ~2× sneller dan sequentieel.
+  const totaalDocs  = effectieveHoofdItems.length;
+  const BATCH_DOCS  = 2; // max docs tegelijk
 
-  for (let di = 0; di < totaalDocs; di++) {
-    const item     = effectieveHoofdItems[di];
+  // Gedeelde voortgangsstate over actieve docs heen
+  const docVoortgang = new Array(totaalDocs).fill(0);
+  const updateVoortgang = (di, pct, label) => {
+    if (pct !== null && pct !== undefined) docVoortgang[di] = pct;
+    const gem = docVoortgang.reduce((a, b) => a + b, 0) / totaalDocs;
+    onProgress(null, gem, label ?? `${totaalDocs} documenten analyseren…`);
+  };
+
+  onProgress(`Stap 3 van 3 — Documenten analyseren (batches van ${BATCH_DOCS})…`, 0);
+
+  const documenten = [];
+  for (let bStart = 0; bStart < totaalDocs; bStart += BATCH_DOCS) {
+    const batchItems   = effectieveHoofdItems.slice(bStart, bStart + BATCH_DOCS);
+    const batchResultaten = await Promise.all(batchItems.map(async (item, bIdx) => {
+      const di = bStart + bIdx; // globaal index
     const deel     = deelPerIdx.get(item.id);
     const docType  = item.type;
     const heeftMfn = docType === 'convenant' || docType === 'ouderschapsplan';
@@ -1640,8 +1666,8 @@ Gebruik voor situatie_kenmerken UITSLUITEND keys uit deze lijst: ${kenmerkenLijs
 
     const bijlageToelichting = effectieveContextItems.length
       ? ` (+${effectieveContextItems.length} bijlage${effectieveContextItems.length > 1 ? 'n' : ''} als context)` : '';
-    const docLabel = `Document ${di + 1}/${totaalDocs}${di === 0 ? bijlageToelichting : ''}: ${DOC_TYPE_LABELS[docType] || docType}`;
-    onProgress(`Stap 3 van 3 — Analyseren…`, 0, docLabel);
+    const docLabel = `Doc ${di + 1}/${totaalDocs}: ${DOC_TYPE_LABELS[docType] || docType}`;
+    updateVoortgang(di, 0, docLabel);
 
     const checklist = (templatesPer[tmplType] || []).filter(
       t => !t.applies_when || t.applies_when.every(tag => classificatie.situatie_kenmerken.includes(tag))
@@ -1847,21 +1873,21 @@ STRIKTE REGELS:
       const MAX = 92;
       const id  = setInterval(() => {
         const elapsed = Date.now() - t0;
-        onProgress(null, (elapsed / (elapsed + K)) * MAX, docLabel);
+        updateVoortgang(di, (elapsed / (elapsed + K)) * MAX, docLabel);
       }, 300);
       return () => clearInterval(id);
     };
     _stopTimer = startTimer();
 
-    // Drie calls tegelijk: structuur | juridisch | balans+grammatica (elk eigen tokenbudget)
-    // Tokenbudgetten bewust begrensd: minder tokens = snellere responstijd van Anthropic
+    // Drie calls tegelijk: structuur | juridisch | balans+grammatica
+    // Edge Runtime streaming → geen tijdslimiet, ruimere tokenbudgetten mogelijk
     const [structuur, juridischResult, balansGrammaticaResult] = await Promise.all([
       askClaudeForJson(sysStructuur, userVoorStructuur, structuurTool,
-        heeftMfn ? 6000 : 3000, { cache: true }),  // MfN-respons is typisch 3-5k tokens
+        heeftMfn ? 10000 : 4000, { cache: true }),
       askClaudeForJson(sysJuridisch, userVoorJuridisch, juridischTool,
-        6000, { cache: true }),                      // juridisch zelden >4k tokens
+        8000, { cache: true }),
       askClaudeForJson(sysBalansGrammatica, userVoorBalansGrammatica, balansGrammaticaTool,
-        4000, { cache: true }),
+        8000, { cache: true }),
     ]);
     // Herstel namen/PII in Claude's output (placeholders → echte waarden)
     const docRapport = {
@@ -1871,11 +1897,13 @@ STRIKTE REGELS:
     };
 
     _stopTimer();
-    onProgress(null, 100, docLabel); // even 100% tonen voordat volgende doc begint
+    updateVoortgang(di, 100, docLabel);
 
     docRapport.doc_type    = docType;
     docRapport.bestandsnaam = item.bestandsnaam;
-    documenten.push(docRapport);
+    return docRapport;
+    }));
+    documenten.push(...batchResultaten);
   }
   onProgress('Analyse klaar — verwerken…', undefined, undefined);
 
@@ -2009,31 +2037,25 @@ async function renderDocPanel(searchText) {
       }
       const naam = bestand.name.toLowerCase();
       if (naam.endsWith('.pdf')) {
-        const docxBlob = docxPerBestandsnaam.get(bestand.name);
-        if (docxBlob) {
-          // DOCX van Adobe beschikbaar: render als mammoth HTML (mooie opmaak)
-          const ab     = await docxBlob.arrayBuffer();
-          if (gen !== renderGeneratie) return;
-          const result = await mammoth.convertToHtml({ arrayBuffer: ab });
-          if (gen !== renderGeneratie) return;
-          const div    = document.createElement('div');
-          div.className = 'docx-inhoud';
-          div.innerHTML = result.value;
-          schoonmaakMammothHtml(div); // verwijder inline footer-artefacten
-          panel.appendChild(div);
-        } else {
-          // Fallback: PDF.js canvas-rendering
-          const buf    = await bestand.arrayBuffer();
-          if (gen !== renderGeneratie) return;
-          const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
-          if (gen !== renderGeneratie) return;
-          huidigePdfDocCache[bestand.name] = pdfDoc;
-          await renderPdfPaginas(panel, pdfDoc, gen);
-        }
-      } else if (naam.endsWith('.docx')) {
+        // Altijd PDF.js canvas-rendering voor PDFs — geeft exacte weergave van het origineel
+        // (logo, watermerken, opmaak) en is consistent tussen eerste load en heropenen.
+        // De Adobe DOCX wordt alleen gebruikt voor tekst-extractie, niet voor weergave.
         const buf    = await bestand.arrayBuffer();
         if (gen !== renderGeneratie) return;
-        const result = await mammoth.convertToHtml({ arrayBuffer: buf });
+        const pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+        if (gen !== renderGeneratie) return;
+        huidigePdfDocCache[bestand.name] = pdfDoc;
+        await renderPdfPaginas(panel, pdfDoc, gen);
+      } else if (naam.endsWith('.docx')) {
+        // DOCX: mammoth HTML-rendering (geen PDF.js beschikbaar voor .docx)
+        const mammothOpties = {
+          convertImage: mammoth.images.imgElement(img =>
+            img.read('base64').then(b64 => ({ src: `data:${img.contentType};base64,${b64}` }))
+          ),
+        };
+        const buf    = await bestand.arrayBuffer();
+        if (gen !== renderGeneratie) return;
+        const result = await mammoth.convertToHtml({ arrayBuffer: buf }, mammothOpties);
         if (gen !== renderGeneratie) return;
         const div    = document.createElement('div');
         div.className = 'docx-inhoud';
@@ -4864,34 +4886,9 @@ async function toonDossierDetail(id) {
         ? docsArr.map(d => DOC_TYPE_LABELS[d.doc_type] || d.doc_type).filter(Boolean).join(' & ')
         : (v.classificatie?.doc_type ? (DOC_TYPE_LABELS[v.classificatie.doc_type] || v.classificatie.doc_type) : '');
 
-      // ── Aggregeer scores over alle documenten ─────────────────
-      let volAanw = 0, volOnvoll = 0, volTot = 0;
-      let jurHoog = 0, jurMidd = 0, jurLaag = 0;
-      let mfnAanw = 0, mfnOntbr = 0, mfnTot = 0;
-      let balHoog = 0, balMed = 0;
-      let gramN = 0;
-      let heeftData = false;
-      for (const drp of allDrps) {
-        const vol = drp.volledigheid || [];
-        volAanw  += vol.filter(v2 => v2.status === 'aanwezig').length;
-        volOnvoll += vol.filter(v2 => v2.status === 'onvolledig').length;
-        volTot   += vol.length;
-        const jur = drp.juridisch || [];
-        jurHoog += jur.filter(j => j.ernst === 'hoog').length;
-        jurMidd += jur.filter(j => j.ernst === 'midden').length;
-        jurLaag += jur.filter(j => j.ernst === 'laag' || j.ernst === 'info').length;
-        const mfnEl = drp.mfn_score?.elementen;
-        if (mfnEl?.length) {
-          mfnAanw += mfnEl.filter(e => e.status === 'aanwezig').length;
-          mfnOntbr += mfnEl.filter(e => e.status !== 'aanwezig').length; // ontbreekt + onvolledig
-          mfnTot  += mfnEl.length;
-        }
-        const bal = drp.balans || [];
-        balHoog += bal.filter(b => b.ernst === 'hoog').length;
-        balMed  += bal.filter(b => b.ernst !== 'hoog').length; // midden + laag = medium
-        gramN   += (drp.grammatica || []).length;
-        if (drp.samenvatting) heeftData = true;
-      }
+      // ── Per-document cirkel-generator ────────────────────────
+      // Cirkels worden per document berekend (niet geaggregeerd),
+      // zodat convenant en ouderschapsplan elk hun eigen set tonen.
 
       // ── Grote score-cirkel: overall % ────────────────────────
       const primDrp = allDrps[0];
@@ -4903,24 +4900,14 @@ async function toonDossierDetail(id) {
         scoreHtml = `${pct}<span style="opacity:.35;font-size:.65em">%</span>`;
       }
 
-      // ── Mini-helper ───────────────────────────────────────────
-      const mini = (lbl, inhoud, kleur) =>
-        `<div class="v2-mini">
-          <div class="v2-mini-ring" style="--ring:${kleur}">${inhoud}</div>
-          <div class="v2-mini-lbl">${lbl}</div>
-        </div>`;
-
-      // ── Kleine cirkels per categorie (geaggregeerd) ──────────
-      // Helper: gesegmenteerde cirkel (conic-gradient ring, witte kern)
+      // ── Gesegmenteerde cirkel helper ──────────────────────────
       const segCircle = (lbl, segs, inhoud) => {
-        // segs = [{kleur, n}] — proporties berekend over som
         const som = segs.reduce((a, s) => a + s.n, 0);
         let grad;
         if (som === 0) {
           grad = 'var(--status-ok) 0deg 360deg';
         } else {
-          const stops = [];
-          let pos = 0;
+          const stops = []; let pos = 0;
           for (const s of segs) {
             if (s.n <= 0) continue;
             const d = (s.n / som) * 360;
@@ -4937,63 +4924,71 @@ async function toonDossierDetail(id) {
         </div>`;
       };
 
-      let onderdelen = '';
-      if (heeftData) {
-        // Volledigheid — gesegmenteerd: rood=ontbreekt, geel=onvolledig, groen=aanwezig
-        // Tekst: verbeterpunten / totaal
-        if (volTot > 0) {
-          const volOntbr = volTot - volAanw - volOnvoll;
-          const volVp    = volOntbr + volOnvoll; // totaal verbeterpunten
-          const inhoud   = volVp === 0 ? '✓' : `${volVp}/${volTot}`;
-          onderdelen += segCircle('Vol', [
-            { kleur: 'var(--status-risico)',   n: volOntbr  },
-            { kleur: 'var(--status-aandacht)', n: volOnvoll },
-            { kleur: 'var(--status-ok)',        n: volAanw   },
-          ], inhoud);
-        }
+      // ── Cirkels per document ──────────────────────────────────
+      const maakDocCircels = (drp) => {
+        if (!drp.samenvatting) return '';
+        const vol    = drp.volledigheid || [];
+        const vA     = vol.filter(x => x.status === 'aanwezig').length;
+        const vOv    = vol.filter(x => x.status === 'onvolledig').length;
+        const vT     = vol.length;
+        const vOntbr = vT - vA - vOv;
+        const jur    = drp.juridisch || [];
+        const jH     = jur.filter(x => x.ernst === 'hoog').length;
+        const jM     = jur.filter(x => x.ernst === 'midden').length;
+        const jL     = jur.filter(x => x.ernst === 'laag' || x.ernst === 'info').length;
+        const mfnEl  = drp.mfn_score?.elementen || [];
+        const mA     = mfnEl.filter(x => x.status === 'aanwezig').length;
+        const mO     = mfnEl.filter(x => x.status !== 'aanwezig').length;
+        const mT     = mfnEl.length;
+        const bal    = drp.balans || [];
+        const bH     = bal.filter(x => x.ernst === 'hoog').length;
+        const bM     = bal.filter(x => x.ernst !== 'hoog').length;
+        const gN     = (drp.grammatica || []).length;
+        let c = '';
+        if (vT > 0) c += segCircle('Vol', [
+          { kleur: 'var(--status-risico)',   n: vOntbr },
+          { kleur: 'var(--status-aandacht)', n: vOv    },
+          { kleur: 'var(--status-ok)',        n: vA     },
+        ], `${vA}/${vT}`);
+        c += segCircle('Jur', [
+          { kleur: 'var(--status-risico)',   n: jH },
+          { kleur: 'var(--status-aandacht)', n: jM },
+          { kleur: 'var(--status-ok)',        n: jL },
+        ], (jH + jM + jL) === 0 ? '✓' : String(jH + jM + jL));
+        if (mT > 0) c += segCircle('MfN', [
+          { kleur: 'var(--status-risico)', n: mO },
+          { kleur: 'var(--status-ok)',     n: mA },
+        ], `${mA}/${mT}`);
+        const bTot = bH + bM;
+        c += segCircle('Bal', bTot > 0 ? [
+          { kleur: 'var(--status-risico)',   n: bH },
+          { kleur: 'var(--status-aandacht)', n: bM },
+        ] : [], bTot > 0 ? String(bTot) : '✓');
+        c += segCircle('Gram', gN > 0 ? [
+          { kleur: 'var(--status-aandacht)', n: gN },
+        ] : [], gN > 0 ? String(gN) : '✓');
+        return c;
+      };
 
-        // Juridisch — gesegmenteerd: rood=hoog, geel=midden, groen=laag
-        // Tekst: totaal verbeterpunten (hoog + midden + laag)
-        {
-          const jurTot  = jurHoog + jurMidd + jurLaag;
-          const inhoud  = jurTot === 0 ? '✓' : String(jurTot);
-          onderdelen += segCircle('Jur', [
-            { kleur: 'var(--status-risico)',   n: jurHoog },
-            { kleur: 'var(--status-aandacht)', n: jurMidd },
-            { kleur: 'var(--status-ok)',        n: jurLaag },
-          ], inhoud);
-        }
-
-        // MfN — groen=compliant, rood=niet-compliant (ontbreekt + onvolledig)
-        if (mfnTot > 0) {
-          const inhoud = mfnOntbr === 0 ? '✓' : `${mfnOntbr}/${mfnTot}`;
-          onderdelen += segCircle('MfN', [
-            { kleur: 'var(--status-risico)', n: mfnOntbr },
-            { kleur: 'var(--status-ok)',     n: mfnAanw  },
-          ], inhoud);
-        }
-
-        // Balans — rood=hoog, geel=medium (midden+laag zijn alle verbeterpunten)
-        if (balHoog + balMed > 0) {
-          const totBal = balHoog + balMed;
-          const inhoud = String(totBal);
-          onderdelen += segCircle('Bal', [
-            { kleur: 'var(--status-risico)',   n: balHoog },
-            { kleur: 'var(--status-aandacht)', n: balMed  },
-          ], inhoud);
-        } else if (heeftData) {
-          onderdelen += segCircle('Bal', [], '✓');
-        }
-
-        // Grammatica — geel=verbeterpunten (geen ernst-onderverdeling)
-        if (gramN > 0) {
-          onderdelen += segCircle('Gram', [
-            { kleur: 'var(--status-aandacht)', n: gramN },
-          ], String(gramN));
-        } else if (heeftData) {
-          onderdelen += segCircle('Gram', [], '✓');
-        }
-      }
+      // Per-document kolommen naast elkaar: titel + score bovenaan, cirkels eronder
+      const docsMetData = allDrps.filter(drp => drp.samenvatting);
+      const docKolommen = docsMetData.map(drp => {
+        const cirkels = maakDocCircels(drp);
+        const lbl     = DOC_TYPE_LABELS[drp.doc_type] || drp.doc_type || 'Document';
+        const dpct    = berekenGemiddeldeScore(drp);
+        const dkleur  = dpct === null ? 'var(--ink-faint)'
+          : dpct >= 80 ? 'var(--status-ok)' : dpct >= 60 ? 'var(--status-aandacht)' : 'var(--status-risico)';
+        const scoreSpan = dpct !== null
+          ? `<span class="v2-doc-score" style="color:${dkleur}">${dpct}%</span>` : '';
+        return `<div class="v2-doc-kolom">
+          <div class="v2-doc-kop">
+            <span class="v2-doc-titel">${escH(lbl)}</span>${scoreSpan}
+          </div>
+          <div class="v2-onderdelen">${cirkels}</div>
+        </div>`;
+      }).join('');
+      const docRijen = docKolommen
+        ? `<div class="v2-docs-rij">${docKolommen}</div>` : '';
 
       // ── Bestanden achter toggle ───────────────────────────────
       const bestanden = rp._document_bestanden
@@ -5015,9 +5010,11 @@ async function toonDossierDetail(id) {
       <div class="v2-kaart" data-id="${v.id}">
         <div class="v2-score" style="--ring:${ringKleur}">${scoreHtml}</div>
         <div class="v2-info">
-          <div class="v2-label">${escH(label)}</div>
-          <div class="v2-meta">${datum}${doctypeLbl ? ' · ' + escH(doctypeLbl) : ''}</div>
-          ${onderdelen ? `<div class="v2-onderdelen">${onderdelen}</div>` : ''}
+          <div class="v2-kop">
+            <span class="v2-label">${escH(label)}</span>
+            <span class="v2-datum-lbl">${datum}</span>
+          </div>
+          ${docRijen}
         </div>
         <div class="v2-acties" onclick="event.stopPropagation()">
           ${bestandenHtml ? `<div class="v2-acties-wrap">${bestandenHtml}</div>` : '<div></div>'}
