@@ -4916,11 +4916,23 @@ async function toonDossierDetail(id) {
         if (som === 0) {
           grad = 'var(--status-ok) 0deg 360deg';
         } else {
+          const GAP = 4; // graden wit tussen segmenten
           const stops = []; let pos = 0;
-          for (const s of segs) {
-            if (s.n <= 0) continue;
+          const validSegs = segs.filter(s => s.n > 0);
+          const meerdere  = validSegs.length > 1;
+          for (let i = 0; i < validSegs.length; i++) {
+            const s = validSegs[i];
             const d = (s.n / som) * 360;
-            stops.push(`${s.kleur} ${pos}deg ${pos + d}deg`);
+            if (!meerdere) {
+              stops.push(`${s.kleur} ${pos}deg ${pos + d}deg`);
+            } else {
+              const gb = i > 0                       ? GAP / 2 : 0;
+              const ga = i < validSegs.length - 1   ? GAP / 2 : 0;
+              const vs = pos + gb, ve = pos + d - ga;
+              if (gb) stops.push(`white ${pos}deg ${vs}deg`);
+              if (vs < ve) stops.push(`${s.kleur} ${vs}deg ${ve}deg`);
+              if (ga) stops.push(`white ${ve}deg ${pos + d}deg`);
+            }
             pos += d;
           }
           grad = stops.join(',');
@@ -4980,7 +4992,11 @@ async function toonDossierDetail(id) {
       };
 
       // Per-document kolommen: grote score-cirkel + type-label + kleine cirkels
-      const docsMetData = allDrps.filter(drp => drp.samenvatting);
+      // Vaste volgorde: ouderschapsplan links, convenant rechts
+      const DOC_VOLGORDE = { ouderschapsplan: 0, convenant: 1 };
+      const docsMetData = allDrps
+        .filter(drp => drp.samenvatting)
+        .sort((a, b) => (DOC_VOLGORDE[a.doc_type] ?? 9) - (DOC_VOLGORDE[b.doc_type] ?? 9));
       const docKolommen = docsMetData.map(drp => {
         const cirkels = maakDocCircels(drp);
         const lbl     = DOC_TYPE_LABELS[drp.doc_type] || drp.doc_type || 'Document';
